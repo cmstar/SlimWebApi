@@ -60,9 +60,9 @@ namespace cmstar.WebApi
                     "The cache provider must be specified if the base provider is not set.", "cacheProvider");
             }
 
-            _apiMethodInfo.CacheExpiration = expiration.HasValue ? expiration.Value : _setup.CacheExpiration;
             _apiMethodInfo.CacheProvider = provider;
-            _apiMethodInfo.CacheNamespace = cacheNamespace;
+            _apiMethodInfo.CacheNamespace = cacheNamespace ?? _setup.CacheNamespace;
+            _apiMethodInfo.CacheExpiration = expiration.HasValue ? expiration.Value : _setup.CacheExpiration;
 
             return this;
         }
