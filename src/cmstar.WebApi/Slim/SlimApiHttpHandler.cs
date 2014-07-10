@@ -57,10 +57,10 @@ namespace cmstar.WebApi.Slim
                 var setup = new ApiSetup(type);
                 Setup(setup);
 
-                var handler = new SlimApiInvocationHandler(setup.CallerType, setup.ApiMethodInfos);
-                InternalHandlers.Add(type, handler);
+                internalHandler = new SlimApiInvocationHandler(setup.CallerType, setup.ApiMethodInfos);
+                InternalHandlers.Add(type, internalHandler);
 
-                return handler;
+                return internalHandler;
             }
         }
     }

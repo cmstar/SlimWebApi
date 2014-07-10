@@ -23,6 +23,8 @@ namespace cmstar.WebApi.Slim
 
         public SlimApiInvocationHandler(Type callerType, IEnumerable<ApiMethodInfo> methods)
         {
+            ArgAssert.NotNull(methods, "methods");
+
             foreach (var method in methods)
             {
                 AddRegistry(method);
@@ -69,7 +71,7 @@ namespace cmstar.WebApi.Slim
                 object result;
 
                 var cacheProvider = apiMethodInfo.CacheProvider;
-                if (apiMethodInfo.CacheProvider == null)
+                if (cacheProvider == null)
                 {
                     result = apiMethodInfo.Invoke(paramValueMap);
                 }
