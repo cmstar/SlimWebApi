@@ -1613,6 +1613,33 @@
             The instance of <see cref="T:System.IO.TextWriter"/> which the JSON is written to.
             </param>
         </member>
+        <member name="M:cmstar.Serialization.Json.JsonWriter.WriteObjectStart">
+            <summary>
+            Write a '{' which indicates a beginning of a JSON object.
+            </summary>
+        </member>
+        <member name="M:cmstar.Serialization.Json.JsonWriter.WriteObjectEnd">
+            <summary>
+            Write a '}' which indicates an end of a JSON object.
+            </summary>
+        </member>
+        <member name="M:cmstar.Serialization.Json.JsonWriter.WriteArrayStart">
+            <summary>
+            Write a '[' which indicates a beginning of a JSON array.
+            </summary>
+        </member>
+        <member name="M:cmstar.Serialization.Json.JsonWriter.WriteArrayEnd">
+            <summary>
+            Write a ']' which indicates a end of a JSON array.
+            </summary>
+        </member>
+        <member name="M:cmstar.Serialization.Json.JsonWriter.WritePropertyName(System.String)">
+            <summary>
+            Write a JSON property name like '"name":'.
+            A <c>null</c> name is treated as an empty string.
+            </summary>
+            <param name="name">The property name.</param>
+        </member>
         <member name="M:cmstar.Serialization.Json.JsonWriter.WriteComma">
             <summary>
             Write a comma for properties or array elements.
