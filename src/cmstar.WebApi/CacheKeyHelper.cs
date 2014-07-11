@@ -7,11 +7,31 @@ using cmstar.WebApi.Slim;
 
 namespace cmstar.WebApi
 {
+    /// <summary>
+    /// 包含获取方法缓存键相关的方法。
+    /// </summary>
     internal static class CacheKeyHelper
     {
         private static readonly Dictionary<ApiMethodInfo, ICacheKeyBuilder> KnownCacheKeyBuilders
             = new Dictionary<ApiMethodInfo, ICacheKeyBuilder>();
 
+        /// <summary>
+        /// 获取指定WebAPI方法所使用的缓存键的前缀。
+        /// 此前缀可用于查找、清除特定方法的缓存。
+        /// </summary>
+        /// <param name="apiMethodInfo">WebAPI方法的注册信息。</param>
+        /// <returns>缓存键的前缀。</returns>
+        public static string GetCacheKeyPrefix(ApiMethodInfo apiMethodInfo)
+        {
+            return apiMethodInfo.CacheNamespace + apiMethodInfo.MethodName;
+        }
+
+        /// <summary>
+        /// 获取缓存的键。
+        /// </summary>
+        /// <param name="apiMethodInfo">WebAPI方法的注册信息。</param>
+        /// <param name="paramValueMap">方法的参数字典，包含各参数的名称及值。</param>
+        /// <returns>缓存的键。</returns>
         public static string GetCacheKey(ApiMethodInfo apiMethodInfo, IDictionary<string, object> paramValueMap)
         {
             var cacheKeyBuilder = GetCacheKeyBuilder(apiMethodInfo);
@@ -66,8 +86,8 @@ namespace cmstar.WebApi
             {
                 var paramArray = apiMethodInfo.BuildParamArray(paramValueMap);
 
-                var sb = new StringBuilder(apiMethodInfo.CacheNamespace, 40);
-                sb.Append('.').Append(apiMethodInfo.MethodName);
+                var prefix = GetCacheKeyPrefix(apiMethodInfo);
+                var sb = new StringBuilder(prefix, 40);
 
                 foreach (var v in paramArray)
                 {
@@ -106,8 +126,8 @@ namespace cmstar.WebApi
                 var paramArray = apiMethodInfo.BuildParamArray(paramValueMap);
                 var param = paramArray[0];
 
-                var sb = new StringBuilder(apiMethodInfo.CacheNamespace, 40);
-                sb.Append('.').Append(apiMethodInfo.MethodName);
+                var prefix = GetCacheKeyPrefix(apiMethodInfo);
+                var sb = new StringBuilder(prefix, 40);
 
                 if (param != null)
                 {
@@ -129,8 +149,8 @@ namespace cmstar.WebApi
             {
                 var paramArray = apiMethodInfo.BuildParamArray(paramValueMap);
 
-                var sb = new StringBuilder(apiMethodInfo.CacheNamespace, 40);
-                sb.Append('.').Append(apiMethodInfo.MethodName);
+                var prefix = GetCacheKeyPrefix(apiMethodInfo);
+                var sb = new StringBuilder(prefix, 80);
 
                 foreach (var v in paramArray)
                 {
