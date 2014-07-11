@@ -61,8 +61,21 @@ namespace cmstar.WebApi
             }
 
             _apiMethodInfo.CacheProvider = provider;
-            _apiMethodInfo.CacheNamespace = cacheNamespace ?? _setup.CacheNamespace;
             _apiMethodInfo.CacheExpiration = expiration.HasValue ? expiration.Value : _setup.CacheExpiration;
+
+            // 在没有显式指定命名空间时，优先使用承载方法的类型的名称
+            if (cacheNamespace != null)
+            {
+                _apiMethodInfo.CacheNamespace = cacheNamespace;
+            }
+            else if (_apiMethodInfo.Method.DeclaringType != null)
+            {
+                _apiMethodInfo.CacheNamespace = _apiMethodInfo.Method.DeclaringType.FullName;
+            }
+            else
+            {
+                _apiMethodInfo.CacheNamespace = _setup.CallerType.FullName;
+            }
 
             return this;
         }

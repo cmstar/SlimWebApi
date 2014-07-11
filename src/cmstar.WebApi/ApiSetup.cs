@@ -40,11 +40,6 @@ namespace cmstar.WebApi
         public TimeSpan CacheExpiration { get; private set; }
 
         /// <summary>
-        /// 获取缓存键的命名空间。若API方法注册中没有单独指定命名空间，则套用此命名空间。
-        /// </summary>
-        public string CacheNamespace { get; private set; }
-
-        /// <summary>
         /// 获取于当前实例注册的所有API方法注册信息的序列。
         /// </summary>
         public IEnumerable<ApiMethodInfo> ApiMethodInfos
@@ -58,27 +53,20 @@ namespace cmstar.WebApi
         /// </summary>
         /// <param name="provider">API缓存提供器。</param>
         /// <param name="expiration">缓存的超时时间。</param>
-        /// <param name="cacheNamespace">
-        /// 缓存键的命名空间，若不指定，则默认命名空间通API注册类所在的.net命名空间。
-        /// </param>
-        public void SetupCacheBase(
-            IApiCacheProvider provider,
-            TimeSpan expiration,
-            string cacheNamespace = null)
+        public void SetupCacheBase(IApiCacheProvider provider, TimeSpan expiration)
         {
             if (expiration.Ticks <= 0)
                 throw new ArgumentException("The expiration must be greater than zero.", "expiration");
 
             CacheProvider = provider;
             CacheExpiration = expiration;
-            CacheNamespace = cacheNamespace ?? CallerType.FullName;
         }
 
         /// <summary>
         /// 添加一个API方法注册。
         /// </summary>
         /// <param name="provider">返回一个对象，该对象为提供API逻辑实现的类型实例。</param>
-        /// <param name="method">被注册为API的方法。</param>
+        /// <param name="method">被注册为WebAPI的方法。</param>
         /// <returns><see cref="ApiMethodSetup"/>的实例。</returns>
         public ApiMethodSetup Method(Func<object> provider, MethodInfo method)
         {
@@ -95,7 +83,7 @@ namespace cmstar.WebApi
         /// <param name="provider">
         /// 提供API逻辑实现的类型实例。若方法为静态方法，使用<c>null</c>。
         /// </param>
-        /// <param name="method">被注册为API的方法。</param>
+        /// <param name="method">被注册为WebAPI的方法。</param>
         /// <returns><see cref="ApiMethodSetup"/>的实例。</returns>
         public ApiMethodSetup Method(object provider, MethodInfo method)
         {
