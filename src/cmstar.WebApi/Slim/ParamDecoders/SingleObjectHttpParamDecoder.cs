@@ -91,6 +91,12 @@ namespace cmstar.WebApi.Slim.ParamDecoders
             }
         }
 
+        /// <summary>
+        /// 解析<see cref="HttpRequest"/>并创建该请求所对应要调用方法的参数值集合。
+        /// 集合以参数名称为key，参数的值为value。
+        /// </summary>
+        /// <param name="request">HTTP请求。</param>
+        /// <returns>记录参数名称和对应的值。</returns>
         public IDictionary<string, object> DecodeParam(HttpRequest request)
         {
             if (_memberMap == null)

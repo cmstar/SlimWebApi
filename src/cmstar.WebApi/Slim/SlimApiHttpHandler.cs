@@ -5,6 +5,10 @@ using Common.Logging;
 
 namespace cmstar.WebApi.Slim
 {
+    /// <summary>
+    /// 提供Slim WebAPI的入口。继承此类以实现API的注册和使用。
+    /// 这是一个抽象类。
+    /// </summary>
     public abstract class SlimApiHttpHandler : IHttpHandler
     {
         private static readonly Dictionary<Type, SlimApiInvocationHandler> InternalHandlers
@@ -39,6 +43,10 @@ namespace cmstar.WebApi.Slim
             get { return true; }
         }
 
+        /// <summary>
+        /// 对WebAPI进行注册和配置。
+        /// </summary>
+        /// <param name="setup">提供用于Web API注册与配置的方法。</param>
         public abstract void Setup(ApiSetup setup);
 
         private SlimApiInvocationHandler GetInternalHandler()

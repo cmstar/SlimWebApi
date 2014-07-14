@@ -1,7 +1,7 @@
 ﻿namespace cmstar.WebApi.Slim
 {
     /// <summary>
-    /// 包含SlimWebAPI相关的全局常量和静态成员的定义。
+    /// 包含Slim WebAPI相关的全局常量和静态成员的定义。
     /// </summary>
     public static class SlimApiEnvironment
     {

@@ -9,7 +9,7 @@ using cmstar.Serialization.Json.Contracts;
 namespace cmstar.WebApi.Slim
 {
     /// <summary>
-    /// 包含SlimWebApi中与JSON序列化有关的方法。
+    /// 包含Slim WebAPI中与JSON序列化有关的方法。
     /// </summary>
     internal static class JsonHelper
     {
