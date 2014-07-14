@@ -7,6 +7,9 @@ using cmstar.Serialization.Json;
 
 namespace cmstar.WebApi.Slim
 {
+    /// <summary>
+    /// 包含Slim WebAPI中处理HTTP请求的具体流程。
+    /// </summary>
     public class SlimApiInvocationHandler
     {
         private readonly Dictionary<string, ApiMethodInfo> _registeredMethods
@@ -21,18 +24,30 @@ namespace cmstar.WebApi.Slim
 
         protected readonly ILog Logger;
 
+        /// <summary>
+        /// 初始化<see cref="SlimApiInvocationHandler"/>的新实例。
+        /// </summary>
+        /// <param name="callerType">WebAPI的注册类型。通常是<see cref="SlimApiHttpHandler"/>的子类。</param>
+        /// <param name="methods">
+        /// API注册信息。可以为<c>null</c>，在之后通过<see cref="AddRegistry"/>方法添加API注册。
+        /// </param>
         public SlimApiInvocationHandler(Type callerType, IEnumerable<ApiMethodInfo> methods)
         {
-            ArgAssert.NotNull(methods, "methods");
-
-            foreach (var method in methods)
+            if (methods != null)
             {
-                AddRegistry(method);
+                foreach (var method in methods)
+                {
+                    AddRegistry(method);
+                }
             }
 
             Logger = LogManager.GetLogger(callerType ?? GetType());
         }
 
+        /// <summary>
+        /// 添加一个WebAPI注册。
+        /// </summary>
+        /// <param name="apiMethodInfo">包含WebAPI的注册信息。</param>
         public void AddRegistry(ApiMethodInfo apiMethodInfo)
         {
             var methodName = apiMethodInfo.MethodName;
@@ -49,6 +64,10 @@ namespace cmstar.WebApi.Slim
             _decoderMap.Add(methodName, methodBinding);
         }
 
+        /// <summary>
+        /// 处理HTTP请求。
+        /// </summary>
+        /// <param name="context"><see cref="HttpContext"/>。</param>
         public void ProcessRequest(HttpContext context)
         {
             var request = context.Request;
