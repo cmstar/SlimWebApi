@@ -34,7 +34,7 @@ namespace cmstar.WebApi.Slim.ParamDecoders
                 foreach (var kv in paramInfoMap.ParamInfos)
                 {
                     var paramName = kv.Key;
-                    var paramType = kv.Value;
+                    var paramType = kv.Value.Type;
 
                     var contract = contractResolver.ResolveContract(paramType);
                     contractMap.Add(paramName, contract);
