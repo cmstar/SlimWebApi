@@ -7,11 +7,25 @@ using cmstar.RapidReflection.Emit;
 
 namespace cmstar.WebApi.Slim.ParamDecoders
 {
+    /// <summary>
+    /// <see cref="IRequestDecoder"/>的实现。
+    /// 解析HTTP请求参数（GET或POST方式），并将这些HTTP参数映射到只有一个参数的方法的唯一参数。
+    /// </summary>
     public class SingleObjectHttpParamDecoder : IRequestDecoder
     {
+        /// <summary>
+        /// 定义匹配类型成员名称时的优先级。
+        /// </summary>
         public enum MemberPriority
         {
+            /// <summary>
+            /// 在名称模糊匹配时，若能同时匹配到属性与域，则优先匹配属性名称。
+            /// </summary>
             Property,
+
+            /// <summary>
+            /// 在名称模糊匹配时，若能同时匹配到属性与域，则优先匹配域名称。
+            /// </summary>
             Field
         }
 
@@ -19,6 +33,12 @@ namespace cmstar.WebApi.Slim.ParamDecoders
         private readonly Func<object> _constructor;
         private readonly string _paramName;
 
+        /// <summary>
+        /// 初始化<see cref="SingleObjectHttpParamDecoder"/>的新实例。
+        /// </summary>
+        /// <param name="paramInfoMap">包含方法参数相关的信息。</param>
+        /// <param name="nameComparer">指定类型名称和HTTP参数名称间的匹配方式。</param>
+        /// <param name="memerPriority">指定匹配类型成员名称时的优先级。</param>
         public SingleObjectHttpParamDecoder(
             ApiMethodParamInfoMap paramInfoMap,
             IEqualityComparer<string> nameComparer = null,
@@ -77,7 +97,7 @@ namespace cmstar.WebApi.Slim.ParamDecoders
                 return new Dictionary<string, object>(0);
 
             var instance = _constructor();
-            
+
             foreach (var key in request.Params.AllKeys)
             {
                 // the key may be null in http params

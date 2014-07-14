@@ -6,11 +6,19 @@ using System.Web;
 
 namespace cmstar.WebApi.Slim.ParamDecoders
 {
+    /// <summary>
+    /// <see cref="IRequestDecoder"/>的实现。
+    /// 解析HTTP请求body中的JSON，并将该JSON映射到只有一个参数的方法的唯一参数。
+    /// </summary>
     public class SingleObjectJsonDecoder : IRequestDecoder
     {
         private readonly string _paramName;
         private readonly Type _paramType;
 
+        /// <summary>
+        /// 初始化<see cref="SingleObjectJsonDecoder"/>的新实例。
+        /// </summary>
+        /// <param name="paramInfoMap">包含方法参数相关的信息。</param>
         public SingleObjectJsonDecoder(ApiMethodParamInfoMap paramInfoMap)
         {
             ArgAssert.NotNull(paramInfoMap, "paramInfoMap");
@@ -36,8 +44,8 @@ namespace cmstar.WebApi.Slim.ParamDecoders
                 return new Dictionary<string, object>(0);
 
             var textReader = new StreamReader(request.InputStream);
-            var value = SlimApiEnvironment.JsonSerializer.Deserialize(textReader, _paramType);
-            
+            var value = JsonHelper.Deserialize(textReader, _paramType);
+
             return new Dictionary<string, object>(1) { { _paramName, value } };
         }
     }

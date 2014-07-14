@@ -186,7 +186,7 @@ namespace cmstar.WebApi.Slim
             }
 
             var responseObject = new SlimApiResponse<object>(responseCode, responseMessage, responseData);
-            var json = SlimApiEnvironment.JsonSerializer.FastSerialize(responseObject);
+            var json = JsonHelper.Serialize(responseObject);
             context.Response.Write(json);
 
             if (isJsonp)

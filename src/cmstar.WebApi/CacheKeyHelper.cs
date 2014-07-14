@@ -154,7 +154,7 @@ namespace cmstar.WebApi
 
                 foreach (var v in paramArray)
                 {
-                    var json = SlimApiEnvironment.JsonSerializer.FastSerialize(v);
+                    var json = JsonHelper.Serialize(v);
                     sb.Append('_').Append(json);
                 }
 

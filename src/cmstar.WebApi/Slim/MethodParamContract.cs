@@ -4,24 +4,27 @@ using cmstar.Serialization.Json;
 
 namespace cmstar.WebApi.Slim
 {
+    /// <summary>
+    /// 此<see cref="JsonContract"/>用于从JSON中获取调用方法所需的参数信息。
+    /// 其将JSON反序列化到一个字典，其键为方法参数的名称，值为参数的值。
+    /// </summary>
     public class MethodParamContract : JsonContract
     {
         private readonly Dictionary<string, JsonContract> _paramContractMap;
 
-        public MethodParamContract(
-            Dictionary<string, Type> paramTypeMap, IJsonContractResolver jsonContractResolver)
+        /// <summary>
+        /// 初始化<see cref="MethodParamContract"/>的新实例并指定各参数的类型。
+        /// </summary>
+        /// <param name="paramContractMap">包含方法中各个参数的名称参数类型所对应的<see cref="JsonContract"/>。</param>
+        public MethodParamContract(IDictionary<string, JsonContract> paramContractMap)
             : base(typeof(object))
         {
-            ArgAssert.NotNull(paramTypeMap, "paramTypeMap");
-            ArgAssert.NotNull(jsonContractResolver, "jsonContractResolver");
+            ArgAssert.NotNull(paramContractMap, "paramContractMap");
 
-            _paramContractMap = new Dictionary<string, JsonContract>();
-            foreach (var keyValue in paramTypeMap)
+            _paramContractMap = new Dictionary<string, JsonContract>(paramContractMap.Count);
+            foreach (var kv in paramContractMap)
             {
-                var paramName = keyValue.Key;
-                var paramType = keyValue.Value;
-                var contract = jsonContractResolver.ResolveContract(paramType);
-                _paramContractMap.Add(paramName, contract);
+                _paramContractMap.Add(kv.Key, kv.Value);
             }
         }
 

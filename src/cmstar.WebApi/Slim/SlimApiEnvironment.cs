@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using cmstar.Serialization.Json;
-using cmstar.Serialization.Json.Contracts;
-
-namespace cmstar.WebApi.Slim
+﻿namespace cmstar.WebApi.Slim
 {
+    /// <summary>
+    /// 包含SlimWebAPI相关的全局常量和静态成员的定义。
+    /// </summary>
     public static class SlimApiEnvironment
     {
         public static string MetaParamMethodName = "~method";
@@ -15,41 +12,5 @@ namespace cmstar.WebApi.Slim
         public const string MetaRequestFormatJson = "json";
         public const string MetaRequestFormatPost = "post";
         public const string MetaRequestFormatGet = "get";
-
-        private static readonly object SyncBlock = new object();
-        private static JsonSerializer _jsonSerializer;
-
-        public static JsonSerializer JsonSerializer
-        {
-            get
-            {
-                if (_jsonSerializer != null)
-                    return _jsonSerializer;
-
-                lock (SyncBlock)
-                {
-                    Thread.MemoryBarrier();
-
-                    if (_jsonSerializer != null)
-                        return _jsonSerializer;
-
-                    var knonwContracts = new Dictionary<Type, JsonContract>();
-                    var dateTimeContract = GetCustomFormatDateTimeContract();
-                    knonwContracts.Add(typeof(DateTime), dateTimeContract);
-
-                    var jsonContractResolver = new JsonContractResolver(knonwContracts);
-                    _jsonSerializer = new JsonSerializer(jsonContractResolver);
-                }
-
-                return _jsonSerializer;
-            }
-        }
-
-        private static JsonContract GetCustomFormatDateTimeContract()
-        {
-            var contract = new CustomFormatDateTimeContract();
-            contract.Format = "yyyy-MM-dd HH:mm:ss";
-            return contract;
-        }
     }
 }

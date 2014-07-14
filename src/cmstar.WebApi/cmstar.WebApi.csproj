@@ -59,6 +59,7 @@
     <Compile Include="IApiCacheProvider.cs" />
     <Compile Include="IRequestDecoder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Slim\JsonHelper.cs" />
     <Compile Include="Slim\MethodParamContract.cs" />
     <Compile Include="Slim\ParamDecoders\InlineParamHttpParamDecoder.cs" />
     <Compile Include="Slim\ParamDecoders\InlineParamJsonDecoder.cs" />

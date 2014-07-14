@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Web;
 using cmstar.Serialization.Json;
 
@@ -16,10 +15,19 @@ namespace cmstar.WebApi.Slim.ParamDecoders
 
             if (paramInfoMap.ParamCount > 0)
             {
-                var paramTypeMap = paramInfoMap.ParamInfos
-                    .Select(x => x.Value)
-                    .ToDictionary(x => x.Name, x => x.Type);
-                _contract = new MethodParamContract(paramTypeMap, SlimApiEnvironment.JsonSerializer.ContractResolver);
+                var contractResolver = JsonHelper.GetSerializer().ContractResolver;
+                var contractMap = new Dictionary<string, JsonContract>(paramInfoMap.ParamCount);
+
+                foreach (var kv in paramInfoMap.ParamInfos)
+                {
+                    var paramName = kv.Key;
+                    var paramType = kv.Value;
+
+                    var contract = contractResolver.ResolveContract(paramType);
+                    contractMap.Add(paramName, contract);
+                }
+
+                _contract = new MethodParamContract(contractMap);
             }
         }
 
