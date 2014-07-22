@@ -89,6 +89,9 @@ namespace cmstar.WebApi
             {
                 type = ReflectionUtils.GetUnderlyingType(type);
 
+                if (type == typeof(bool))
+                    return ToBoolean(value);
+
                 if (typeof(IConvertible).IsAssignableFrom(type))
                     return Convert.ChangeType(value, type);
 
@@ -102,6 +105,19 @@ namespace cmstar.WebApi
 
             var msg = string.Format("Cannnot cast value \"{0}\" to type {1}.", value, type);
             throw new InvalidCastException(msg, innerException);
+        }
+
+        private static bool ToBoolean(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return false;
+
+            // treat any non-zero numbers as true; only false if the value is exactly zero
+            double d;
+            if (double.TryParse(value, out d))
+                return !d.Equals(0D);
+
+            return bool.Parse(value);
         }
     }
 }
