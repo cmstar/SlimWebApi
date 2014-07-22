@@ -72,6 +72,19 @@ namespace cmstar.WebApi.Tests
             return x + y;
         }
 
+        public int Count(ICollection<int> collection, string[] strings)
+        {
+            var count = 0;
+
+            if (collection != null)
+                count += collection.Count;
+
+            if (strings != null)
+                count += strings.Length;
+
+            return count;
+        }
+
         public static DateTime NextDay(DateTime date)
         {
             return date.Date.AddDays(1);

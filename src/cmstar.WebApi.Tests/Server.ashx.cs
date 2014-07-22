@@ -19,10 +19,16 @@ namespace cmstar.WebApi.Tests
             var serviceProvider = new ServiceMethodProvider();
 
             // singleton methods
+            // simple methods
             setup.Method<int>(serviceProvider.SetIntValue);
             setup.Method<int>(serviceProvider.GetIntValue);
-            setup.Method<PlainData, PlainData>(serviceProvider.GetSameObject);
             setup.Method<Guid>(serviceProvider.GetGuid);
+
+            // with plain object
+            setup.Method<PlainData, PlainData>(serviceProvider.GetSameObject);
+
+            // with collecitons
+            setup.Method((Func<ICollection<int>, string[], int>)serviceProvider.Count);
 
             // register more than once
             setup.Method<int>(serviceProvider.SetIntValue).Name("SetInt");

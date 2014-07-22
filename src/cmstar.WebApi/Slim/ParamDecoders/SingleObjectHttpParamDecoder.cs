@@ -70,7 +70,8 @@ namespace cmstar.WebApi.Slim.ParamDecoders
                 var m = new MemberCache
                 {
                     Setter = setter,
-                    MemberType = prop.PropertyType
+                    MemberType = prop.PropertyType,
+                    IsGenericCollection = TypeHelper.IsGenericCollection(prop.PropertyType)
                 };
                 _memberMap.Add(prop.Name, m);
             }
@@ -85,7 +86,8 @@ namespace cmstar.WebApi.Slim.ParamDecoders
                 var m = new MemberCache
                 {
                     Setter = setter,
-                    MemberType = field.FieldType
+                    MemberType = field.FieldType,
+                    IsGenericCollection = TypeHelper.IsGenericCollection(field.FieldType)
                 };
                 _memberMap.Add(field.Name, m);
             }
@@ -115,7 +117,15 @@ namespace cmstar.WebApi.Slim.ParamDecoders
                     continue;
 
                 var httpParam = request.Params[key];
-                var value = TypeHelper.ConvertString(httpParam, m.MemberType);
+                object value;
+                if (m.IsGenericCollection)
+                {
+                    value = TypeHelper.ConvertToCollection(httpParam, m.MemberType);
+                }
+                else
+                {
+                    value = TypeHelper.ConvertString(httpParam, m.MemberType);
+                }
 
                 m.Setter(instance, value);
             }
@@ -127,6 +137,7 @@ namespace cmstar.WebApi.Slim.ParamDecoders
         {
             public Type MemberType;
             public Action<object, object> Setter;
+            public bool IsGenericCollection;
         }
     }
 }

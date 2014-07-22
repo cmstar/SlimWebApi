@@ -63,10 +63,18 @@ namespace cmstar.WebApi.Slim.ParamDecoders
                 if (!_paramInfoMap.TryGetParamInfo(key, out paramInfo))
                     continue;
 
-                var value = TypeHelper.ConvertString(request.Params[key], paramInfo.Type);
-                var name = paramInfo.Name;
+                var paramValue = request.Params[key];
+                object value;
+                if (paramInfo.IsGenericCollection)
+                {
+                    value = TypeHelper.ConvertToCollection(paramValue, paramInfo.Type);
+                }
+                else
+                {
+                    value = TypeHelper.ConvertString(request.Params[key], paramInfo.Type);
+                }
 
-                paramValueMap.Add(name, value);
+                paramValueMap.Add(paramInfo.Name, value);
             }
 
             return paramValueMap;

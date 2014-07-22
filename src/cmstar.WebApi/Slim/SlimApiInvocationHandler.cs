@@ -119,7 +119,7 @@ namespace cmstar.WebApi.Slim
             try
             {
                 var paramValueMap = decoder.DecodeParam(context.Request);
-                return paramValueMap;
+                return paramValueMap ?? new Dictionary<string, object>(0);
             }
             catch (Exception ex)
             {
@@ -249,7 +249,7 @@ namespace cmstar.WebApi.Slim
 
             var paramInfoMap = apiMethodInfo.ParamInfoMap;
 
-            if (TypeHelper.IsPlainMethod(apiMethodInfo.Method))
+            if (TypeHelper.IsPlainMethod(apiMethodInfo.Method, true))
             {
                 binding.HttpParamDecoder = new InlineParamHttpParamDecoder(paramInfoMap);
                 binding.JsonDecoder = new InlineParamJsonDecoder(paramInfoMap);
@@ -261,7 +261,7 @@ namespace cmstar.WebApi.Slim
                 binding.DefaultDecoder = binding.JsonDecoder;
 
                 var paramType = param[0].ParameterType;
-                if (TypeHelper.IsPlainType(paramType))
+                if (TypeHelper.IsPlainType(paramType, true))
                 {
                     binding.HttpParamDecoder = new SingleObjectHttpParamDecoder(paramInfoMap);
                 }
