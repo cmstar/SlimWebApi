@@ -94,6 +94,11 @@ namespace cmstar.WebApi.Tests
         {
             return new { MapCount = data.Map.Count, ValueSum = data.Values.Sum() };
         }
+
+        public int GetEnumIndex(TheEnum e)
+        {
+            return (int)e;
+        }
     }
 
     public class ComplexData
@@ -108,5 +113,10 @@ namespace cmstar.WebApi.Tests
         public string Name { get; set; }
         public DateTime Date;
         public Guid Guid { get; set; }
+    }
+
+    public enum TheEnum
+    {
+        ItemA, ItemB, ItemC
     }
 }

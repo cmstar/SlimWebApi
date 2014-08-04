@@ -30,6 +30,9 @@ namespace cmstar.WebApi.Tests
             // with collecitons
             setup.Method((Func<ICollection<int>, string[], int>)serviceProvider.Count);
 
+            // with enumeration
+            setup.Method((Func<TheEnum, int>)serviceProvider.GetEnumIndex);
+
             // register more than once
             setup.Method<int>(serviceProvider.SetIntValue).Name("SetInt");
             setup.Method<int>(serviceProvider.GetIntValue).Name("GetInt");

@@ -214,6 +214,9 @@ namespace cmstar.WebApi
                 if (type == typeof(bool))
                     return ToBoolean(value);
 
+                if (type.IsEnum)
+                    return Enum.Parse(type, value);
+
                 if (typeof(IConvertible).IsAssignableFrom(type))
                     return Convert.ChangeType(value, type);
 
