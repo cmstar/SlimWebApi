@@ -17,7 +17,17 @@ namespace cmstar.WebApi
         /// <param name="apiMethodInfo">注册的API方法的有关信息。</param>
         public ApiMethodSetup(ApiSetup setup, ApiMethodInfo apiMethodInfo)
         {
+            ArgAssert.NotNull(setup, "setup");
             ArgAssert.NotNull(apiMethodInfo, "apiMethodInfo");
+
+            apiMethodInfo.CacheProvider = setup.CacheProvider;
+            apiMethodInfo.CacheExpiration = setup.CacheExpiration;
+
+            // 缓存命名空间优先使用承载方法的类型的名称
+            apiMethodInfo.CacheNamespace = apiMethodInfo.Method.DeclaringType != null
+                ? apiMethodInfo.Method.DeclaringType.FullName
+                : setup.CallerType.FullName;
+
             _setup = setup;
             _apiMethodInfo = apiMethodInfo;
         }
@@ -81,26 +91,8 @@ namespace cmstar.WebApi
         {
             if (_apiMethodInfo.CacheProvider == null)
             {
-                _apiMethodInfo.CacheProvider = _setup.CacheProvider;
-            }
-
-            if (_apiMethodInfo.CacheProvider == null)
-            {
                 throw new InvalidOperationException(
                     "The cache provider must be specified if the base provider is not set.");
-            }
-
-            if (_apiMethodInfo.CacheExpiration == TimeSpan.Zero)
-            {
-                _apiMethodInfo.CacheExpiration = _setup.CacheExpiration;
-            }
-
-            // 在没有显式指定命名空间时，优先使用承载方法的类型的名称
-            if (_apiMethodInfo.CacheNamespace == null)
-            {
-                _apiMethodInfo.CacheNamespace = _apiMethodInfo.Method.DeclaringType != null
-                    ? _apiMethodInfo.Method.DeclaringType.FullName
-                    : _setup.CallerType.FullName;
             }
 
             _apiMethodInfo.AutoCacheEnabled = true;
