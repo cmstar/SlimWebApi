@@ -87,15 +87,16 @@ namespace cmstar.WebApi.Slim
 
             try
             {
-                object result;
+                var apiMethodContext = new ApiMethodContext();
+                apiMethodContext.CacheProvider = apiMethodInfo.CacheProvider;
+                apiMethodInfo.CacheExpiration = apiMethodInfo.CacheExpiration;
+                apiMethodContext.CacheKeyProvider = () => CacheKeyHelper.GetCacheKey(apiMethodInfo, paramValueMap);
+                ApiMethodContext.Current = apiMethodContext;
 
-                var cacheProvider = apiMethodInfo.CacheProvider;
-                if (cacheProvider == null)
+                object result;
+                if (apiMethodInfo.AutoCacheEnabled)
                 {
-                    result = apiMethodInfo.Invoke(paramValueMap);
-                }
-                else
-                {
+                    var cacheProvider = apiMethodInfo.CacheProvider;
                     var cacheKey = CacheKeyHelper.GetCacheKey(apiMethodInfo, paramValueMap);
                     result = cacheProvider.Get(cacheKey);
 
@@ -104,6 +105,10 @@ namespace cmstar.WebApi.Slim
                         result = apiMethodInfo.Invoke(paramValueMap);
                         cacheProvider.Add(cacheKey, result, apiMethodInfo.CacheExpiration);
                     }
+                }
+                else
+                {
+                    result = apiMethodInfo.Invoke(paramValueMap);
                 }
 
                 WriteResponse(context, 200, result);

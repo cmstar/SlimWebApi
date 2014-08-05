@@ -61,7 +61,7 @@ namespace cmstar.WebApi.Tests
             Func<ServiceMethodProvider> ctor = () => new ServiceMethodProvider(++id);
             setup.Method(ctor, x => (Func<Guid>)x.GetGuid).Name("Guid");
             setup.Method(ctor, x => (Func<int>)x.GetId).Name("IdNoCache");
-            setup.Method(ctor, x => (Func<int>)x.GetId).Name("IdCached").EnableCache();
+            setup.Method(ctor, x => (Func<int>)x.GetId).Name("IdCached").EnableAutoCache();
 
             // methods from .net framework directly
             setup.Method((Func<string, string, string>)string.Concat).Name("NetConcat");
@@ -71,7 +71,7 @@ namespace cmstar.WebApi.Tests
             setup.Method(plus).Name("fun");
 
             // cache
-            setup.Method((Func<PlainData, Guid>)serviceProvider.Random).EnableCache();
+            setup.Method((Func<PlainData, Guid>)serviceProvider.Random).EnableAutoCache();
         }
     }
 }
