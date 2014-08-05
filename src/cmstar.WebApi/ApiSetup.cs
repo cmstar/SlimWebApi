@@ -70,11 +70,7 @@ namespace cmstar.WebApi
         /// <returns><see cref="ApiMethodSetup"/>的实例。</returns>
         public ApiMethodSetup Method(Func<object> provider, MethodInfo method)
         {
-            var apiMethodInfo = new ApiMethodInfo(provider, method);
-            var apiMethodSetup = new ApiMethodSetup(this, apiMethodInfo);
-
-            _apiMethodInfos.Add(apiMethodInfo);
-            return apiMethodSetup;
+            return AppendMethod(provider, method);
         }
 
         /// <summary>
@@ -87,7 +83,7 @@ namespace cmstar.WebApi
         /// <returns><see cref="ApiMethodSetup"/>的实例。</returns>
         public ApiMethodSetup Method(object provider, MethodInfo method)
         {
-            return Method(() => provider, method);
+            return AppendMethod(provider, method);
         }
 
         /// <summary>
@@ -98,7 +94,7 @@ namespace cmstar.WebApi
         /// <returns><see cref="ApiMethodSetup"/>的实例。</returns>
         public ApiMethodSetup Method<TResult>(Func<TResult> method)
         {
-            return Method((Delegate)method);
+            return AppendMethod(method);
         }
 
         /// <summary>
@@ -110,7 +106,7 @@ namespace cmstar.WebApi
         /// <returns><see cref="ApiMethodSetup"/>的实例。</returns>
         public ApiMethodSetup Method<T1, TResult>(Func<T1, TResult> method)
         {
-            return Method((Delegate)method);
+            return AppendMethod(method);
         }
 
         /// <summary>
@@ -123,7 +119,7 @@ namespace cmstar.WebApi
         /// <returns><see cref="ApiMethodSetup"/>的实例。</returns>
         public ApiMethodSetup Method<T1, T2, TResult>(Func<T1, T2, TResult> method)
         {
-            return Method((Delegate)method);
+            return AppendMethod(method);
         }
 
         /// <summary>
@@ -137,7 +133,7 @@ namespace cmstar.WebApi
         /// <returns><see cref="ApiMethodSetup"/>的实例。</returns>
         public ApiMethodSetup Method<T1, T2, T3, TResult>(Func<T1, T2, T3, TResult> method)
         {
-            return Method((Delegate)method);
+            return AppendMethod(method);
         }
 
         /// <summary>
@@ -152,7 +148,7 @@ namespace cmstar.WebApi
         /// <returns><see cref="ApiMethodSetup"/>的实例。</returns>
         public ApiMethodSetup Method<T1, T2, T3, T4, TResult>(Func<T1, T2, T3, T4, TResult> method)
         {
-            return Method((Delegate)method);
+            return AppendMethod(method);
         }
 
         /// <summary>
@@ -168,7 +164,7 @@ namespace cmstar.WebApi
         /// <returns><see cref="ApiMethodSetup"/>的实例。</returns>
         public ApiMethodSetup Method<T1, T2, T3, T4, T5, TResult>(Func<T1, T2, T3, T4, T5, TResult> method)
         {
-            return Method((Delegate)method);
+            return AppendMethod(method);
         }
 
         /// <summary>
@@ -185,7 +181,7 @@ namespace cmstar.WebApi
         /// <returns><see cref="ApiMethodSetup"/>的实例。</returns>
         public ApiMethodSetup Method<T1, T2, T3, T4, T5, T6, TResult>(Func<T1, T2, T3, T4, T5, T6, TResult> method)
         {
-            return Method((Delegate)method);
+            return AppendMethod(method);
         }
 
         /// <summary>
@@ -203,7 +199,7 @@ namespace cmstar.WebApi
         /// <returns><see cref="ApiMethodSetup"/>的实例。</returns>
         public ApiMethodSetup Method<T1, T2, T3, T4, T5, T6, T7, TResult>(Func<T1, T2, T3, T4, T5, T6, T7, TResult> method)
         {
-            return Method((Delegate)method);
+            return AppendMethod(method);
         }
 
         /// <summary>
@@ -222,7 +218,7 @@ namespace cmstar.WebApi
         /// <returns><see cref="ApiMethodSetup"/>的实例。</returns>
         public ApiMethodSetup Method<T1, T2, T3, T4, T5, T6, T7, T8, TResult>(Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> method)
         {
-            return Method((Delegate)method);
+            return AppendMethod(method);
         }
 
         /// <summary>
@@ -232,7 +228,7 @@ namespace cmstar.WebApi
         /// <returns><see cref="ApiMethodSetup"/>的实例。</returns>
         public ApiMethodSetup Method(Action method)
         {
-            return Method((Delegate)method);
+            return AppendMethod(method);
         }
 
         /// <summary>
@@ -243,7 +239,7 @@ namespace cmstar.WebApi
         /// <returns><see cref="ApiMethodSetup"/>的实例。</returns>
         public ApiMethodSetup Method<T1>(Action<T1> method)
         {
-            return Method((Delegate)method);
+            return AppendMethod(method);
         }
 
         /// <summary>
@@ -255,7 +251,7 @@ namespace cmstar.WebApi
         /// <returns><see cref="ApiMethodSetup"/>的实例。</returns>
         public ApiMethodSetup Method<T1, T2>(Action<T1, T2> method)
         {
-            return Method((Delegate)method);
+            return AppendMethod(method);
         }
 
         /// <summary>
@@ -268,7 +264,7 @@ namespace cmstar.WebApi
         /// <returns><see cref="ApiMethodSetup"/>的实例。</returns>
         public ApiMethodSetup Method<T1, T2, T3>(Action<T1, T2, T3> method)
         {
-            return Method((Delegate)method);
+            return AppendMethod(method);
         }
 
         /// <summary>
@@ -282,7 +278,7 @@ namespace cmstar.WebApi
         /// <returns><see cref="ApiMethodSetup"/>的实例。</returns>
         public ApiMethodSetup Method<T1, T2, T3, T4>(Action<T1, T2, T3, T4> method)
         {
-            return Method((Delegate)method);
+            return AppendMethod(method);
         }
 
         /// <summary>
@@ -297,7 +293,7 @@ namespace cmstar.WebApi
         /// <returns><see cref="ApiMethodSetup"/>的实例。</returns>
         public ApiMethodSetup Method<T1, T2, T3, T4, T5>(Action<T1, T2, T3, T4, T5> method)
         {
-            return Method((Delegate)method);
+            return AppendMethod(method);
         }
 
         /// <summary>
@@ -313,7 +309,7 @@ namespace cmstar.WebApi
         /// <returns><see cref="ApiMethodSetup"/>的实例。</returns>
         public ApiMethodSetup Method<T1, T2, T3, T4, T5, T6>(Action<T1, T2, T3, T4, T5, T6> method)
         {
-            return Method((Delegate)method);
+            return AppendMethod(method);
         }
 
         /// <summary>
@@ -330,7 +326,7 @@ namespace cmstar.WebApi
         /// <returns><see cref="ApiMethodSetup"/>的实例。</returns>
         public ApiMethodSetup Method<T1, T2, T3, T4, T5, T6, T7>(Action<T1, T2, T3, T4, T5, T6, T7> method)
         {
-            return Method((Delegate)method);
+            return AppendMethod(method);
         }
 
         /// <summary>
@@ -348,7 +344,7 @@ namespace cmstar.WebApi
         /// <returns><see cref="ApiMethodSetup"/>的实例。</returns>
         public ApiMethodSetup Method<T1, T2, T3, T4, T5, T6, T7, T8>(Action<T1, T2, T3, T4, T5, T6, T7, T8> method)
         {
-            return Method((Delegate)method);
+            return AppendMethod(method);
         }
 
         /// <summary>
@@ -362,7 +358,7 @@ namespace cmstar.WebApi
         public ApiMethodSetup Method<TProvider, TResult>(Func<TProvider> provider,
             Expression<Func<TProvider, Func<TResult>>> methodSelector)
         {
-            return Method(() => provider(), ResolveMethodInfo(methodSelector));
+            return AppendMethod(() => provider(), ResolveMethodInfo(methodSelector));
         }
 
         /// <summary>
@@ -377,7 +373,7 @@ namespace cmstar.WebApi
         public ApiMethodSetup Method<TProvider, T1, TResult>(Func<TProvider> provider,
             Expression<Func<TProvider, Func<T1, TResult>>> methodSelector)
         {
-            return Method(() => provider(), ResolveMethodInfo(methodSelector));
+            return AppendMethod(() => provider(), ResolveMethodInfo(methodSelector));
         }
 
         /// <summary>
@@ -393,7 +389,7 @@ namespace cmstar.WebApi
         public ApiMethodSetup Method<TProvider, T1, T2, TResult>(Func<TProvider> provider,
             Expression<Func<TProvider, Func<T1, T2, TResult>>> methodSelector)
         {
-            return Method(() => provider(), ResolveMethodInfo(methodSelector));
+            return AppendMethod(() => provider(), ResolveMethodInfo(methodSelector));
         }
 
         /// <summary>
@@ -410,7 +406,7 @@ namespace cmstar.WebApi
         public ApiMethodSetup Method<TProvider, T1, T2, T3, TResult>(Func<TProvider> provider,
             Expression<Func<TProvider, Func<T1, T2, T3, TResult>>> methodSelector)
         {
-            return Method(() => provider(), ResolveMethodInfo(methodSelector));
+            return AppendMethod(() => provider(), ResolveMethodInfo(methodSelector));
         }
 
         /// <summary>
@@ -428,7 +424,7 @@ namespace cmstar.WebApi
         public ApiMethodSetup Method<TProvider, T1, T2, T3, T4, TResult>(Func<TProvider> provider,
             Expression<Func<TProvider, Func<T1, T2, T3, T4, TResult>>> methodSelector)
         {
-            return Method(() => provider(), ResolveMethodInfo(methodSelector));
+            return AppendMethod(() => provider(), ResolveMethodInfo(methodSelector));
         }
 
         /// <summary>
@@ -447,7 +443,7 @@ namespace cmstar.WebApi
         public ApiMethodSetup Method<TProvider, T1, T2, T3, T4, T5, TResult>(Func<TProvider> provider,
             Expression<Func<TProvider, Func<T1, T2, T3, T4, T5, TResult>>> methodSelector)
         {
-            return Method(() => provider(), ResolveMethodInfo(methodSelector));
+            return AppendMethod(() => provider(), ResolveMethodInfo(methodSelector));
         }
 
         /// <summary>
@@ -467,7 +463,7 @@ namespace cmstar.WebApi
         public ApiMethodSetup Method<TProvider, T1, T2, T3, T4, T5, T6, TResult>(Func<TProvider> provider,
             Expression<Func<TProvider, Func<T1, T2, T3, T4, T5, T6, TResult>>> methodSelector)
         {
-            return Method(() => provider(), ResolveMethodInfo(methodSelector));
+            return AppendMethod(() => provider(), ResolveMethodInfo(methodSelector));
         }
 
         /// <summary>
@@ -488,7 +484,7 @@ namespace cmstar.WebApi
         public ApiMethodSetup Method<TProvider, T1, T2, T3, T4, T5, T6, T7, TResult>(Func<TProvider> provider,
             Expression<Func<TProvider, Func<T1, T2, T3, T4, T5, T6, T7, TResult>>> methodSelector)
         {
-            return Method(() => provider(), ResolveMethodInfo(methodSelector));
+            return AppendMethod(() => provider(), ResolveMethodInfo(methodSelector));
         }
 
         /// <summary>
@@ -510,7 +506,7 @@ namespace cmstar.WebApi
         public ApiMethodSetup Method<TProvider, T1, T2, T3, T4, T5, T6, T7, T8, TResult>(Func<TProvider> provider,
             Expression<Func<TProvider, Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult>>> methodSelector)
         {
-            return Method(() => provider(), ResolveMethodInfo(methodSelector));
+            return AppendMethod(() => provider(), ResolveMethodInfo(methodSelector));
         }
 
         /// <summary>
@@ -523,7 +519,7 @@ namespace cmstar.WebApi
         public ApiMethodSetup Method<TProvider>(Func<TProvider> provider,
             Expression<Func<TProvider, Action>> methodSelector)
         {
-            return Method(() => provider(), ResolveMethodInfo(methodSelector));
+            return AppendMethod(() => provider(), ResolveMethodInfo(methodSelector));
         }
 
         /// <summary>
@@ -537,7 +533,7 @@ namespace cmstar.WebApi
         public ApiMethodSetup Method<TProvider, T1>(Func<TProvider> provider,
             Expression<Func<TProvider, Action<T1>>> methodSelector)
         {
-            return Method(() => provider(), ResolveMethodInfo(methodSelector));
+            return AppendMethod(() => provider(), ResolveMethodInfo(methodSelector));
         }
 
         /// <summary>
@@ -552,7 +548,7 @@ namespace cmstar.WebApi
         public ApiMethodSetup Method<TProvider, T1, T2>(Func<TProvider> provider,
             Expression<Func<TProvider, Action<T1, T2>>> methodSelector)
         {
-            return Method(() => provider(), ResolveMethodInfo(methodSelector));
+            return AppendMethod(() => provider(), ResolveMethodInfo(methodSelector));
         }
 
         /// <summary>
@@ -568,7 +564,7 @@ namespace cmstar.WebApi
         public ApiMethodSetup Method<TProvider, T1, T2, T3>(Func<TProvider> provider,
             Expression<Func<TProvider, Action<T1, T2, T3>>> methodSelector)
         {
-            return Method(() => provider(), ResolveMethodInfo(methodSelector));
+            return AppendMethod(() => provider(), ResolveMethodInfo(methodSelector));
         }
 
         /// <summary>
@@ -585,7 +581,7 @@ namespace cmstar.WebApi
         public ApiMethodSetup Method<TProvider, T1, T2, T3, T4>(Func<TProvider> provider,
             Expression<Func<TProvider, Action<T1, T2, T3, T4>>> methodSelector)
         {
-            return Method(() => provider(), ResolveMethodInfo(methodSelector));
+            return AppendMethod(() => provider(), ResolveMethodInfo(methodSelector));
         }
 
         /// <summary>
@@ -603,7 +599,7 @@ namespace cmstar.WebApi
         public ApiMethodSetup Method<TProvider, T1, T2, T3, T4, T5>(Func<TProvider> provider,
             Expression<Func<TProvider, Action<T1, T2, T3, T4, T5>>> methodSelector)
         {
-            return Method(() => provider(), ResolveMethodInfo(methodSelector));
+            return AppendMethod(() => provider(), ResolveMethodInfo(methodSelector));
         }
 
         /// <summary>
@@ -622,7 +618,7 @@ namespace cmstar.WebApi
         public ApiMethodSetup Method<TProvider, T1, T2, T3, T4, T5, T6>(Func<TProvider> provider,
             Expression<Func<TProvider, Action<T1, T2, T3, T4, T5, T6>>> methodSelector)
         {
-            return Method(() => provider(), ResolveMethodInfo(methodSelector));
+            return AppendMethod(() => provider(), ResolveMethodInfo(methodSelector));
         }
 
         /// <summary>
@@ -642,7 +638,7 @@ namespace cmstar.WebApi
         public ApiMethodSetup Method<TProvider, T1, T2, T3, T4, T5, T6, T7>(Func<TProvider> provider,
             Expression<Func<TProvider, Action<T1, T2, T3, T4, T5, T6, T7>>> methodSelector)
         {
-            return Method(() => provider(), ResolveMethodInfo(methodSelector));
+            return AppendMethod(() => provider(), ResolveMethodInfo(methodSelector));
         }
 
         /// <summary>
@@ -663,7 +659,7 @@ namespace cmstar.WebApi
         public ApiMethodSetup Method<TProvider, T1, T2, T3, T4, T5, T6, T7, T8>(Func<TProvider> provider,
             Expression<Func<TProvider, Action<T1, T2, T3, T4, T5, T6, T7, T8>>> methodSelector)
         {
-            return Method(() => provider(), ResolveMethodInfo(methodSelector));
+            return AppendMethod(() => provider(), ResolveMethodInfo(methodSelector));
         }
 
         private MethodInfo ResolveMethodInfo(LambdaExpression methodSelector)
@@ -684,10 +680,28 @@ namespace cmstar.WebApi
             return methodInfo;
         }
 
-        private ApiMethodSetup Method(Delegate method)
+        private ApiMethodSetup AppendMethod(Delegate method)
         {
             ArgAssert.NotNull(method, "method");
-            return Method(method.Target, method.Method);
+            return AppendMethod(method.Target, method.Method);
+        }
+
+        private ApiMethodSetup AppendMethod(object provider, MethodInfo method)
+        {
+            if (provider == null && !method.IsStatic)
+                throw new ArgumentNullException(
+                    "provider", "The provider can not be null if the method is not static.");
+
+            return AppendMethod(() => provider, method);
+        }
+
+        private ApiMethodSetup AppendMethod(Func<object> provider, MethodInfo method)
+        {
+            var apiMethodInfo = new ApiMethodInfo(provider, method);
+            var apiMethodSetup = new ApiMethodSetup(this, apiMethodInfo);
+
+            _apiMethodInfos.Add(apiMethodInfo);
+            return apiMethodSetup;
         }
     }
 }
