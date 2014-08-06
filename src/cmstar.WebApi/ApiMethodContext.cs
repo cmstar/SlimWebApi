@@ -10,6 +10,8 @@ namespace cmstar.WebApi
         [ThreadStatic]
         private static ApiMethodContext _currentContext;
 
+        private string _cacheKey;
+
         /// <summary>
         /// 获取或设置本次API方法调用所关联的<see cref="ApiMethodContext"/>。
         /// </summary>
@@ -28,7 +30,7 @@ namespace cmstar.WebApi
             if (CacheProvider == null || CacheKeyProvider == null)
                 return null;
 
-            var cacheKey = CacheKeyProvider();
+            var cacheKey = GetCacheKey();
             return CacheProvider.Get(cacheKey);
         }
 
@@ -41,7 +43,7 @@ namespace cmstar.WebApi
             if (CacheProvider == null || CacheKeyProvider == null)
                 return;
 
-            var cacheKey = CacheKeyProvider();
+            var cacheKey = GetCacheKey();
             CacheProvider.Set(cacheKey, obj, CacheExpiration);
         }
 
@@ -50,5 +52,10 @@ namespace cmstar.WebApi
         internal TimeSpan CacheExpiration { get; set; }
 
         internal IApiCacheProvider CacheProvider { get; set; }
+
+        private string GetCacheKey()
+        {
+            return _cacheKey ?? (_cacheKey = CacheKeyProvider());
+        }
     }
 }
