@@ -17,7 +17,17 @@ namespace cmstar.WebApi
         /// <param name="apiMethodInfo">注册的API方法的有关信息。</param>
         public ApiMethodSetup(ApiSetup setup, ApiMethodInfo apiMethodInfo)
         {
+            ArgAssert.NotNull(setup, "setup");
             ArgAssert.NotNull(apiMethodInfo, "apiMethodInfo");
+
+            apiMethodInfo.CacheProvider = setup.CacheProvider;
+            apiMethodInfo.CacheExpiration = setup.CacheExpiration;
+
+            // 缓存命名空间优先使用承载方法的类型的名称
+            apiMethodInfo.CacheNamespace = apiMethodInfo.Method.DeclaringType != null
+                ? apiMethodInfo.Method.DeclaringType.FullName
+                : setup.CallerType.FullName;
+
             _setup = setup;
             _apiMethodInfo = apiMethodInfo;
         }
@@ -35,48 +45,57 @@ namespace cmstar.WebApi
         }
 
         /// <summary>
-        /// 开启API方法的缓存。
-        /// 可以使用参数默认值以便套用<see cref="ApiSetup"/>中设置的缓存参数，也可以单独指定。
+        /// 为当前注册的方法单独指定缓存提供器。
         /// </summary>
-        /// <param name="expiration">
-        /// 缓存的超时时间。若不指定，则使用<see cref="ApiSetup"/>中设置的时间。
-        /// </param>
-        /// <param name="cacheProvider">
-        /// 缓存提供器。若不指定，则使用<see cref="ApiSetup"/>中设置的提供器。
-        /// </param>
-        /// <param name="cacheNamespace">
-        /// 次方法所使用的缓存键的命名空间，若不指定，则使用<see cref="ApiSetup"/>中设置的命名空间。
-        /// </param>
+        /// <param name="cacheProvider">缓存提供器。</param>
         /// <returns>当前<see cref="ApiMethodSetup"/>实例。</returns>
-        public ApiMethodSetup EnableCache(
-            TimeSpan? expiration = null,
-            IApiCacheProvider cacheProvider = null,
-            string cacheNamespace = null)
+        public ApiMethodSetup CacheProvider(IApiCacheProvider cacheProvider)
         {
-            var provider = cacheProvider ?? _setup.CacheProvider;
-            if (provider == null)
+            ArgAssert.NotNull(cacheProvider, "cacheProvider");
+            _apiMethodInfo.CacheProvider = cacheProvider;
+            return this;
+        }
+
+        /// <summary>
+        /// 为当前注册的方法单独指定缓存超时时间。
+        /// </summary>
+        /// <param name="expiration"></param>
+        /// <returns>当前<see cref="ApiMethodSetup"/>超时时间。</returns>
+        public ApiMethodSetup CacheExpiration(TimeSpan expiration)
+        {
+            if (expiration.Ticks <= 0)
+                throw new ArgumentOutOfRangeException(
+                    "expiration", "The expiration time must be greater than zero.");
+
+            _apiMethodInfo.CacheExpiration = expiration;
+            return this;
+        }
+
+        /// <summary>
+        /// 为当前注册的方法单独指定缓存命名空间。
+        /// </summary>
+        /// <param name="ns">缓存命名空间。</param>
+        /// <returns>当前<see cref="ApiMethodSetup"/>实例。</returns>
+        public ApiMethodSetup CacheNamespace(string ns)
+        {
+            _apiMethodInfo.CacheNamespace = ns ?? string.Empty;
+            return this;
+        }
+
+        /// <summary>
+        /// 开启API方法的自动缓存。
+        /// 没有被指定的缓存配置将套用<see cref="ApiSetup"/>中设置的缓存配置。
+        /// </summary>
+        /// <returns>当前<see cref="ApiMethodSetup"/>实例。</returns>
+        public ApiMethodSetup EnableAutoCache()
+        {
+            if (_apiMethodInfo.CacheProvider == null)
             {
-                throw new ArgumentException(
-                    "The cache provider must be specified if the base provider is not set.", "cacheProvider");
+                throw new InvalidOperationException(
+                    "The cache provider must be specified if the base provider is not set.");
             }
 
-            _apiMethodInfo.CacheProvider = provider;
-            _apiMethodInfo.CacheExpiration = expiration.HasValue ? expiration.Value : _setup.CacheExpiration;
-
-            // 在没有显式指定命名空间时，优先使用承载方法的类型的名称
-            if (cacheNamespace != null)
-            {
-                _apiMethodInfo.CacheNamespace = cacheNamespace;
-            }
-            else if (_apiMethodInfo.Method.DeclaringType != null)
-            {
-                _apiMethodInfo.CacheNamespace = _apiMethodInfo.Method.DeclaringType.FullName;
-            }
-            else
-            {
-                _apiMethodInfo.CacheNamespace = _setup.CallerType.FullName;
-            }
-
+            _apiMethodInfo.AutoCacheEnabled = true;
             return this;
         }
     }

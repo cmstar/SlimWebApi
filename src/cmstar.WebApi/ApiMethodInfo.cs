@@ -14,6 +14,7 @@ namespace cmstar.WebApi
         private readonly Func<object> _provider;
         private readonly Func<object, object[], object> _invoker;
         private string _methodName;
+        private bool _autoCacheEnabled;
         private TimeSpan _cacheExpiration = TimeSpan.Zero;
 
         /// <summary>
@@ -91,6 +92,24 @@ namespace cmstar.WebApi
         /// 获取当前WebAPI注册中使用的缓存命名空间。
         /// </summary>
         public string CacheNamespace { get; set; }
+
+        /// <summary>
+        /// 是否允许对当前方法进行自动缓存。
+        /// </summary>
+        public bool AutoCacheEnabled
+        {
+            get
+            {
+                return _autoCacheEnabled;
+            }
+            set
+            {
+                if (value && CacheProvider == null)
+                    throw new ArgumentException("The cache provider must be specified.", "value");
+
+                _autoCacheEnabled = value;
+            }
+        }
 
         /// <summary>
         /// 执行一次WebAPI中绑定的方法。
