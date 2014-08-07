@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
+using cmstar.RapidReflection.Emit;
 
 namespace cmstar.WebApi
 {
@@ -10,6 +11,9 @@ namespace cmstar.WebApi
     /// </summary>
     public class ApiSetup
     {
+        private const BindingFlags DefaultBindingFlags =
+            BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static;
+
         private readonly List<ApiMethodInfo> _apiMethodInfos;
 
         /// <summary>
@@ -660,6 +664,134 @@ namespace cmstar.WebApi
             Expression<Func<TProvider, Action<T1, T2, T3, T4, T5, T6, T7, T8>>> methodSelector)
         {
             return AppendMethod(() => provider(), ResolveMethodInfo(methodSelector));
+        }
+
+        /// <summary>
+        /// 从指定类型的实例加载API方法的注册。
+        /// </summary>
+        /// <typeparam name="TProvider">提供API方法的类型。</typeparam>
+        /// <param name="provider">提供API方法的实例。</param>
+        /// <param name="parseAttribute">
+        /// 若为true，则仅加载标记有<see cref="ApiMethodAttribute"/>的方法；否则加载所有方法。
+        /// 方法的筛选受<paramref name="bindingFlags"/>影响。
+        /// </param>
+        /// <param name="bindingFlags">指定方法的过滤方式。默认加载所有公共方法。</param>
+        /// <returns>返回被注册的API方法的注册信息。</returns>
+        public IEnumerable<ApiMethodSetup> Auto<TProvider>(
+            TProvider provider, bool parseAttribute = true, BindingFlags bindingFlags = DefaultBindingFlags)
+        {
+            return parseAttribute
+                ? AppendMethodsFromApiMethodAttributes(typeof(TProvider), () => provider, bindingFlags)
+                : AppendMethodsFromAllMethods(typeof(TProvider), () => provider, bindingFlags);
+        }
+
+        /// <summary>
+        /// 从指定类型加载API方法的注册。
+        /// </summary>
+        /// <param name="providerType">提供API方法的类型。</param>
+        /// <param name="singleton">true若在API提供对象上使用单例模式；否则为false。默认为true。</param>
+        /// <param name="parseAttribute">
+        /// 若为true，则仅加载标记有<see cref="ApiMethodAttribute"/>的方法；否则加载所有方法。
+        /// 方法的筛选受<paramref name="bindingFlags"/>影响。
+        /// </param>
+        /// <param name="bindingFlags">指定方法的过滤方式。默认加载所有公共方法。</param>
+        /// <returns>返回被注册的API方法的注册信息。</returns>
+        public IEnumerable<ApiMethodSetup> Auto(Type providerType, bool singleton = true,
+            bool parseAttribute = true, BindingFlags bindingFlags = DefaultBindingFlags)
+        {
+            ArgAssert.NotNull(providerType, "providerType");
+
+            Func<object> provider;
+            if (singleton)
+            {
+                var instance = Activator.CreateInstance(providerType);
+                provider = () => instance;
+            }
+            else
+            {
+                provider = ConstructorInvokerGenerator.CreateDelegate(providerType);
+            }
+
+            return parseAttribute
+                ? AppendMethodsFromApiMethodAttributes(providerType, provider, bindingFlags)
+                : AppendMethodsFromAllMethods(providerType, provider, bindingFlags);
+        }
+
+        /// <summary>
+        /// 从指定类型加载API方法的注册。
+        /// </summary>
+        /// <param name="provider">返回一个对象，该对象为提供API逻辑实现的类型实例。</param>
+        /// <param name="parseAttribute">
+        /// 若为true，则仅加载标记有<see cref="ApiMethodAttribute"/>的方法；否则加载所有方法。
+        /// 方法的筛选受<paramref name="bindingFlags"/>影响。
+        /// </param>
+        /// <param name="bindingFlags">指定方法的过滤方式。默认加载所有公共方法。</param>
+        /// <returns>返回被注册的API方法的注册信息。</returns>
+        public IEnumerable<ApiMethodSetup> Auto<TProvider>(
+            Func<TProvider> provider, bool parseAttribute = true, BindingFlags bindingFlags = DefaultBindingFlags)
+        {
+            return parseAttribute
+                ? AppendMethodsFromApiMethodAttributes(typeof(TProvider), () => provider(), bindingFlags)
+                : AppendMethodsFromAllMethods(typeof(TProvider), () => provider(), bindingFlags);
+        }
+
+        private List<ApiMethodSetup> AppendMethodsFromAllMethods(
+            Type providerType, Func<object> provider, BindingFlags bindingFlags)
+        {
+            var methodSetups = new List<ApiMethodSetup>();
+            var methods = providerType.GetMethods(bindingFlags);
+
+            foreach (var methodInfo in methods)
+            {
+                var methodSetup = AppendMethod(provider, methodInfo);
+                methodSetups.Add(methodSetup);
+            }
+
+            return methodSetups;
+        }
+
+        private List<ApiMethodSetup> AppendMethodsFromApiMethodAttributes(
+            Type providerType, Func<object> provider, BindingFlags bindingFlags)
+        {
+            var methodSetups = new List<ApiMethodSetup>();
+            var methods = providerType.GetMethods(bindingFlags);
+
+            foreach (var methodInfo in methods)
+            {
+                var attrs = methodInfo.GetCustomAttributes(typeof(ApiMethodAttribute), true);
+                if (attrs.Length == 0)
+                    continue;
+
+                var apiSetupInfo = AppendMethod(provider, methodInfo);
+
+                // ApiMethodAttribute是可以被标注多次的，此时将一个方法发布为API多次
+                foreach (ApiMethodAttribute apiMethodAttr in attrs)
+                {
+                    if (!string.IsNullOrEmpty(apiMethodAttr.Name))
+                    {
+                        apiSetupInfo.Name(apiMethodAttr.Name);
+                    }
+
+                    if (apiMethodAttr.CacheExpiration > 0)
+                    {
+                        apiSetupInfo.CacheExpiration(TimeSpan.FromSeconds(apiMethodAttr.CacheExpiration));
+                    }
+
+                    if (!string.IsNullOrEmpty(apiMethodAttr.CacheNamespace))
+                    {
+                        apiSetupInfo.CacheNamespace(apiMethodAttr.CacheNamespace);
+                    }
+
+                    if (apiMethodAttr.AutoCacheEnabled)
+                    {
+                        apiSetupInfo.EnableAutoCache();
+                    }
+
+                    methodSetups.Add(apiSetupInfo);
+                }
+            }
+
+            return methodSetups;
         }
 
         private MethodInfo ResolveMethodInfo(LambdaExpression methodSelector)

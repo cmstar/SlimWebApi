@@ -48,6 +48,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ApiEnvironment.cs" />
+    <Compile Include="ApiMethodAttribute.cs" />
     <Compile Include="ApiMethodContext.cs" />
     <Compile Include="ApiMethodInfo.cs" />
     <Compile Include="ApiMethodParamInfoMap.cs" />
