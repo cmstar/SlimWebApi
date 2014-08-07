@@ -31,10 +31,11 @@ namespace cmstar.WebApi
             if (!_isStaticMethod)
             {
                 ArgAssert.NotNull(provider, "provider");
+                _provider = provider;
             }
 
             ParamInfoMap = new ApiMethodParamInfoMap(methodInfo);
-            _provider = provider;
+
             _methodName = methodInfo.Name;
             _invoker = MethodInvokerGenerator.CreateDelegate(methodInfo);
         }
