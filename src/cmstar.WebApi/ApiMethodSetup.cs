@@ -8,7 +8,6 @@ namespace cmstar.WebApi
     public class ApiMethodSetup
     {
         private readonly ApiMethodInfo _apiMethodInfo;
-        private readonly ApiSetup _setup;
 
         /// <summary>
         /// 初始化<see cref="ApiMethodSetup"/>的新实例。
@@ -21,14 +20,17 @@ namespace cmstar.WebApi
             ArgAssert.NotNull(apiMethodInfo, "apiMethodInfo");
 
             apiMethodInfo.CacheProvider = setup.CacheProvider;
-            apiMethodInfo.CacheExpiration = setup.CacheExpiration;
+
+            if (setup.CacheExpiration.Ticks > 0)
+            {
+                apiMethodInfo.CacheExpiration = setup.CacheExpiration;
+            }
 
             // 缓存命名空间优先使用承载方法的类型的名称
             apiMethodInfo.CacheNamespace = apiMethodInfo.Method.DeclaringType != null
                 ? apiMethodInfo.Method.DeclaringType.FullName
                 : setup.CallerType.FullName;
 
-            _setup = setup;
             _apiMethodInfo = apiMethodInfo;
         }
 

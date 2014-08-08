@@ -74,7 +74,10 @@ namespace cmstar.WebApi
         /// </summary>
         public TimeSpan CacheExpiration
         {
-            get { return _cacheExpiration; }
+            get
+            {
+                return _cacheExpiration;
+            }
             set
             {
                 if (value.Ticks <= 0)
