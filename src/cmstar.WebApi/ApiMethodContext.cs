@@ -7,8 +7,15 @@ namespace cmstar.WebApi
     /// </summary>
     public class ApiMethodContext
     {
+        private readonly static ApiMethodContext EmptyContext;
+
         [ThreadStatic]
         private static ApiMethodContext _currentContext;
+
+        static ApiMethodContext()
+        {
+            EmptyContext = new ApiMethodContext();
+        }
 
         private string _cacheKey;
 
@@ -17,8 +24,14 @@ namespace cmstar.WebApi
         /// </summary>
         public static ApiMethodContext Current
         {
-            get { return _currentContext; }
-            set { _currentContext = value; }
+            get
+            {
+                return _currentContext ?? EmptyContext;
+            }
+            set
+            {
+                _currentContext = value;
+            }
         }
 
         /// <summary>
