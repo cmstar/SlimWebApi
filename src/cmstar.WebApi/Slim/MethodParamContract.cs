@@ -68,7 +68,10 @@ namespace cmstar.WebApi.Slim
 
                 JsonContract contract;
                 if (!_paramContractMap.TryGetValue(paramName, out contract))
+                {
+                    SkipPropertyValue(reader);
                     continue;
+                }
 
                 var value = contract.Read(reader, state);
                 paramValueMap.Add(paramName, value);
