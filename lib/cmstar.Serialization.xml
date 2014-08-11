@@ -1136,6 +1136,13 @@
             </param>
             <returns>An intance of the <see cref="P:cmstar.Serialization.Json.JsonContract.UnderlyingType"/>.</returns>
         </member>
+        <member name="M:cmstar.Serialization.Json.JsonContract.SkipPropertyValue(cmstar.Serialization.Json.JsonReader)">
+            <summary>
+            Skip the property value at the current position on the reader.
+            The method can only be called after a <see cref="F:cmstar.Serialization.Json.JsonToken.PropertyName"/> being read.
+            </summary>
+            <param name="reader">The instance of <see cref="T:cmstar.Serialization.Json.JsonReader"/>.</param>
+        </member>
         <member name="P:cmstar.Serialization.Json.JsonContract.UnderlyingType">
             <summary>
             Gets the underlying type of the current <see cref="T:cmstar.Serialization.Json.JsonContract"/>.
