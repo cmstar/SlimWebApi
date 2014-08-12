@@ -248,7 +248,7 @@ namespace cmstar.WebApi.Slim
             {
                 binding.HttpParamDecoder = EmptyParamMethodRequestDecoder.Instance;
                 binding.JsonDecoder = EmptyParamMethodRequestDecoder.Instance;
-                binding.DefaultDecoder = binding.JsonDecoder;
+                binding.DefaultDecoder = EmptyParamMethodRequestDecoder.Instance;
                 return binding;
             }
 
@@ -258,12 +258,10 @@ namespace cmstar.WebApi.Slim
             {
                 binding.HttpParamDecoder = new InlineParamHttpParamDecoder(paramInfoMap);
                 binding.JsonDecoder = new InlineParamJsonDecoder(paramInfoMap);
-                binding.DefaultDecoder = binding.HttpParamDecoder;
             }
             else if (param.Length == 1)
             {
                 binding.JsonDecoder = new SingleObjectJsonDecoder(paramInfoMap);
-                binding.DefaultDecoder = binding.JsonDecoder;
 
                 var paramType = param[0].ParameterType;
                 if (TypeHelper.IsPlainType(paramType, true))
@@ -274,8 +272,10 @@ namespace cmstar.WebApi.Slim
             else
             {
                 binding.JsonDecoder = new InlineParamJsonDecoder(paramInfoMap);
-                binding.DefaultDecoder = binding.JsonDecoder;
             }
+
+            // 总是优先使用HttpParamDecoder作为默认的Decoder
+            binding.DefaultDecoder = binding.HttpParamDecoder ?? binding.JsonDecoder;
 
             return binding;
         }
