@@ -111,11 +111,11 @@ namespace cmstar.WebApi.Slim
                     result = apiMethodInfo.Invoke(paramValueMap);
                 }
 
-                WriteResponse(context, 200, result);
+                WriteResponse(context, 0, result);
             }
             catch (Exception ex)
             {
-                WriteResponse(context, 500, null, 500, "Unhandled exception.", ex);
+                WriteResponse(context, 500, null, "Unhandled exception.", ex);
             }
         }
 
@@ -128,19 +128,27 @@ namespace cmstar.WebApi.Slim
             }
             catch (Exception ex)
             {
-                if (ex is JsonContractException || ex is JsonFormatException)
+                var jsonContractException = ex as JsonContractException;
+                if (jsonContractException != null)
                 {
-                    WriteResponse(context, 400, null, 400, "Bad JSON.", ex);
-                }
-                else if (ex is InvalidCastException)
-                {
-                    WriteResponse(context, 400, null, 400, "Invalid parameter value.", ex);
-                }
-                else
-                {
-                    WriteResponse(context, 500, null, 500, "Unhandled exception.", ex);
+                    WriteResponse(context, 400, null, "Bad JSON. " + jsonContractException.Message, ex);
+                    return null;
                 }
 
+                var jsonFormatException = ex as JsonFormatException;
+                if (jsonFormatException != null)
+                {
+                    WriteResponse(context, 400, null, "Bad JSON. " + jsonFormatException.Message, ex);
+                    return null;
+                }
+                
+                if (ex is InvalidCastException)
+                {
+                    WriteResponse(context, 400, null, "Invalid parameter value.", ex);
+                    return null;
+                }
+
+                WriteResponse(context, 500, null, "Unhandled exception.", ex);
                 return null;
             }
         }
@@ -149,14 +157,14 @@ namespace cmstar.WebApi.Slim
         {
             if (methodName == null)
             {
-                WriteResponse(context, 400, null, 400, "Method name not specified.");
+                WriteResponse(context, 400, null, "Method name not specified.");
                 return null;
             }
 
             ApiMethodInfo apiMethodInfo;
             if (!_registeredMethods.TryGetValue(methodName, out apiMethodInfo))
             {
-                WriteResponse(context, 400, null, 400, "Method not found.");
+                WriteResponse(context, 400, null, "Method not found.");
                 return null;
             }
 
@@ -181,18 +189,18 @@ namespace cmstar.WebApi.Slim
                     break;
 
                 default:
-                    WriteResponse(context, 400, null, 400, "Unknow format.");
+                    WriteResponse(context, 400, null, "Unknow format.");
                     return null;
             }
 
             if (decoder == null)
-                WriteResponse(context, 400, null, 400, "The format is not supported on the method.");
+                WriteResponse(context, 400, null, "The format is not supported on the method.");
 
             return decoder;
         }
 
-        private void WriteResponse(HttpContext context, int httpStatusCode,
-            object responseData, int responseCode = 0, string responseMessage = "", Exception ex = null)
+        private void WriteResponse(HttpContext context, int code,
+            object responseData, string responseMessage = "", Exception ex = null)
         {
             var httpResponse = context.Response;
             var callback = context.Request[_metaCallback];
@@ -209,7 +217,7 @@ namespace cmstar.WebApi.Slim
                 httpResponse.ContentType = "application/json";
             }
 
-            var responseObject = new SlimApiResponse<object>(responseCode, responseMessage, responseData);
+            var responseObject = new SlimApiResponse<object>(code, responseMessage, responseData);
             var json = JsonHelper.Serialize(responseObject);
             context.Response.Write(json);
 
@@ -218,20 +226,20 @@ namespace cmstar.WebApi.Slim
                 context.Response.Write(")");
             }
 
-            if (httpStatusCode != 200)
+            if (code != 0)
             {
-                httpResponse.StatusCode = httpStatusCode;
-
                 var httpRequest = context.Request;
                 var requestDescription = string.Format("{0,-15} {1}",
                     httpRequest.UserHostAddress, httpRequest.RawUrl);
 
-                if (httpStatusCode >= 400 && httpStatusCode < 500)
+                // 目前错误码还有没具体定义，但确定1000以下与HTTP状态码一致
+                // 故先用状态码来表示某些类型错误
+                if (code >= 400 && code < 500) // 请求错误
                 {
                     Logger.Warn(requestDescription);
                     Logger.Warn(json, ex);
                 }
-                else if (httpStatusCode >= 500 && httpStatusCode < 600)
+                else if (code >= 500 && code < 600) // 服务器错误
                 {
                     Logger.Error(requestDescription);
                     Logger.Error(json, ex);
