@@ -11,7 +11,7 @@
     <ProjectTypeGuids>{349c5851-65df-11da-9384-00065b846f21};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>cmstar.WebApi.Tests</RootNamespace>
+    <RootNamespace>cmstar.WebApi</RootNamespace>
     <AssemblyName>cmstar.WebApi.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <WcfConfigValidationEnabled>True</WcfConfigValidationEnabled>
@@ -39,7 +39,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Web.DynamicData" />
     <Reference Include="System.Web.Entity" />
     <Reference Include="System.Web.ApplicationServices" />
@@ -48,7 +47,6 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.EnterpriseServices" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.ServiceModel.Web" />
@@ -56,17 +54,25 @@
     <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Web.Services" />
     <Reference Include="System.Xml" />
-    <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Server.ashx.cs">
-      <DependentUpon>Server.ashx</DependentUpon>
+    <Compile Include="AutoSetupExample.ashx.cs">
+      <DependentUpon>AutoSetupExample.ashx</DependentUpon>
     </Compile>
-    <Compile Include="ServiceMethodProvider.cs" />
+    <Compile Include="CacheExample.ashx.cs">
+      <DependentUpon>CacheExample.ashx</DependentUpon>
+    </Compile>
+    <Compile Include="ServiceClasses.cs" />
+    <Compile Include="ReflectionExample.ashx.cs">
+      <DependentUpon>ReflectionExample.ashx</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="DelegateExample.ashx.cs">
+      <DependentUpon>DelegateExample.ashx</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\cmstar.WebApi\cmstar.WebApi.csproj">
@@ -75,7 +81,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Server.ashx" />
+    <Content Include="DelegateExample.ashx" />
+    <Content Include="ReflectionExample.ashx" />
+    <Content Include="CacheExample.ashx" />
+    <Content Include="AutoSetupExample.ashx" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
