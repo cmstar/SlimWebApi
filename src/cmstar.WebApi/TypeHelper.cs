@@ -209,7 +209,13 @@ namespace cmstar.WebApi
             Exception innerException = null;
             try
             {
-                type = ReflectionUtils.GetUnderlyingType(type);
+                if (ReflectionUtils.IsNullable(type))
+                {
+                    if (string.IsNullOrEmpty(value))
+                        return null;
+
+                    type = Nullable.GetUnderlyingType(type);
+                }
 
                 if (type == typeof(bool))
                     return ToBoolean(value);

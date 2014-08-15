@@ -17,7 +17,7 @@ namespace cmstar.WebApi
             var serviceInstance = new SimpleServiceProvider();
 
             // 注册无返回值的方法
-            setup.Method((Action<DateTime>)serviceInstance.DoNothingWith);
+            setup.Method((Action<DateTime, DateTime?>)serviceInstance.DoNothingWith);
 
             // 注册有返回值的方法
             setup.Method((Func<int, int, int>)serviceInstance.PlusRandom);

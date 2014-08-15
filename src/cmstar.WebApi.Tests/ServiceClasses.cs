@@ -46,7 +46,7 @@ namespace cmstar.WebApi
             return _guid;
         }
 
-        public void DoNothingWith(DateTime date)
+        public void DoNothingWith(DateTime date, DateTime? nullableDate)
         {
         }
 
