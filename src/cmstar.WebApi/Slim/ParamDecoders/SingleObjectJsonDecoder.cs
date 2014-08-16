@@ -49,6 +49,7 @@ namespace cmstar.WebApi.Slim.ParamDecoders
             if (_paramName == null)
                 return new Dictionary<string, object>(0);
 
+            // 不调用StreamReader.Dispose以保持InputStream不被关掉
             var textReader = new StreamReader(request.InputStream);
             var value = JsonHelper.Deserialize(textReader, _paramType);
 

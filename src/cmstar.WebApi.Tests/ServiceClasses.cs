@@ -55,7 +55,7 @@ namespace cmstar.WebApi
             return x + y + Random(1000);
         }
 
-        public void Error()
+        public void Error(int i)
         {
             throw new Exception("An error occured.");
         }

@@ -55,6 +55,7 @@ namespace cmstar.WebApi.Slim.ParamDecoders
             if (_contract == null)
                 return new Dictionary<string, object>(0);
 
+            // 不调用StreamReader.Dispose以保持InputStream不被关掉
             var textReader = new StreamReader(request.InputStream);
             var jsonReader = new JsonReader(textReader);
             var paramValueMap = _contract.Read(jsonReader, new JsonDeserializingState());

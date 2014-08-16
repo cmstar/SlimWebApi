@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Text;
 using System.Web;
 using cmstar.WebApi.Slim.ParamDecoders;
 using Common.Logging;
@@ -141,7 +144,7 @@ namespace cmstar.WebApi.Slim
                     WriteResponse(context, 400, null, "Bad JSON. " + jsonFormatException.Message, ex);
                     return null;
                 }
-                
+
                 if (ex is InvalidCastException)
                 {
                     WriteResponse(context, 400, null, "Invalid parameter value.", ex);
@@ -218,8 +221,8 @@ namespace cmstar.WebApi.Slim
             }
 
             var responseObject = new SlimApiResponse<object>(code, responseMessage, responseData);
-            var json = JsonHelper.Serialize(responseObject);
-            context.Response.Write(json);
+            var responseJson = JsonHelper.Serialize(responseObject);
+            context.Response.Write(responseJson);
 
             if (isJsonp)
             {
@@ -229,22 +232,40 @@ namespace cmstar.WebApi.Slim
             if (code != 0)
             {
                 var httpRequest = context.Request;
-                var requestDescription = string.Format("{0,-15} {1}",
-                    httpRequest.UserHostAddress, httpRequest.RawUrl);
+                var requestDescription = BuildRequestDescritpion(httpRequest, responseJson);
 
                 // 目前错误码还有没具体定义，但确定1000以下与HTTP状态码一致
                 // 故先用状态码来表示某些类型错误
                 if (code >= 400 && code < 500) // 请求错误
                 {
-                    Logger.Warn(requestDescription);
-                    Logger.Warn(json, ex);
+                    Logger.Warn(requestDescription, ex);
                 }
                 else if (code >= 500 && code < 600) // 服务器错误
                 {
-                    Logger.Error(requestDescription);
-                    Logger.Error(json, ex);
+                    Logger.Error(requestDescription, ex);
                 }
             }
+        }
+
+        private string BuildRequestDescritpion(HttpRequest request, string responseText)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine(request.UserHostAddress);
+            sb.Append("Url: ").AppendLine(request.RawUrl);
+            sb.Append("Length: ").AppendLine(request.ContentLength.ToString(CultureInfo.InvariantCulture));
+
+            if (request.ContentLength > 0)
+            {
+                // 重读InputStream
+                request.InputStream.Position = 0;
+                var streamReader = new StreamReader(request.InputStream);
+                var body = streamReader.ReadToEnd();
+                sb.Append("Body: ").AppendLine(body);
+            }
+
+            sb.Append("Response: ").AppendLine(responseText);
+
+            return sb.ToString();
         }
 
         private DecoderBinding ResolveDefaultDecoderBinding(ApiMethodInfo apiMethodInfo)
