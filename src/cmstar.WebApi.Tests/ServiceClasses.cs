@@ -55,6 +55,11 @@ namespace cmstar.WebApi
             return x + y + Random(1000);
         }
 
+        public void Error()
+        {
+            throw new Exception("An error occured.");
+        }
+
         public SimpleObject GetSelf(SimpleObject simpleObject)
         {
             return simpleObject;
