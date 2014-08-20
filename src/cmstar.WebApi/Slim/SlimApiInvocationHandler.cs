@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
-using System.Threading;
 using System.Web;
 using cmstar.WebApi.Slim.ParamDecoders;
 using Common.Logging;
@@ -265,7 +264,7 @@ namespace cmstar.WebApi.Slim
             var sb = new StringBuilder();
             sb.AppendLine(request.UserHostAddress);
             sb.Append("Url: ").AppendLine(request.RawUrl);
-            sb.Append("Length: ").AppendLine(request.InputStream.Length.ToString(CultureInfo.InvariantCulture));
+            sb.Append("Length: ").Append(request.InputStream.Length.ToString(CultureInfo.InvariantCulture));
 
             if (request.ContentLength > 0)
             {
@@ -275,6 +274,7 @@ namespace cmstar.WebApi.Slim
 
             if (!string.IsNullOrEmpty(responseText))
             {
+                sb.AppendLine();
                 sb.Append("Response: ").AppendLine(responseText);
             }
 
