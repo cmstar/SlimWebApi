@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Web;
 
 namespace cmstar.WebApi
 {
@@ -39,11 +40,14 @@ namespace cmstar.WebApi
         /// </summary>
         public string CacheKey
         {
-            get
-            {
-                return _cacheKey ?? (_cacheKey = CacheKeyProvider());
-            }
+            get { return _cacheKey ?? (_cacheKey = CacheKeyProvider()); }
         }
+
+        /// <summary>
+        /// 获取当前API方法所关联的原始<see cref="HttpContext"/>。
+        /// 若当前并不处于HTTP请求上下文中，返回<c>null</c>。
+        /// </summary>
+        public HttpContext Raw { get; internal set; }
 
         /// <summary>
         /// 获取当前被调用方法所关联的缓存值。

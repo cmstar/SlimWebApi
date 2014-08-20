@@ -91,6 +91,7 @@ namespace cmstar.WebApi.Slim
             try
             {
                 var apiMethodContext = new ApiMethodContext();
+                apiMethodContext.Raw = context;
                 apiMethodContext.CacheProvider = apiMethodInfo.CacheProvider;
                 apiMethodContext.CacheExpiration = apiMethodInfo.CacheExpiration;
                 apiMethodContext.CacheKeyProvider = () => CacheKeyHelper.GetCacheKey(apiMethodInfo, paramValueMap);
