@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Web;
 using cmstar.WebApi.Slim.ParamDecoders;
 using Common.Logging;
@@ -74,6 +75,12 @@ namespace cmstar.WebApi.Slim
         public void ProcessRequest(HttpContext context)
         {
             var request = context.Request;
+
+            if (Logger.IsInfoEnabled)
+            {
+                var requestDescription = GetRequestDescritpion(request, null);
+                Logger.Info(requestDescription);
+            }
 
             var methodName = request.Params[_metaMethodName];
             var apiMethodInfo = ResolveMethodInfo(context, methodName);
@@ -232,41 +239,58 @@ namespace cmstar.WebApi.Slim
 
             if (code != 0)
             {
-                var httpRequest = context.Request;
-                var requestDescription = BuildRequestDescritpion(httpRequest, responseJson);
-
                 // 目前错误码还有没具体定义，但确定1000以下与HTTP状态码一致
                 // 故先用状态码来表示某些类型错误
-                if (code >= 400 && code < 500) // 请求错误
+                if (code >= 400 && code < 500 && Logger.IsWarnEnabled) // 请求错误
                 {
+                    var requestDescription = GetRequestDescritpion(context.Request, responseJson);
                     Logger.Warn(requestDescription, ex);
                 }
-                else if (code >= 500 && code < 600) // 服务器错误
+                else if (code >= 500 && code < 600 && Logger.IsErrorEnabled) // 服务器错误
                 {
+                    var requestDescription = GetRequestDescritpion(context.Request, responseJson);
                     Logger.Error(requestDescription, ex);
                 }
             }
         }
 
-        private string BuildRequestDescritpion(HttpRequest request, string responseText)
+        private string GetRequestDescritpion(HttpRequest request, string responseText)
         {
+            /*
+             * 此方法在一次请求开头被调用，之后的错误日志中再次被调用，考虑是否缓存这些信息。
+             * 1 错误日志并不总是有，此方法多数情况应该只被调用一次；
+             * 2 缓存需要考虑线程安全性，例如使用[ThreadStatic]字段，开销也不小；
+             * 鉴于上述原因，每次此方法被调用时，都重新组装描述信息，不进行缓存。
+             */
             var sb = new StringBuilder();
             sb.AppendLine(request.UserHostAddress);
             sb.Append("Url: ").AppendLine(request.RawUrl);
-            sb.Append("Length: ").AppendLine(request.ContentLength.ToString(CultureInfo.InvariantCulture));
+            sb.Append("Length: ").AppendLine(request.InputStream.Length.ToString(CultureInfo.InvariantCulture));
 
             if (request.ContentLength > 0)
             {
-                // 重读InputStream
-                request.InputStream.Position = 0;
-                var streamReader = new StreamReader(request.InputStream);
-                var body = streamReader.ReadToEnd();
+                var body = ReadRequestBody(request);
                 sb.Append("Body: ").AppendLine(body);
             }
 
-            sb.Append("Response: ").AppendLine(responseText);
+            if (!string.IsNullOrEmpty(responseText))
+            {
+                sb.Append("Response: ").AppendLine(responseText);
+            }
 
             return sb.ToString();
+        }
+
+        private string ReadRequestBody(HttpRequest request)
+        {
+            // 重读InputStream
+            request.InputStream.Position = 0;
+            var streamReader = new StreamReader(request.InputStream);
+            var body = streamReader.ReadToEnd();
+
+            // 重置Position以供再次读取
+            request.InputStream.Position = 0;
+            return body;
         }
 
         private DecoderBinding ResolveDefaultDecoderBinding(ApiMethodInfo apiMethodInfo)
