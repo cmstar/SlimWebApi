@@ -263,13 +263,17 @@ namespace cmstar.WebApi.Slim
              */
             var sb = new StringBuilder();
             sb.AppendLine(request.UserHostAddress);
-            sb.Append("Url: ").AppendLine(request.RawUrl);
-            sb.Append("Length: ").Append(request.InputStream.Length.ToString(CultureInfo.InvariantCulture));
+            sb.Append("Url: ").Append(request.RawUrl);
 
-            if (request.ContentLength > 0)
+            var bodyLength = request.InputStream.Length;
+            if (bodyLength > 0)
             {
+                sb.AppendLine();
+                sb.Append("Length: ").Append(request.InputStream.Length.ToString(CultureInfo.InvariantCulture));
+
                 var body = ReadRequestBody(request);
-                sb.Append("Body: ").AppendLine(body);
+                sb.AppendLine();
+                sb.Append("Body: ").Append(body);
             }
 
             if (!string.IsNullOrEmpty(responseText))
