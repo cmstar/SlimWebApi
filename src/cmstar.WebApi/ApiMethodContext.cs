@@ -35,6 +35,17 @@ namespace cmstar.WebApi
         }
 
         /// <summary>
+        /// 获取当前API方法所使用的缓存键。
+        /// </summary>
+        public string CacheKey
+        {
+            get
+            {
+                return _cacheKey ?? (_cacheKey = CacheKeyProvider());
+            }
+        }
+
+        /// <summary>
         /// 获取当前被调用方法所关联的缓存值。
         /// 若没有被缓存的值，返回<c>null</c>。
         /// </summary>
@@ -43,8 +54,7 @@ namespace cmstar.WebApi
             if (CacheProvider == null || CacheKeyProvider == null)
                 return null;
 
-            var cacheKey = GetCacheKey();
-            return CacheProvider.Get(cacheKey);
+            return CacheProvider.Get(CacheKey);
         }
 
         /// <summary>
@@ -56,8 +66,7 @@ namespace cmstar.WebApi
             if (CacheProvider == null || CacheKeyProvider == null)
                 return;
 
-            var cacheKey = GetCacheKey();
-            CacheProvider.Set(cacheKey, obj, CacheExpiration);
+            CacheProvider.Set(CacheKey, obj, CacheExpiration);
         }
 
         internal Func<string> CacheKeyProvider { get; set; }
@@ -65,10 +74,5 @@ namespace cmstar.WebApi
         internal TimeSpan CacheExpiration { get; set; }
 
         internal IApiCacheProvider CacheProvider { get; set; }
-
-        private string GetCacheKey()
-        {
-            return _cacheKey ?? (_cacheKey = CacheKeyProvider());
-        }
     }
 }
