@@ -269,7 +269,7 @@ namespace cmstar.WebApi.Slim
             if (bodyLength > 0)
             {
                 sb.AppendLine();
-                sb.Append("Length: ").Append(request.InputStream.Length.ToString(CultureInfo.InvariantCulture));
+                sb.Append("Length: ").Append(bodyLength.ToString(CultureInfo.InvariantCulture));
 
                 var body = ReadRequestBody(request);
                 sb.AppendLine();
