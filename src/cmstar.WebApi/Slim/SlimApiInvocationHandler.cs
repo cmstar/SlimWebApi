@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Web;
@@ -269,7 +268,7 @@ namespace cmstar.WebApi.Slim
             if (bodyLength > 0)
             {
                 sb.AppendLine();
-                sb.Append("Length: ").Append(bodyLength.ToString(CultureInfo.InvariantCulture));
+                sb.Append("Length: ").Append(bodyLength);
 
                 var body = ReadRequestBody(request);
                 sb.AppendLine();
@@ -279,7 +278,7 @@ namespace cmstar.WebApi.Slim
             if (!string.IsNullOrEmpty(responseText))
             {
                 sb.AppendLine();
-                sb.Append("Response: ").AppendLine(responseText);
+                sb.Append("Response: ").Append(responseText);
             }
 
             return sb.ToString();
