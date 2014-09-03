@@ -71,7 +71,7 @@ namespace cmstar.WebApi.Slim.ParamDecoders
                 }
                 else
                 {
-                    value = TypeHelper.ConvertString(request.Params[key], paramInfo.Type);
+                    value = TypeHelper.ConvertString(paramValue, paramInfo.Type);
                 }
 
                 paramValueMap.Add(paramInfo.Name, value);

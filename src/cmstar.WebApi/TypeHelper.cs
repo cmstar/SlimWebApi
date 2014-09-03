@@ -171,9 +171,15 @@ namespace cmstar.WebApi
         /// </remarks>
         public static object ConvertToCollection(string value, Type collectionType)
         {
+            if (value == null)
+                return null;
+
             var elementType = GetElementType(collectionType);
             if (elementType == null)
                 throw CannotCastValue(value, collectionType, null);
+
+            if (value.Length == 0)
+                return Array.CreateInstance(elementType, 0);
 
             try
             {
