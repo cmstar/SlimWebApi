@@ -54,6 +54,7 @@
     <Compile Include="ApiSetup.cs" />
     <Compile Include="CacheKeyHelper.cs" />
     <Compile Include="EmptyParamMethodRequestDecoder.cs" />
+    <Compile Include="HttpContextExtention.cs" />
     <Compile Include="HttpRuntimeApiCacheProvider.cs" />
     <Compile Include="IApiCacheProvider.cs" />
     <Compile Include="IRequestDecoder.cs" />

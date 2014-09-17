@@ -51,8 +51,8 @@ namespace cmstar.WebApi.Slim.ParamDecoders
             if (_paramInfoMap.ParamCount == 0)
                 return new Dictionary<string, object>(0);
 
-            var keys = request.Params.AllKeys;
-            var paramValueMap = new Dictionary<string, object>(keys.Length);
+            var keys = request.ExplicicParamKeys();
+            var paramValueMap = new Dictionary<string, object>();
 
             foreach (var key in keys)
             {
@@ -63,16 +63,10 @@ namespace cmstar.WebApi.Slim.ParamDecoders
                 if (!_paramInfoMap.TryGetParamInfo(key, out paramInfo))
                     continue;
 
-                var paramValue = request.Params[key];
-                object value;
-                if (paramInfo.IsGenericCollection)
-                {
-                    value = TypeHelper.ConvertToCollection(paramValue, paramInfo.Type);
-                }
-                else
-                {
-                    value = TypeHelper.ConvertString(paramValue, paramInfo.Type);
-                }
+                var paramValue = request.ExplicicParam(key);
+                var value = paramInfo.IsGenericCollection
+                    ? TypeHelper.ConvertToCollection(paramValue, paramInfo.Type)
+                    : TypeHelper.ConvertString(paramValue, paramInfo.Type);
 
                 paramValueMap.Add(paramInfo.Name, value);
             }

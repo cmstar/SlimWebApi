@@ -80,12 +80,12 @@ namespace cmstar.WebApi.Slim
                 Logger.Info(requestDescription);
             }
 
-            var methodName = request.Params[_metaMethodName];
+            var methodName = request.ExplicicParam(_metaMethodName);
             var apiMethodInfo = ResolveMethodInfo(context, methodName);
             if (apiMethodInfo == null)
                 return;
 
-            var decoder = ResolveDecoder(context, methodName, request.Params[_metaRequestFormat]);
+            var decoder = ResolveDecoder(context, methodName, request.ExplicicParam(_metaRequestFormat));
             if (decoder == null)
                 return;
 
@@ -212,7 +212,7 @@ namespace cmstar.WebApi.Slim
             object responseData, string responseMessage = "", Exception ex = null)
         {
             var httpResponse = context.Response;
-            var callback = context.Request[_metaCallback];
+            var callback = context.Request.ExplicicParam(_metaCallback);
             var isJsonp = !string.IsNullOrEmpty(callback);
 
             if (isJsonp)

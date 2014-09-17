@@ -106,7 +106,7 @@ namespace cmstar.WebApi.Slim.ParamDecoders
 
             var instance = _constructor();
 
-            foreach (var key in request.Params.AllKeys)
+            foreach (var key in request.ExplicicParamKeys())
             {
                 // the key may be null in http params
                 if (key == null)
@@ -116,16 +116,10 @@ namespace cmstar.WebApi.Slim.ParamDecoders
                 if (!_memberMap.TryGetValue(key, out m))
                     continue;
 
-                var httpParam = request.Params[key];
-                object value;
-                if (m.IsGenericCollection)
-                {
-                    value = TypeHelper.ConvertToCollection(httpParam, m.MemberType);
-                }
-                else
-                {
-                    value = TypeHelper.ConvertString(httpParam, m.MemberType);
-                }
+                var httpParam = request.ExplicicParam(key);
+                var value = m.IsGenericCollection
+                    ? TypeHelper.ConvertToCollection(httpParam, m.MemberType)
+                    : TypeHelper.ConvertString(httpParam, m.MemberType);
 
                 m.Setter(instance, value);
             }
