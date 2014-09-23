@@ -117,9 +117,21 @@ namespace cmstar.WebApi.Slim.ParamDecoders
                     continue;
 
                 var httpParam = request.ExplicicParam(key);
-                var value = m.IsGenericCollection
-                    ? TypeHelper.ConvertToCollection(httpParam, m.MemberType)
-                    : TypeHelper.ConvertString(httpParam, m.MemberType);
+                object value;
+
+                try
+                {
+                    value = m.IsGenericCollection
+                        ? TypeHelper.ConvertToCollection(httpParam, m.MemberType)
+                        : TypeHelper.ConvertString(httpParam, m.MemberType);
+                }
+                catch (Exception ex)
+                {
+                    var msg = string.Format(
+                        "Parameter '{0}' - failed on converting value '{1}' to type {2}.",
+                        key, httpParam, m.MemberType);
+                    throw new InvalidCastException(msg, ex);
+                }
 
                 m.Setter(instance, value);
             }
