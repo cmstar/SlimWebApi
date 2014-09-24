@@ -12,5 +12,6 @@
         public const string MetaRequestFormatJson = "json";
         public const string MetaRequestFormatPost = "post";
         public const string MetaRequestFormatGet = "get";
+        public const string MetaResponseFormatPlain = "plain";
     }
 }

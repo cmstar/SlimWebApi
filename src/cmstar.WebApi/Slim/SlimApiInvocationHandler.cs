@@ -80,16 +80,17 @@ namespace cmstar.WebApi.Slim
                 Logger.Info(requestDescription);
             }
 
-            var methodName = request.ExplicicParam(_metaMethodName);
-            var apiMethodInfo = ResolveMethodInfo(context, methodName);
+            var state = GetInvocationState(context);
+
+            var apiMethodInfo = ResolveMethodInfo(state);
             if (apiMethodInfo == null)
                 return;
 
-            var decoder = ResolveDecoder(context, methodName, request.ExplicicParam(_metaRequestFormat));
+            var decoder = ResolveDecoder(state);
             if (decoder == null)
                 return;
 
-            var paramValueMap = DecodeParam(context, decoder);
+            var paramValueMap = DecodeParam(state, decoder);
             if (paramValueMap == null)
                 return;
 
@@ -120,19 +121,48 @@ namespace cmstar.WebApi.Slim
                     result = apiMethodInfo.Invoke(paramValueMap);
                 }
 
-                WriteResponse(context, 0, result);
+                WriteResponse(state, 0, result);
             }
             catch (Exception ex)
             {
-                WriteResponse(context, 500, null, "Unhandled exception.", ex);
+                WriteResponse(state, 500, null, "Unhandled exception.", ex);
             }
         }
 
-        private IDictionary<string, object> DecodeParam(HttpContext context, IRequestDecoder decoder)
+        private InvocationState GetInvocationState(HttpContext context)
+        {
+            var request = context.Request;
+            var state = new InvocationState();
+
+            state.Context = context;
+            state.MethodName = request.ExplicicParam(_metaMethodName);
+            state.JsonpMethod = request.ExplicicParam(_metaCallback);
+
+            var format = request.ExplicicParam(_metaRequestFormat);
+            if (!string.IsNullOrEmpty(format))
+            {
+                var formatOptions = format.ToLower().Split(TypeHelper.CollectionElementSpliter);
+                foreach (var formatOption in formatOptions)
+                {
+                    if (formatOption == SlimApiEnvironment.MetaResponseFormatPlain)
+                    {
+                        state.UsePlainText = true;
+                    }
+                    else
+                    {
+                        state.RequestFormat = formatOption;
+                    }
+                }
+            }
+
+            return state;
+        }
+
+        private IDictionary<string, object> DecodeParam(InvocationState state, IRequestDecoder decoder)
         {
             try
             {
-                var paramValueMap = decoder.DecodeParam(context.Request);
+                var paramValueMap = decoder.DecodeParam(state.Context.Request);
                 return paramValueMap ?? new Dictionary<string, object>(0);
             }
             catch (Exception ex)
@@ -140,99 +170,103 @@ namespace cmstar.WebApi.Slim
                 var jsonContractException = ex as JsonContractException;
                 if (jsonContractException != null)
                 {
-                    WriteResponse(context, 400, null, "Bad JSON. " + jsonContractException.Message, ex);
+                    WriteResponse(state, 400, null, "Bad JSON. " + jsonContractException.Message, ex);
                     return null;
                 }
 
                 var jsonFormatException = ex as JsonFormatException;
                 if (jsonFormatException != null)
                 {
-                    WriteResponse(context, 400, null, "Bad JSON. " + jsonFormatException.Message, ex);
+                    WriteResponse(state, 400, null, "Bad JSON. " + jsonFormatException.Message, ex);
                     return null;
                 }
 
                 if (ex is InvalidCastException)
                 {
-                    WriteResponse(context, 400, null, "Invalid parameter value.", ex);
+                    WriteResponse(state, 400, null, "Invalid parameter value.", ex);
                     return null;
                 }
 
-                WriteResponse(context, 500, null, "Unhandled exception.", ex);
+                WriteResponse(state, 500, null, "Unhandled exception.", ex);
                 return null;
             }
         }
 
-        private ApiMethodInfo ResolveMethodInfo(HttpContext context, string methodName)
+        private ApiMethodInfo ResolveMethodInfo(InvocationState state)
         {
-            if (methodName == null)
+            if (string.IsNullOrEmpty(state.MethodName))
             {
-                WriteResponse(context, 400, null, "Method name not specified.");
+                WriteResponse(state, 400, null, "Method name not specified.");
                 return null;
             }
 
             ApiMethodInfo apiMethodInfo;
-            if (!_registeredMethods.TryGetValue(methodName, out apiMethodInfo))
+            if (!_registeredMethods.TryGetValue(state.MethodName, out apiMethodInfo))
             {
-                WriteResponse(context, 400, null, "Method not found.");
+                WriteResponse(state, 400, null, "Method not found.");
                 return null;
             }
 
             return apiMethodInfo;
         }
 
-        private IRequestDecoder ResolveDecoder(HttpContext context, string methodName, string requestFormat)
+        private IRequestDecoder ResolveDecoder(InvocationState state)
         {
-            if (requestFormat == null)
-                return _decoderMap[methodName].DefaultDecoder;
+            var format = state.RequestFormat;
+            if (string.IsNullOrEmpty(format))
+                return _decoderMap[state.MethodName].DefaultDecoder;
 
-            IRequestDecoder decoder;
-            switch (requestFormat.ToLower())
+            IRequestDecoder decoder = null;
+            switch (format)
             {
                 case SlimApiEnvironment.MetaRequestFormatJson:
-                    decoder = _decoderMap[methodName].JsonDecoder;
+                    decoder = _decoderMap[state.MethodName].JsonDecoder;
                     break;
 
                 case SlimApiEnvironment.MetaRequestFormatGet:
                 case SlimApiEnvironment.MetaRequestFormatPost:
-                    decoder = _decoderMap[methodName].HttpParamDecoder;
+                    decoder = _decoderMap[state.MethodName].HttpParamDecoder;
                     break;
-
-                default:
-                    WriteResponse(context, 400, null, "Unknow format.");
-                    return null;
             }
 
             if (decoder == null)
-                WriteResponse(context, 400, null, "The format is not supported on the method.");
+                WriteResponse(state, 400, null, "The format is not supported on the method.");
 
             return decoder;
         }
 
-        private void WriteResponse(HttpContext context, int code,
+        private void WriteResponse(InvocationState state, int code,
             object responseData, string responseMessage = "", Exception ex = null)
         {
-            var httpResponse = context.Response;
-            var callback = context.Request.ExplicicParam(_metaCallback);
-            var isJsonp = !string.IsNullOrEmpty(callback);
+            var httpResponse = state.Context.Response;
+            var isJsonp = !string.IsNullOrEmpty(state.JsonpMethod);
 
-            if (isJsonp)
+            if (state.UsePlainText)
+            {
+                httpResponse.ContentType = "text/plain";
+            }
+            else if (isJsonp)
             {
                 httpResponse.ContentType = "text/javascript";
-                httpResponse.Write(callback);
-                httpResponse.Write("(");
             }
             else
             {
                 httpResponse.ContentType = "application/json";
             }
 
+            if (isJsonp)
+            {
+                httpResponse.Write(state.JsonpMethod);
+                httpResponse.Write("(");
+            }
+
             var responseObject = new SlimApiResponse<object>(code, responseMessage, responseData);
             var responseJson = JsonHelper.Serialize(responseObject);
-            context.Response.Write(responseJson);
+            httpResponse.Write(responseJson);
 
             if (isJsonp)
             {
-                context.Response.Write(")");
+                httpResponse.Write(")");
             }
 
             if (code != 0)
@@ -241,12 +275,12 @@ namespace cmstar.WebApi.Slim
                 // 故先用状态码来表示某些类型错误
                 if (code >= 400 && code < 500 && Logger.IsWarnEnabled) // 请求错误
                 {
-                    var requestDescription = GetRequestDescritpion(context.Request, responseJson);
+                    var requestDescription = GetRequestDescritpion(state.Context.Request, responseJson);
                     Logger.Warn(requestDescription, ex);
                 }
                 else if (code >= 500 && code < 600 && Logger.IsErrorEnabled) // 服务器错误
                 {
-                    var requestDescription = GetRequestDescritpion(context.Request, responseJson);
+                    var requestDescription = GetRequestDescritpion(state.Context.Request, responseJson);
                     Logger.Error(requestDescription, ex);
                 }
             }
@@ -342,6 +376,19 @@ namespace cmstar.WebApi.Slim
             public IRequestDecoder HttpParamDecoder;
             public IRequestDecoder JsonDecoder;
             public IRequestDecoder DefaultDecoder;
+        }
+
+        private class InvocationState
+        {
+            public HttpContext Context;
+
+            public string MethodName;
+
+            public string RequestFormat;
+
+            public bool UsePlainText;
+
+            public string JsonpMethod;
         }
     }
 }
