@@ -18,6 +18,12 @@ namespace cmstar.WebApi
         public const char CollectionElementDelimiter = '~';
 
         /// <summary>
+        /// The array contains only the <see cref="CollectionElementDelimiter"/> 
+        /// and is used for splitting strings.
+        /// </summary>
+        public static readonly char[] CollectionElementSpliter = { CollectionElementDelimiter };
+
+        /// <summary>
         /// The generic defination of collections.
         /// </summary>
         public static Type GenericCollecitonDefination = typeof(ICollection<>);
@@ -183,7 +189,7 @@ namespace cmstar.WebApi
 
             try
             {
-                var stringValues = value.Split(new[] { CollectionElementDelimiter });
+                var stringValues = value.Split(CollectionElementSpliter);
                 var elements = CreateElementArray(elementType, stringValues);
 
                 if (collectionType.IsInterface || collectionType.IsArray)
