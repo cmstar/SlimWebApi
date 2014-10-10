@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using cmstar.RapidReflection.Emit;
@@ -715,7 +714,7 @@ namespace cmstar.WebApi
         /// <param name="bindingFlags">指定方法的过滤方式。默认加载所有公共方法。</param>
         /// <returns>返回被注册的API方法的注册信息。</returns>
         public IEnumerable<ApiMethodSetup> FromType(Type providerType, bool singleton = true,
-            bool parseAttribute = true, BindingFlags bindingFlags = DefaultBindingFlags, bool inherites = false)
+            bool parseAttribute = true, BindingFlags bindingFlags = DefaultBindingFlags)
         {
             ArgAssert.NotNull(providerType, "providerType");
             
