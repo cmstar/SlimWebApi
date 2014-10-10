@@ -6,7 +6,7 @@ namespace cmstar.WebApi
 {
     /// <summary>
     /// Example 4：
-    /// 此示例演示使用setup.Auto进行批量注册。
+    /// 此示例演示使用setup.Auto和setup.FromType进行批量注册。
     /// </summary>
     public class AutoSetupExample : SlimApiHttpHandler
     {
@@ -20,6 +20,9 @@ namespace cmstar.WebApi
 
             // 注册利用ApiMethodAttribute标记的方法，该特性上已经定义了方法注册配置的相关信息
             setup.Auto(new AttributedServiceProvider());
+
+            // 注册抽象类的静态方法
+            setup.FromType(typeof(AbstractServiceProvider), false);
         }
     }
 }
