@@ -10,11 +10,13 @@ namespace cmstar.WebApi
     /// </summary>
     public class HttpRuntimeApiCacheProvider : IEnumerableApiCacheProvider
     {
+        private static readonly Guid NullValuePlaceholder = Guid.NewGuid();
         private readonly Cache _cache = HttpRuntime.Cache;
 
         public object Get(string key)
         {
-            return _cache.Get(key);
+            var value = _cache.Get(key);
+            return NullValuePlaceholder.Equals(value) ? null : value;
         }
 
         public void Add(string key, object value, TimeSpan expiration)
@@ -25,8 +27,9 @@ namespace cmstar.WebApi
         public object Set(string key, object value, TimeSpan expiration)
         {
             var absoluteExpiration = DateTime.Now.Add(expiration);
-            return _cache.Add(key, value, null, absoluteExpiration,
+            var oldValue = _cache.Add(key, value ?? NullValuePlaceholder, null, absoluteExpiration,
                 Cache.NoSlidingExpiration, CacheItemPriority.Default, null);
+            return NullValuePlaceholder.Equals(oldValue) ? null : oldValue;
         }
 
         public void Remove(string key)
@@ -44,7 +47,8 @@ namespace cmstar.WebApi
                     var key = e.Key.ToString();
                     if (string.IsNullOrEmpty(prefix) || key.StartsWith(prefix))
                     {
-                        yield return new KeyValuePair<string, object>(key, e.Value);
+                        var value = NullValuePlaceholder.Equals(e.Value) ? null : e.Value;
+                        yield return new KeyValuePair<string, object>(key, value);
                     }
                 }
             }
