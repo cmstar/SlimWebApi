@@ -717,13 +717,13 @@ namespace cmstar.WebApi
             bool parseAttribute = true, BindingFlags bindingFlags = DefaultBindingFlags)
         {
             ArgAssert.NotNull(providerType, "providerType");
-            
+
             Func<object> provider = null;
             Func<MethodInfo, Func<object>> providerCreator = m =>
             {
                 if (m.IsStatic)
                     return null;
-                
+
                 if (provider == null)
                 {
                     if (singleton)
@@ -751,15 +751,6 @@ namespace cmstar.WebApi
             var methodSetups = new List<ApiMethodSetup>();
 
             if (parseAttribute)
-            {
-                foreach (var methodInfo in methods)
-                {
-                    var provider = methodInfo.IsStatic ? null : providerCreator(methodInfo);
-                    var methodSetup = AppendMethod(provider, methodInfo);
-                    methodSetups.Add(methodSetup);
-                }
-            }
-            else
             {
                 foreach (var methodInfo in methods)
                 {
@@ -795,6 +786,15 @@ namespace cmstar.WebApi
 
                         methodSetups.Add(apiSetupInfo);
                     }
+                }
+            }
+            else
+            {
+                foreach (var methodInfo in methods)
+                {
+                    var provider = methodInfo.IsStatic ? null : providerCreator(methodInfo);
+                    var methodSetup = AppendMethod(provider, methodInfo);
+                    methodSetups.Add(methodSetup);
                 }
             }
 
