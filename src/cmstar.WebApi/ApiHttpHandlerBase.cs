@@ -79,10 +79,10 @@ namespace cmstar.WebApi
         }
 
         /// <summary>
-        /// 返回用于获取<see cref="ILog"/>实例的名称。null表示使用使用默认的名称。
+        /// 返回当前API使用的<see cref="ILog"/>实例。null表示使用使用默认的实例。
         /// </summary>
-        /// <returns>用于获取<see cref="ILog"/>实例的名称。</returns>
-        protected virtual string GetLoggerName()
+        /// <returns>当前API使用的<see cref="ILog"/>实例。</returns>
+        protected virtual ILog GetLogger()
         {
             return null;
         }
@@ -173,9 +173,7 @@ namespace cmstar.WebApi
                 var setup = new ApiSetup(type);
                 Setup(setup);
 
-                var loggerName = GetLoggerName();
-                var logger = loggerName == null ? LogManager.GetLogger(type) : LogManager.GetLogger(loggerName);
-
+                var logger = GetLogger() ?? LogManager.GetLogger(type);
                 state = new ApiHandlerState(logger);
 
                 foreach (var apiMethodInfo in setup.ApiMethodInfos)
