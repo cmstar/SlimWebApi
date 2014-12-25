@@ -1363,6 +1363,12 @@
             <param name="type">The type to resolve.</param>
             <returns>The instance of <see cref="T:cmstar.Serialization.Json.JsonContract"/> for the type.</returns>
         </member>
+        <member name="P:cmstar.Serialization.Json.JsonContractResolver.CaseSensitive">
+            <summary>
+            Indicates if the mappings between JSON property names and CLR type members (fields/properties)
+            are case-sensitive. The default value is <c>true</c>.
+            </summary>
+        </member>
         <member name="T:cmstar.Serialization.Json.Contracts.ContractMemberInfo">
             <summary>
             Contains the data for the <see cref="T:cmstar.Serialization.Json.JsonSerializer"/> to serialize or access the value
@@ -1700,6 +1706,11 @@
             The default value is <c>true</c>.
             </summary>
         </member>
+        <member name="P:cmstar.Serialization.Json.JsonWriter.QuoteChar">
+            <summary>
+            Gets or sets the character used for a quote.
+            </summary>
+        </member>
         <member name="T:cmstar.Serialization.Json.JsonPropertyAttribute">
             <summary>
             Instructs the <see cref="T:cmstar.Serialization.Json.JsonSerializer"/> to always serialize the member with the specified name.
@@ -2014,6 +2025,14 @@
             with the given underlying type.
             </summary>
             <param name="type">The underlying type.</param>
+        </member>
+        <member name="M:cmstar.Serialization.Json.Contracts.ObjectContract.#ctor(System.Type,System.Collections.Generic.IEqualityComparer{System.String})">
+            <summary>
+            Initializes a new instance of <see cref="T:cmstar.Serialization.Json.Contracts.ObjectContract"/>
+            with the given underlying type.
+            </summary>
+            <param name="type">The underlying type.</param>
+            <param name="memberNameComparer"></param>
         </member>
         <member name="P:cmstar.Serialization.Json.Contracts.ObjectContract.Members">
             <summary>
