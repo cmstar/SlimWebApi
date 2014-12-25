@@ -45,6 +45,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ApiEnvironment.cs" />
+    <Compile Include="ApiException.cs" />
+    <Compile Include="ApiHandlerState.cs" />
+    <Compile Include="ApiHttpHandlerBase.cs" />
     <Compile Include="ApiMethodAttribute.cs" />
     <Compile Include="ApiMethodContext.cs" />
     <Compile Include="ApiMethodInfo.cs" />
@@ -57,6 +60,7 @@
     <Compile Include="HttpContextExtention.cs" />
     <Compile Include="HttpRuntimeApiCacheProvider.cs" />
     <Compile Include="IApiCacheProvider.cs" />
+    <Compile Include="IApiInvocationHandler.cs" />
     <Compile Include="IRequestDecoder.cs" />
     <Compile Include="NoCacheApiCacheProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -68,8 +72,8 @@
     <Compile Include="Slim\ParamDecoders\SingleObjectJsonDecoder.cs" />
     <Compile Include="Slim\SlimApiEnvironment.cs" />
     <Compile Include="Slim\SlimApiHttpHandler.cs" />
+    <Compile Include="ApiResponse.cs" />
     <Compile Include="Slim\SlimApiInvocationHandler.cs" />
-    <Compile Include="Slim\SlimApiResponse.cs" />
     <Compile Include="TypeHelper.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

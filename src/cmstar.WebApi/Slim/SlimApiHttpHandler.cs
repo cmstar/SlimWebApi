@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Web;
-using Common.Logging;
+using cmstar.WebApi.Slim.ParamDecoders;
 
 namespace cmstar.WebApi.Slim
 {
@@ -9,67 +8,77 @@ namespace cmstar.WebApi.Slim
     /// 提供Slim WebAPI的入口。继承此类以实现API的注册和使用。
     /// 这是一个抽象类。
     /// </summary>
-    public abstract class SlimApiHttpHandler : IHttpHandler
+    public abstract class SlimApiHttpHandler : ApiHttpHandlerBase
     {
-        private static readonly Dictionary<Type, SlimApiInvocationHandler> InternalHandlers
-            = new Dictionary<Type, SlimApiInvocationHandler>();
-
-        public void ProcessRequest(HttpContext context)
+        /// <summary>
+        /// 获取用于当前API调用的<see cref="IApiInvocationHandler"/>实现。
+        /// </summary>
+        /// <param name="context"><see cref="HttpContext"/>。</param>
+        /// <param name="handlerState">包含API方法注册相关的信息。</param>
+        /// <returns><see cref="IApiInvocationHandler"/>实现。</returns>
+        protected override IApiInvocationHandler CreateInvocationHandler(HttpContext context, ApiHandlerState handlerState)
         {
-            var httpResponse = context.Response;
-
-            httpResponse.AddHeader("Pragma", "No-Cache");
-            httpResponse.Expires = 0;
-            httpResponse.CacheControl = "no-cache";
-
-            try
-            {
-                var internalHandler = GetInternalHandler();
-                internalHandler.ProcessRequest(context);
-            }
-            catch (Exception ex)
-            {
-                httpResponse.ContentType = "text/plain; charset=utf-8";
-                httpResponse.StatusCode = 500;
-                httpResponse.Write("500 internal error.");
-
-                var logger = LogManager.GetLogger(GetType());
-                logger.Fatal("Failed on handling the request.", ex);
-            }
-        }
-
-        public bool IsReusable
-        {
-            get { return true; }
+            return new SlimApiInvocationHandler(context, handlerState.Logger);
         }
 
         /// <summary>
-        /// 对WebAPI进行注册和配置。
+        /// 获取指定的API方法所对应的参数解析器。
         /// </summary>
-        /// <param name="setup">提供用于Web API注册与配置的方法。</param>
-        public abstract void Setup(ApiSetup setup);
-
-        private SlimApiInvocationHandler GetInternalHandler()
+        /// <param name="method">包含API方法的有关信息。</param>
+        /// <returns>key为解析器的名称，value为解析器实例。</returns>
+        protected override IDictionary<string, IRequestDecoder> ResolveDecoders(ApiMethodInfo method)
         {
-            var type = GetType();
+            var param = method.Method.GetParameters();
+            var decoderMap = new Dictionary<string, IRequestDecoder>(4);
 
-            SlimApiInvocationHandler internalHandler;
-            if (InternalHandlers.TryGetValue(type, out internalHandler))
-                return internalHandler;
-
-            lock (InternalHandlers)
+            if (param.Length == 0)
             {
-                if (InternalHandlers.TryGetValue(type, out internalHandler))
-                    return internalHandler;
+                decoderMap[SlimApiEnvironment.MetaRequestFormatGet]
+                    = decoderMap[SlimApiEnvironment.MetaRequestFormatPost]
+                    = decoderMap[SlimApiEnvironment.MetaRequestFormatJson]
+                    = decoderMap[string.Empty]
+                    = EmptyParamMethodRequestDecoder.Instance;
 
-                var setup = new ApiSetup(type);
-                Setup(setup);
-
-                internalHandler = new SlimApiInvocationHandler(setup.CallerType, setup.ApiMethodInfos);
-                InternalHandlers.Add(type, internalHandler);
-
-                return internalHandler;
+                return decoderMap;
             }
+
+            var paramInfoMap = method.ParamInfoMap;
+
+            if (TypeHelper.IsPlainMethod(method.Method, true))
+            {
+                decoderMap[SlimApiEnvironment.MetaRequestFormatGet]
+                    = decoderMap[SlimApiEnvironment.MetaRequestFormatPost]
+                    = new InlineParamHttpParamDecoder(paramInfoMap);
+
+                decoderMap[SlimApiEnvironment.MetaRequestFormatJson]
+                    = new InlineParamJsonDecoder(paramInfoMap);
+            }
+            else if (param.Length == 1)
+            {
+                decoderMap[SlimApiEnvironment.MetaRequestFormatJson]
+                    = new SingleObjectJsonDecoder(paramInfoMap);
+
+                var paramType = param[0].ParameterType;
+                if (TypeHelper.IsPlainType(paramType, true))
+                {
+                    decoderMap[SlimApiEnvironment.MetaRequestFormatGet]
+                        = decoderMap[SlimApiEnvironment.MetaRequestFormatPost]
+                        = new SingleObjectHttpParamDecoder(paramInfoMap);
+                }
+            }
+            else
+            {
+                decoderMap[SlimApiEnvironment.MetaRequestFormatJson]
+                    = new InlineParamJsonDecoder(paramInfoMap);
+            }
+
+            // 优先使用HttpParamDecoder作为默认的Decoder
+            decoderMap[string.Empty] =
+                decoderMap.ContainsKey(SlimApiEnvironment.MetaRequestFormatGet)
+                ? decoderMap[SlimApiEnvironment.MetaRequestFormatGet]
+                : decoderMap[SlimApiEnvironment.MetaRequestFormatJson];
+
+            return decoderMap;
         }
     }
 }

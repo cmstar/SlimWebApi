@@ -1,144 +1,40 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Web;
-using cmstar.WebApi.Slim.ParamDecoders;
-using Common.Logging;
 using cmstar.Serialization.Json;
+using Common.Logging;
 
 namespace cmstar.WebApi.Slim
 {
     /// <summary>
-    /// 包含Slim WebAPI中处理HTTP请求的具体流程。
+    /// ��ӦSlim WebAPI��<see cref="IApiInvocationHandler"/>ʵ�֡�
     /// </summary>
-    public class SlimApiInvocationHandler
+    public class SlimApiInvocationHandler : IApiInvocationHandler
     {
-        private readonly Dictionary<string, ApiMethodInfo> _registeredMethods
-            = new Dictionary<string, ApiMethodInfo>(ApiEnvironment.DefaultMethodNameComparer);
-
-        private readonly Dictionary<string, DecoderBinding> _decoderMap
-            = new Dictionary<string, DecoderBinding>(ApiEnvironment.DefaultMethodNameComparer);
-
-        private readonly string _metaMethodName = SlimApiEnvironment.MetaParamMethodName;
-        private readonly string _metaRequestFormat = SlimApiEnvironment.MetaParamFormat;
-        private readonly string _metaCallback = SlimApiEnvironment.MetaParamCallback;
-
-        protected readonly ILog Logger;
+        private readonly HttpContext _context;
+        private readonly string _methodName;
+        private readonly string _callbackName;
+        private readonly string _requestFormat;
+        private readonly bool _usePlainText;
+        private readonly ILog _logger;
 
         /// <summary>
-        /// 初始化<see cref="SlimApiInvocationHandler"/>的新实例。
+        /// ��ʼ�����͵���ʵ����
         /// </summary>
-        /// <param name="callerType">WebAPI的注册类型。通常是<see cref="SlimApiHttpHandler"/>的子类。</param>
-        /// <param name="methods">
-        /// API注册信息。可以为<c>null</c>，在之后通过<see cref="AddRegistry"/>方法添加API注册。
-        /// </param>
-        public SlimApiInvocationHandler(Type callerType, IEnumerable<ApiMethodInfo> methods)
+        /// <param name="context">������������������ġ�</param>
+        /// <param name="logger">ָ��������������ʹ�õ���־��</param>
+        public SlimApiInvocationHandler(HttpContext context, ILog logger)
         {
-            if (methods != null)
-            {
-                foreach (var method in methods)
-                {
-                    AddRegistry(method);
-                }
-            }
+            _context = context;
+            _logger = logger;
 
-            Logger = LogManager.GetLogger(callerType ?? GetType());
-        }
-
-        /// <summary>
-        /// 添加一个WebAPI注册。
-        /// </summary>
-        /// <param name="apiMethodInfo">包含WebAPI的注册信息。</param>
-        public void AddRegistry(ApiMethodInfo apiMethodInfo)
-        {
-            var methodName = apiMethodInfo.MethodName;
-
-            // 由于函数可能有重载，名称是一样的，这里自动对方法名称进行改名
-            for (var i = 2; _registeredMethods.ContainsKey(methodName); i++)
-            {
-                methodName = apiMethodInfo.MethodName + i;
-            }
-
-            _registeredMethods.Add(methodName, apiMethodInfo);
-
-            var methodBinding = ResolveDefaultDecoderBinding(apiMethodInfo);
-            _decoderMap.Add(methodName, methodBinding);
-        }
-
-        /// <summary>
-        /// 处理HTTP请求。
-        /// </summary>
-        /// <param name="context"><see cref="HttpContext"/>。</param>
-        public void ProcessRequest(HttpContext context)
-        {
             var request = context.Request;
+            _methodName = request.ExplicicParam(SlimApiEnvironment.MetaParamMethodName);
+            _callbackName = request.ExplicicParam(SlimApiEnvironment.MetaParamCallback);
 
-            if (Logger.IsInfoEnabled)
-            {
-                var requestDescription = GetRequestDescritpion(request, null);
-                Logger.Info(requestDescription);
-            }
-
-            var state = GetInvocationState(context);
-
-            var apiMethodInfo = ResolveMethodInfo(state);
-            if (apiMethodInfo == null)
-                return;
-
-            var decoder = ResolveDecoder(state);
-            if (decoder == null)
-                return;
-
-            var paramValueMap = DecodeParam(state, decoder);
-            if (paramValueMap == null)
-                return;
-
-            try
-            {
-                var apiMethodContext = new ApiMethodContext();
-                apiMethodContext.Raw = context;
-                apiMethodContext.CacheProvider = apiMethodInfo.CacheProvider;
-                apiMethodContext.CacheExpiration = apiMethodInfo.CacheExpiration;
-                apiMethodContext.CacheKeyProvider = () => CacheKeyHelper.GetCacheKey(apiMethodInfo, paramValueMap);
-                ApiMethodContext.Current = apiMethodContext;
-
-                object result;
-                if (apiMethodInfo.AutoCacheEnabled)
-                {
-                    var cacheProvider = apiMethodInfo.CacheProvider;
-                    var cacheKey = CacheKeyHelper.GetCacheKey(apiMethodInfo, paramValueMap);
-                    result = cacheProvider.Get(cacheKey);
-
-                    if (result == null)
-                    {
-                        result = apiMethodInfo.Invoke(paramValueMap);
-                        cacheProvider.Add(cacheKey, result, apiMethodInfo.CacheExpiration);
-                    }
-                }
-                else
-                {
-                    result = apiMethodInfo.Invoke(paramValueMap);
-                }
-
-                WriteResponse(state, 0, result);
-            }
-            catch (Exception ex)
-            {
-                WriteResponse(state, 500, null, "Unhandled exception.", ex);
-            }
-        }
-
-        private InvocationState GetInvocationState(HttpContext context)
-        {
-            var request = context.Request;
-            var state = new InvocationState();
-
-            state.Context = context;
-            state.MethodName = request.ExplicicParam(_metaMethodName);
-            state.JsonpMethod = request.ExplicicParam(_metaCallback);
-
-            var format = request.ExplicicParam(_metaRequestFormat);
+            var format = request.ExplicicParam(SlimApiEnvironment.MetaParamFormat);
             if (!string.IsNullOrEmpty(format))
             {
                 var formatOptions = format.ToLower().Split(TypeHelper.CollectionElementSpliter);
@@ -146,102 +42,154 @@ namespace cmstar.WebApi.Slim
                 {
                     if (formatOption == SlimApiEnvironment.MetaResponseFormatPlain)
                     {
-                        state.UsePlainText = true;
+                        _usePlainText = true;
                     }
                     else
                     {
-                        state.RequestFormat = formatOption;
+                        _requestFormat = formatOption;
                     }
                 }
             }
-
-            return state;
         }
 
-        private IDictionary<string, object> DecodeParam(InvocationState state, IRequestDecoder decoder)
+        public string GetMethodName()
+        {
+            return _methodName;
+        }
+
+        public string GetDecoderName()
+        {
+            return _requestFormat;
+        }
+
+        public IDictionary<string, object> DecodeParam(IRequestDecoder decoder)
         {
             try
             {
-                var paramValueMap = decoder.DecodeParam(state.Context.Request);
-                return paramValueMap ?? new Dictionary<string, object>(0);
+                return decoder.DecodeParam(_context.Request, null);
             }
             catch (Exception ex)
             {
                 var jsonContractException = ex as JsonContractException;
                 if (jsonContractException != null)
-                {
-                    WriteResponse(state, 400, null, "Bad JSON. " + jsonContractException.Message, ex);
-                    return null;
-                }
+                    throw new ApiException(400, "Bad JSON. " + jsonContractException.Message, ex);
 
                 var jsonFormatException = ex as JsonFormatException;
                 if (jsonFormatException != null)
-                {
-                    WriteResponse(state, 400, null, "Bad JSON. " + jsonFormatException.Message, ex);
-                    return null;
-                }
+                    throw new ApiException(400, "Bad JSON. " + jsonFormatException.Message, ex);
 
                 if (ex is InvalidCastException)
+                    throw new ApiException(400, "Invalid parameter value.", ex);
+
+                throw;
+            }
+        }
+
+        public void OnSuccess(ApiResponse response)
+        {
+            WriteResponse(response);
+
+            if (_logger.IsInfoEnabled)
+            {
+                var requestDescription = GetRequestDescritpion(_context.Request, 0, null);
+                _logger.Info(requestDescription);
+            }
+        }
+
+        public void OnHandledError(ApiResponse response, Exception rawException, bool error)
+        {
+            if (response == null)
+            {
+                OnUnhandledError(rawException);
+                return;
+            }
+
+            WriteResponse(response);
+
+            if (error)
+            {
+                if (_logger.IsErrorEnabled)
                 {
-                    WriteResponse(state, 400, null, "Invalid parameter value.", ex);
-                    return null;
+                    var requestDescription = GetRequestDescritpion(_context.Request, response.Code, response.Message);
+                    _logger.Error(requestDescription, rawException);
                 }
-
-                WriteResponse(state, 500, null, "Unhandled exception.", ex);
-                return null;
+            }
+            else
+            {
+                if (_logger.IsInfoEnabled)
+                {
+                    var requestDescription = GetRequestDescritpion(_context.Request, 0, null);
+                    _logger.Info(requestDescription);
+                }
             }
         }
 
-        private ApiMethodInfo ResolveMethodInfo(InvocationState state)
+        public void OnMethodNotFound(string methodName)
         {
-            if (string.IsNullOrEmpty(state.MethodName))
-            {
-                WriteResponse(state, 400, null, "Method name not specified.");
-                return null;
-            }
+            const int code = 400;
+            const string msg = "Unknown method.";
 
-            ApiMethodInfo apiMethodInfo;
-            if (!_registeredMethods.TryGetValue(state.MethodName, out apiMethodInfo))
-            {
-                WriteResponse(state, 400, null, "Method not found.");
-                return null;
-            }
+            WriteResponse(400, null, msg);
 
-            return apiMethodInfo;
+            if (_logger.IsWarnEnabled)
+            {
+                var requestDescription = GetRequestDescritpion(_context.Request, code, msg);
+                _logger.Warn(requestDescription);
+            }
         }
 
-        private IRequestDecoder ResolveDecoder(InvocationState state)
+        public void OnDecoderNotFound(string methodName, string decoderName)
         {
-            var format = state.RequestFormat;
-            if (string.IsNullOrEmpty(format))
-                return _decoderMap[state.MethodName].DefaultDecoder;
+            const int code = 400;
+            const string msg = "The format is not supported on the method.";
 
-            IRequestDecoder decoder = null;
-            switch (format)
+            WriteResponse(code, null, msg);
+
+            if (_logger.IsWarnEnabled)
             {
-                case SlimApiEnvironment.MetaRequestFormatJson:
-                    decoder = _decoderMap[state.MethodName].JsonDecoder;
-                    break;
-
-                case SlimApiEnvironment.MetaRequestFormatGet:
-                case SlimApiEnvironment.MetaRequestFormatPost:
-                    decoder = _decoderMap[state.MethodName].HttpParamDecoder;
-                    break;
+                var requestDescription = GetRequestDescritpion(_context.Request, code, msg);
+                _logger.Warn(requestDescription);
             }
-
-            if (decoder == null)
-                WriteResponse(state, 400, null, "The format is not supported on the method.");
-
-            return decoder;
         }
 
-        private void WriteResponse(InvocationState state, int code,
-            object responseData, string responseMessage = "", Exception ex = null)
+        public void OnUnhandledError(Exception exception)
         {
-            var httpResponse = state.Context.Response;
-            var isJsonp = !string.IsNullOrEmpty(state.JsonpMethod);
+            int code;
+            string msg;
 
-            if (state.UsePlainText)
+            var apiException = exception as ApiException;
+            if (apiException == null)
+            {
+                code = 500;
+                msg = "Internal error.";
+            }
+            else
+            {
+                code = apiException.Code;
+                msg = apiException.Description;
+            }
+
+            WriteResponse(code, null, msg);
+
+            if (_logger.IsErrorEnabled)
+            {
+                var requestDescription = GetRequestDescritpion(_context.Request, code, msg);
+                _logger.Error(requestDescription);
+            }
+        }
+
+        private void WriteResponse(int code, object responseData, string responseMessage)
+        {
+            var apiResponse = new ApiResponse(code, responseMessage, responseData);
+            WriteResponse(apiResponse);
+        }
+
+        private void WriteResponse(ApiResponse apiResponse)
+        {
+            var httpResponse = _context.Response;
+            var isJsonp = !string.IsNullOrEmpty(_callbackName);
+
+            if (_usePlainText)
             {
                 httpResponse.ContentType = "text/plain";
             }
@@ -256,44 +204,21 @@ namespace cmstar.WebApi.Slim
 
             if (isJsonp)
             {
-                httpResponse.Write(state.JsonpMethod);
+                httpResponse.Write(_callbackName);
                 httpResponse.Write("(");
             }
 
-            var responseObject = new SlimApiResponse<object>(code, responseMessage, responseData);
-            var responseJson = JsonHelper.Serialize(responseObject);
+            var responseJson = JsonHelper.Serialize(apiResponse);
             httpResponse.Write(responseJson);
 
             if (isJsonp)
             {
                 httpResponse.Write(")");
             }
-
-            if (code != 0)
-            {
-                // 目前错误码还有没具体定义，但确定1000以下与HTTP状态码一致
-                // 故先用状态码来表示某些类型错误
-                if (code >= 400 && code < 500 && Logger.IsWarnEnabled) // 请求错误
-                {
-                    var requestDescription = GetRequestDescritpion(state.Context.Request, responseJson);
-                    Logger.Warn(requestDescription, ex);
-                }
-                else if (code >= 500 && code < 600 && Logger.IsErrorEnabled) // 服务器错误
-                {
-                    var requestDescription = GetRequestDescritpion(state.Context.Request, responseJson);
-                    Logger.Error(requestDescription, ex);
-                }
-            }
         }
 
-        private string GetRequestDescritpion(HttpRequest request, string responseText)
+        private string GetRequestDescritpion(HttpRequest request, int code, string message)
         {
-            /*
-             * 此方法在一次请求开头被调用，之后的错误日志中再次被调用，考虑是否缓存这些信息。
-             * 1 错误日志并不总是有，此方法多数情况应该只被调用一次；
-             * 2 缓存需要考虑线程安全性，例如使用[ThreadStatic]字段，开销也不小；
-             * 鉴于上述原因，每次此方法被调用时，都重新组装描述信息，不进行缓存。
-             */
             var sb = new StringBuilder();
             sb.AppendLine(request.UserHostAddress);
             sb.Append("Url: ").Append(request.RawUrl);
@@ -309,10 +234,16 @@ namespace cmstar.WebApi.Slim
                 sb.Append("Body: ").Append(body);
             }
 
-            if (!string.IsNullOrEmpty(responseText))
+            if (code != 0)
             {
                 sb.AppendLine();
-                sb.Append("Response: ").Append(responseText);
+                sb.Append("Code: ").Append(code);
+            }
+
+            if (!string.IsNullOrEmpty(message))
+            {
+                sb.AppendLine();
+                sb.Append("Message: ").Append(message);
             }
 
             return sb.ToString();
@@ -320,75 +251,12 @@ namespace cmstar.WebApi.Slim
 
         private string ReadRequestBody(HttpRequest request)
         {
-            // 重读InputStream
+            // �ض�InputStream
             request.InputStream.Position = 0;
             var streamReader = new StreamReader(request.InputStream);
             var body = streamReader.ReadToEnd();
 
-            // 重置Position以供再次读取
-            request.InputStream.Position = 0;
             return body;
-        }
-
-        private DecoderBinding ResolveDefaultDecoderBinding(ApiMethodInfo apiMethodInfo)
-        {
-            var binding = new DecoderBinding();
-            var param = apiMethodInfo.Method.GetParameters();
-
-            if (param.Length == 0)
-            {
-                binding.HttpParamDecoder = EmptyParamMethodRequestDecoder.Instance;
-                binding.JsonDecoder = EmptyParamMethodRequestDecoder.Instance;
-                binding.DefaultDecoder = EmptyParamMethodRequestDecoder.Instance;
-                return binding;
-            }
-
-            var paramInfoMap = apiMethodInfo.ParamInfoMap;
-
-            if (TypeHelper.IsPlainMethod(apiMethodInfo.Method, true))
-            {
-                binding.HttpParamDecoder = new InlineParamHttpParamDecoder(paramInfoMap);
-                binding.JsonDecoder = new InlineParamJsonDecoder(paramInfoMap);
-            }
-            else if (param.Length == 1)
-            {
-                binding.JsonDecoder = new SingleObjectJsonDecoder(paramInfoMap);
-
-                var paramType = param[0].ParameterType;
-                if (TypeHelper.IsPlainType(paramType, true))
-                {
-                    binding.HttpParamDecoder = new SingleObjectHttpParamDecoder(paramInfoMap);
-                }
-            }
-            else
-            {
-                binding.JsonDecoder = new InlineParamJsonDecoder(paramInfoMap);
-            }
-
-            // 总是优先使用HttpParamDecoder作为默认的Decoder
-            binding.DefaultDecoder = binding.HttpParamDecoder ?? binding.JsonDecoder;
-
-            return binding;
-        }
-
-        private class DecoderBinding
-        {
-            public IRequestDecoder HttpParamDecoder;
-            public IRequestDecoder JsonDecoder;
-            public IRequestDecoder DefaultDecoder;
-        }
-
-        private class InvocationState
-        {
-            public HttpContext Context;
-
-            public string MethodName;
-
-            public string RequestFormat;
-
-            public bool UsePlainText;
-
-            public string JsonpMethod;
         }
     }
 }

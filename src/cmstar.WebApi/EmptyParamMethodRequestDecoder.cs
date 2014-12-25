@@ -15,7 +15,7 @@ namespace cmstar.WebApi
 
         private EmptyParamMethodRequestDecoder() { }
 
-        public IDictionary<string, object> DecodeParam(HttpRequest request)
+        public IDictionary<string, object> DecodeParam(HttpRequest request, object state)
         {
             return new Dictionary<string, object>(0);
         }

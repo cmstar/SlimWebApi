@@ -45,8 +45,9 @@ namespace cmstar.WebApi.Slim.ParamDecoders
         /// 集合以参数名称为key，参数的值为value。
         /// </summary>
         /// <param name="request">HTTP请求。</param>
+        /// <param name="state">包含用于参数解析的有关数据。</param>
         /// <returns>记录参数名称和对应的值。</returns>
-        public IDictionary<string, object> DecodeParam(HttpRequest request)
+        public IDictionary<string, object> DecodeParam(HttpRequest request, object state)
         {
             if (_paramInfoMap.ParamCount == 0)
                 return new Dictionary<string, object>(0);
