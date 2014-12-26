@@ -5,6 +5,8 @@
     /// </summary>
     public static class SlimApiEnvironment
     {
+        public static bool CaseSensitiveJson = false;
+
         public static string MetaParamMethodName = "~method";
         public static string MetaParamFormat = "~format";
         public static string MetaParamCallback = "~callback";

@@ -33,6 +33,7 @@ namespace cmstar.WebApi.Slim
                 knonwContracts.Add(typeof(DateTime), dateTimeContract);
 
                 var jsonContractResolver = new JsonContractResolver(knonwContracts);
+                jsonContractResolver.CaseSensitive = SlimApiEnvironment.CaseSensitiveJson;
                 _jsonSerializer = new JsonSerializer(jsonContractResolver);
             }
 
@@ -59,6 +60,14 @@ namespace cmstar.WebApi.Slim
             }
 
             return stringBuilder.ToString();
+        }
+
+        public static object Deserialize(string json, Type type)
+        {
+            using (var reader = new StringReader(json))
+            {
+                return GetSerializer().Deserialize(reader, type);
+            }
         }
 
         public static object Deserialize(TextReader reader, Type type)
