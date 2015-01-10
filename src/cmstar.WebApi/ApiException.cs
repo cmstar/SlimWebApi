@@ -12,7 +12,7 @@ namespace cmstar.WebApi
         /// </summary>
         /// <param name="code">描述此异常的状态码。</param>
         public ApiException(int code)
-            : this(code, "There is an error during the API invocation.")
+            : this(code, "There is an error during the invocation.")
         {
         }
 
@@ -22,9 +22,8 @@ namespace cmstar.WebApi
         /// <param name="code">描述此异常的状态码。</param>
         /// <param name="message">描述此异常的消息。</param>
         public ApiException(int code, string message)
-            : base(message)
+            : this(code, message, null)
         {
-            Code = code;
         }
 
         /// <summary>
@@ -36,6 +35,9 @@ namespace cmstar.WebApi
         public ApiException(int code, string message, Exception innerException)
             : base(message, innerException)
         {
+            if (code == 0)
+                throw new ArgumentException("The error code can not be zero.", "code");
+
             Code = code;
         }
 
