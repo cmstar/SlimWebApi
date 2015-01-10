@@ -3,7 +3,7 @@ using System.IO;
 using System.Web;
 using cmstar.Serialization.Json;
 
-namespace cmstar.WebApi.Slim.ParamDecoders
+namespace cmstar.WebApi.Slim
 {
     /// <summary>
     /// <see cref="IRequestDecoder"/>的实现。

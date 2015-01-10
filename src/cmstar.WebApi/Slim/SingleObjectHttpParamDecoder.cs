@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Web;
 using cmstar.RapidReflection.Emit;
 
-namespace cmstar.WebApi.Slim.ParamDecoders
+namespace cmstar.WebApi.Slim
 {
     /// <summary>
     /// <see cref="IRequestDecoder"/>的实现。
@@ -59,7 +59,7 @@ namespace cmstar.WebApi.Slim.ParamDecoders
             var paramInfo = paramInfoMap.ParamInfos.First().Value;
             var paramType = paramInfo.Type;
 
-            _memberMap = new Dictionary<string, MemberCache>(nameComparer ?? ApiEnvironment.DefaultMethodNameComparer);
+            _memberMap = new Dictionary<string, MemberCache>(nameComparer ?? StringComparer.OrdinalIgnoreCase);
             _constructor = ConstructorInvokerGenerator.CreateDelegate(paramType);
             _paramName = paramInfo.Name;
 

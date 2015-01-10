@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using Common.Logging;
+﻿using System;
+using System.Collections.Generic;
 
 namespace cmstar.WebApi
 {
@@ -11,25 +11,11 @@ namespace cmstar.WebApi
         private const string Delimiter = "$`l%";
 
         private readonly Dictionary<string, ApiMethodInfo> _methods
-            = new Dictionary<string, ApiMethodInfo>(ApiEnvironment.DefaultMethodNameComparer);
+            = new Dictionary<string, ApiMethodInfo>(StringComparer.OrdinalIgnoreCase);
 
         private readonly Dictionary<string, IRequestDecoder> _decoders
-            = new Dictionary<string, IRequestDecoder>(ApiEnvironment.DefaultMethodNameComparer);
-
-        /// <summary>
-        /// 初始化类型的新实例。
-        /// </summary>
-        /// <param name="logger">指定API处理上下文使用的<see cref="ILog"/>。</param>
-        public ApiHandlerState(ILog logger)
-        {
-            Logger = logger;
-        }
-
-        /// <summary>
-        /// 获取API处理上下文使用的<see cref="ILog"/>。
-        /// </summary>
-        public ILog Logger { get; private set; }
-
+            = new Dictionary<string, IRequestDecoder>(StringComparer.OrdinalIgnoreCase);
+        
         /// <summary>
         /// 添加一个API方法注册信息。
         /// </summary>

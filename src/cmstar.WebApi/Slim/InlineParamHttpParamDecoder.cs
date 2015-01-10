@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Web;
 
-namespace cmstar.WebApi.Slim.ParamDecoders
+namespace cmstar.WebApi.Slim
 {
     /// <summary>
     /// <see cref="IRequestDecoder"/>的实现。

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace cmstar.WebApi
@@ -15,7 +16,7 @@ namespace cmstar.WebApi
         /// </summary>
         /// <param name="methodInfo">注册的方法。</param>
         /// <param name="paramNameComparer">
-        /// 指定如何比较参数的名称。若设置为null，则使用<see cref="ApiEnvironment.DefaultMethodNameComparer"/>。
+        /// 指定如何比较参数的名称。若设置为null，则使用<see cref="StringComparer.OrdinalIgnoreCase"/>。
         /// </param>
         public ApiMethodParamInfoMap(MethodInfo methodInfo, IEqualityComparer<string> paramNameComparer = null)
         {
@@ -23,7 +24,7 @@ namespace cmstar.WebApi
             Method = methodInfo;
 
             var param = methodInfo.GetParameters();
-            var comparer = paramNameComparer ?? ApiEnvironment.DefaultMethodNameComparer;
+            var comparer = paramNameComparer ?? StringComparer.OrdinalIgnoreCase;
             _paramTypeMap = new Dictionary<string, ApiParamInfo>(param.Length, comparer);
 
             for (var i = 0; i < param.Length; i++)

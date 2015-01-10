@@ -21,8 +21,9 @@ namespace cmstar.WebApi.Slim
         {
             ArgAssert.NotNull(paramContractMap, "paramContractMap");
 
-            var comparer = SlimApiEnvironment.CaseSensitiveJson ? null : StringComparer.OrdinalIgnoreCase;
-            _paramContractMap = new Dictionary<string, JsonContract>(paramContractMap.Count, comparer);
+            _paramContractMap = new Dictionary<string, JsonContract>(
+                paramContractMap.Count, StringComparer.OrdinalIgnoreCase);
+
             foreach (var kv in paramContractMap)
             {
                 _paramContractMap.Add(kv.Key, kv.Value);
@@ -50,8 +51,7 @@ namespace cmstar.WebApi.Slim
             if (token != JsonToken.ObjectStart)
                 throw JsonContractErrors.UnexpectedToken(JsonToken.ObjectStart, token);
 
-            var comparer = SlimApiEnvironment.CaseSensitiveJson ? null : StringComparer.OrdinalIgnoreCase;
-            var paramValueMap = new Dictionary<string, object>(comparer);
+            var paramValueMap = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
 
             while (reader.Read())
             {
