@@ -93,25 +93,52 @@ namespace cmstar.WebApi.Slim
             var requestState = new SlimApiRequestState();
             var request = context.Request;
 
-            requestState._methodName = request.ExplicicParam(MetaParamMethodName);
-            requestState._callbackName = request.ExplicicParam(MetaParamCallback);
+            // 元参数可以两种方式体现（中括号内内容为可选）：
+            // 形式1：http://domain/entry?~method=METHOD[&~format=FORMAT][&~callback=CALLBACK]
+            // 形式2：http://domain/entry?METHOD[.FORMAT][(CALLBACK)]
+            // 形式2优先级高于形式1
 
-            var format = request.ExplicicParam(MetaParamFormat);
-            if (!String.IsNullOrEmpty(format))
+            string method = null;
+            string callback = null;
+            string format = null;
+
+            // 先从形式2中获取
+            var mixedMetaParams = request.QueryString[null];
+            if (mixedMetaParams != null)
             {
-                var formatOptions = format.ToLower().Split(TypeHelper.CollectionElementSpliter);
+                ParseMixedMetaParams(mixedMetaParams, out method, out format, out callback);
+            }
+
+            // 未从形式2中获取的参数再从形式1中获取
+            if (string.IsNullOrEmpty(method))
+                method = request.ExplicicParam(MetaParamMethodName);
+
+            if (string.IsNullOrEmpty(callback))
+                callback = request.ExplicicParam(MetaParamCallback);
+
+            if (string.IsNullOrEmpty(format))
+                format = request.ExplicicParam(MetaParamFormat);
+
+            if (!string.IsNullOrEmpty(format))
+            {
+                var formatOptions = format.Split(TypeHelper.CollectionElementSpliter);
+                var ignoreCaseComparer = StringComparer.OrdinalIgnoreCase;
+
                 foreach (var formatOption in formatOptions)
                 {
-                    if (formatOption == MetaResponseFormatPlain)
+                    if (ignoreCaseComparer.Equals(formatOption, MetaResponseFormatPlain))
                     {
-                        requestState._usePlainText = true;
+                        requestState.UsePlainText = true;
                     }
                     else
                     {
-                        requestState._requestFormat = formatOption;
+                        requestState.RequestFormat = formatOption;
                     }
                 }
             }
+
+            requestState.MethodName = method;
+            requestState.CallbackName = callback;
 
             return requestState;
         }
@@ -125,7 +152,7 @@ namespace cmstar.WebApi.Slim
         /// <returns>方法名称。</returns>
         protected override string RetriveRequestMethodName(HttpContext context, object requestState)
         {
-            return ((SlimApiRequestState)requestState)._methodName;
+            return ((SlimApiRequestState)requestState).MethodName;
         }
 
         /// <summary>
@@ -137,7 +164,7 @@ namespace cmstar.WebApi.Slim
         /// <returns>调用的API方法所使用的参数解析器的名称。</returns>
         protected override string RetrieveRequestDecoderName(HttpContext context, object requestState)
         {
-            return ((SlimApiRequestState)requestState)._requestFormat;
+            return ((SlimApiRequestState)requestState).RequestFormat;
         }
 
         /// <summary>
@@ -183,9 +210,9 @@ namespace cmstar.WebApi.Slim
         {
             var slimApiRequestState = (SlimApiRequestState)requestState;
             var httpResponse = context.Response;
-            var isJsonp = !String.IsNullOrEmpty(slimApiRequestState._callbackName);
+            var isJsonp = !String.IsNullOrEmpty(slimApiRequestState.CallbackName);
 
-            if (slimApiRequestState._usePlainText)
+            if (slimApiRequestState.UsePlainText)
             {
                 httpResponse.ContentType = "text/plain";
             }
@@ -200,7 +227,7 @@ namespace cmstar.WebApi.Slim
 
             if (isJsonp)
             {
-                httpResponse.Write(slimApiRequestState._callbackName);
+                httpResponse.Write(slimApiRequestState.CallbackName);
                 httpResponse.Write("(");
             }
 
@@ -267,12 +294,96 @@ namespace cmstar.WebApi.Slim
             return body;
         }
 
+        private void ParseMixedMetaParams(string input, out string method, out string format, out string callback)
+        {
+            // METHOD.FORMAT(CALLBACK)
+            format = callback = null;
+
+            const int followedByFomat = 1;
+            const int followedByCallback = 2;
+
+            var inputLength = input.Length;
+            var position = 0;
+            var followedBy = 0;
+
+            while (position < inputLength)
+            {
+                var c = input[position];
+
+                if (c == '.') // hit the beginning of the format name
+                {
+                    followedBy = followedByFomat;
+                    break;
+                }
+
+                if (c == '(') // hit the beginning of the callback name
+                {
+                    followedBy = followedByCallback;
+                    break;
+                }
+
+                if (++position == inputLength)
+                {
+                    method = input;
+                    return;
+                }
+            }
+
+            method = input.Substring(0, position);
+
+            if (followedBy == followedByFomat)
+            {
+                position++; // move to the next char after .
+                var formatStartIndex = position;
+                var paramLength = 0;
+                while (position < inputLength)
+                {
+                    var c = input[position];
+
+                    if (c == '(') // hit the beginning of the callback name
+                    {
+                        followedBy = followedByCallback;
+                        break;
+                    }
+
+                    paramLength++;
+                    position++;
+                }
+
+                format = input.Substring(formatStartIndex, paramLength);
+            }
+
+            if (followedBy == followedByCallback)
+            {
+                position++; // move to the next char after (
+
+                var callbackStartIndex = position;
+                var paramLength = 0;
+                while (true)
+                {
+                    var c = input[position];
+
+                    if (c == ')') // hit the end of the callback name
+                        break;
+
+                    paramLength++;
+                    position++;
+
+                    // if there's not a ')', means no callback name specified
+                    if (position == inputLength)
+                        return;
+                }
+
+                callback = input.Substring(callbackStartIndex, paramLength);
+            }
+        }
+
         private class SlimApiRequestState
         {
-            public string _methodName;
-            public string _callbackName;
-            public string _requestFormat;
-            public bool _usePlainText;
+            public string MethodName;
+            public string CallbackName;
+            public string RequestFormat;
+            public bool UsePlainText;
         }
     }
 }
