@@ -1499,6 +1499,11 @@
             the underlying type of <see cref="T:System.Nullable`1"/>.
             </summary>
         </member>
+        <member name="T:cmstar.Serialization.Json.Contracts.BooleanContract">
+            <summary>
+            The contract for boolean values.
+            </summary>
+        </member>
         <member name="T:cmstar.Serialization.Json.Contracts.ArrayContract">
             <summary>
             The contract for collections.
