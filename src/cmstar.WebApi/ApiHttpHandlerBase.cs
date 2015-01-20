@@ -149,7 +149,7 @@ namespace cmstar.WebApi
             if (Logger.IsErrorEnabled)
             {
                 var requestDescription = GetRequestDescription(context, requestState, apiResponse);
-                Logger.Error(requestDescription);
+                Logger.Error(requestDescription, exception);
             }
         }
 
