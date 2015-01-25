@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using cmstar.WebApi.Slim;
 
 namespace cmstar.WebApi
@@ -28,6 +29,9 @@ namespace cmstar.WebApi
 
             // 也可以直接重命名API方法的调用名称
             setup.Method((Func<SimpleObject, SimpleObject>)serviceInstance.GetSelf).Name("Self");
+
+            // 使用带入输入流的方法
+            setup.Method((Func<string, Stream, string, string>)serviceInstance.InputStream);
 
             // 注册静态方法
             setup.Method((Func<IList<double>, double>)SimpleServiceProvider.Sum);

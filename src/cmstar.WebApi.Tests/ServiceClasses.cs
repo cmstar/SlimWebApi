@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace cmstar.WebApi
 {
@@ -63,6 +65,21 @@ namespace cmstar.WebApi
         public SimpleObject GetSelf(SimpleObject simpleObject)
         {
             return simpleObject;
+        }
+
+        public string InputStream(string head, Stream input, string tail)
+        {
+            var ms = new MemoryStream();
+            var buf = new byte[1024];
+            int len;
+            while ((len = input.Read(buf, 0, buf.Length)) > 0)
+            {
+                ms.Write(buf, 0, len);
+            }
+
+            var data = ms.ToArray();
+            var s = Encoding.UTF8.GetString(data);
+            return string.Concat(head, s, tail);
         }
 
         private int Random(int max)

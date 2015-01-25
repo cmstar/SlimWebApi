@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using System.Web;
 using cmstar.Serialization.Json;
@@ -37,47 +38,72 @@ namespace cmstar.WebApi.Slim
                 decoderMap[MetaRequestFormatGet]
                     = decoderMap[MetaRequestFormatPost]
                     = decoderMap[MetaRequestFormatJson]
-                    = decoderMap[String.Empty]
+                    = decoderMap[string.Empty]
                     = EmptyParamMethodRequestDecoder.Instance;
 
                 return decoderMap;
             }
 
             var paramInfoMap = method.ParamInfoMap;
-
-            if (TypeHelper.IsPlainMethod(method.Method, true))
+            var methodParamStat = TypeHelper.GetMethodParamStat(method.Method);
+            if (!methodParamStat.HasCoplexMember)
             {
-                decoderMap[MetaRequestFormatGet]
-                    = decoderMap[MetaRequestFormatPost]
-                    = new InlineParamHttpParamDecoder(paramInfoMap);
+                var inlineParamHttpParamDecoder = new InlineParamHttpParamDecoder(paramInfoMap);
+                decoderMap[MetaRequestFormatGet] = inlineParamHttpParamDecoder;
 
-                decoderMap[MetaRequestFormatJson]
-                    = new InlineParamJsonDecoder(paramInfoMap);
+                if (!methodParamStat.HasStream)
+                {
+                    decoderMap[MetaRequestFormatPost] = inlineParamHttpParamDecoder;
+                    decoderMap[MetaRequestFormatJson] = new InlineParamJsonDecoder(paramInfoMap);
+                }
             }
             else if (param.Length == 1)
             {
-                decoderMap[MetaRequestFormatJson]
-                    = new SingleObjectJsonDecoder(paramInfoMap);
-
                 var paramType = param[0].ParameterType;
-                if (TypeHelper.IsPlainType(paramType, true))
+                var paramTypeStat = TypeHelper.GetTypeMemberStat(paramType);
+
+                if (paramTypeStat.HasStream)
                 {
-                    decoderMap[MetaRequestFormatGet]
-                        = decoderMap[MetaRequestFormatPost]
-                        = new SingleObjectHttpParamDecoder(paramInfoMap);
+                    if (paramTypeStat.HasCoplexMember)
+                    {
+                        throw NoSupportedDecoderError(method.Method);
+                    }
+
+                    decoderMap[MetaRequestFormatGet] = new SingleObjectHttpParamDecoder(paramInfoMap);
+                }
+                else
+                {
+                    if (!paramTypeStat.HasCoplexMember)
+                    {
+                        decoderMap[MetaRequestFormatPost] = new SingleObjectHttpParamDecoder(paramInfoMap);
+                    }
+
+                    decoderMap[MetaRequestFormatJson] = new SingleObjectJsonDecoder(paramInfoMap);
                 }
             }
-            else
+            else // param.Length > 1 || methodParamStat.HasCoplexMember
             {
-                decoderMap[MetaRequestFormatJson]
-                    = new InlineParamJsonDecoder(paramInfoMap);
+                if (methodParamStat.HasStream)
+                {
+                    throw NoSupportedDecoderError(method.Method);
+                }
+
+                decoderMap[MetaRequestFormatJson] = new InlineParamJsonDecoder(paramInfoMap);
             }
 
-            // 优先使用HttpParamDecoder作为默认的Decoder
-            decoderMap[String.Empty] =
-                decoderMap.ContainsKey(MetaRequestFormatGet)
-                ? decoderMap[MetaRequestFormatGet]
-                : decoderMap[MetaRequestFormatJson];
+            // 设置默认的Decoder，优先级 get->json->post
+            if (decoderMap.ContainsKey(MetaRequestFormatGet))
+            {
+                decoderMap[string.Empty] = decoderMap[MetaRequestFormatGet];
+            }
+            else if (decoderMap.ContainsKey(MetaRequestFormatJson))
+            {
+                decoderMap[string.Empty] = decoderMap[MetaRequestFormatJson];
+            }
+            else if (decoderMap.ContainsKey(MetaRequestFormatPost))
+            {
+                decoderMap[string.Empty] = decoderMap[MetaRequestFormatPost];
+            }
 
             return decoderMap;
         }
@@ -282,6 +308,14 @@ namespace cmstar.WebApi.Slim
             }
 
             return sb.ToString();
+        }
+
+        private Exception NoSupportedDecoderError(MethodInfo method)
+        {
+            var msg = string.Format(
+                "Can not resolve decoder for method {0} in type {1}.",
+                method.Name, method.DeclaringType);
+            return new NotSupportedException(msg);
         }
 
         private string ReadRequestBody(HttpRequest request)

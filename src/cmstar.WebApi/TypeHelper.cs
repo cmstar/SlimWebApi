@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Reflection;
 using cmstar.Util;
 
@@ -29,90 +31,40 @@ namespace cmstar.WebApi
         public static Type GenericCollecitonDefination = typeof(ICollection<>);
 
         /// <summary>
-        /// Indicates whether a method is a plain method 
-        /// whose parameters' types are all simple 
-        /// (see <see cref="IsSimpleType"/> or <see cref="IsSimpleTypeOrCollection"/>).
+        /// Returns an instance of <see cref="MemberTypeStat"/> which contains statistic infomation
+        /// for the parameters of the specified method.
         /// </summary>
         /// <param name="methodInfo">The method.</param>
-        /// <param name="acceptCollections">
-        /// true if allows a plain method contains parameter whose type is a collection,
-        /// and the type of the collection elements is simple.
-        /// </param>
-        /// <returns>true if the method is plain; otherwise false.</returns>
-        public static bool IsPlainMethod(MethodInfo methodInfo, bool acceptCollections = false)
+        /// <returns>An instance of <see cref="MemberTypeStat"/>.</returns>
+        public static MemberTypeStat GetMethodParamStat(MethodInfo methodInfo)
         {
             ArgAssert.NotNull(methodInfo, "methodInfo");
 
+            var stat = new MemberTypeStat();
             var ps = methodInfo.GetParameters();
-            if (ps.Length == 0)
-                return true;
-
-            foreach (var p in ps)
-            {
-                var t = p.ParameterType;
-
-                if (acceptCollections)
-                {
-                    if (!IsSimpleTypeOrCollection(t))
-                        return false;
-                }
-                else if (!IsSimpleType(t))
-                {
-                    return false;
-                }
-            }
-
-            return true;
+            CountMemberTypes(stat, ps.Select(x => x.ParameterType));
+            return stat;
         }
 
         /// <summary>
-        /// Indicates whether a type is a plain type
-        /// whose members' types are all simple
-        /// (see <see cref="IsSimpleType"/> or <see cref="IsSimpleTypeOrCollection"/>).
+        /// Returns an instance of <see cref="MemberTypeStat"/> which contains statistic infomation
+        /// for the properties and fields in the specified type.
         /// </summary>
         /// <param name="type">The type.</param>
-        /// <param name="acceptCollections">
-        /// true if allows a plain method contains parameter whose type is a collection,
-        /// and the type of the collection elements is simple.
-        /// </param>
-        /// <returns>true if the type is plain; otherwise false.</returns>
-        public static bool IsPlainType(Type type, bool acceptCollections = false)
+        /// <returns>An instance of <see cref="MemberTypeStat"/>.</returns>
+        public static MemberTypeStat GetTypeMemberStat(Type type)
         {
             ArgAssert.NotNull(type, "Type");
 
-            var props = type.GetProperties(BindingFlags.Instance | BindingFlags.Public);
-            foreach (var p in props)
-            {
-                var t = p.PropertyType;
+            var stat = new MemberTypeStat();
 
-                if (acceptCollections)
-                {
-                    if (!IsSimpleTypeOrCollection(t))
-                        return false;
-                }
-                else if (!IsSimpleType(t))
-                {
-                    return false;
-                }
-            }
+            var props = type.GetProperties(BindingFlags.Instance | BindingFlags.Public);
+            CountMemberTypes(stat, props.Select(x => x.PropertyType));
 
             var fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public);
-            foreach (var f in fields)
-            {
-                var t = f.FieldType;
+            CountMemberTypes(stat, fields.Select(x => x.FieldType));
 
-                if (acceptCollections)
-                {
-                    if (!IsSimpleTypeOrCollection(t))
-                        return false;
-                }
-                else if (!IsSimpleType(t))
-                {
-                    return false;
-                }
-            }
-
-            return true;
+            return stat;
         }
 
         /// <summary>
@@ -249,6 +201,33 @@ namespace cmstar.WebApi
             throw CannotCastValue(value, type, innerException);
         }
 
+        private static void CountMemberTypes(MemberTypeStat output, IEnumerable<Type> types)
+        {
+            foreach (var t in types)
+            {
+                if (IsSimpleType(t))
+                {
+                    output.Plains++;
+                    continue;
+                }
+
+                if (t == typeof(Stream))
+                {
+                    output.Streams++;
+                    continue;
+                }
+
+                var elementType = GetElementType(t);
+                if (elementType != null && IsSimpleType(elementType))
+                {
+                    output.PlainCollections++;
+                    continue;
+                }
+
+                output.Others++;
+            }
+        }
+
         private static bool ToBoolean(string value)
         {
             if (string.IsNullOrEmpty(value))
@@ -311,6 +290,38 @@ namespace cmstar.WebApi
                 return null;
 
             return genericArguments[0];
+        }
+    }
+
+    internal class MemberTypeStat
+    {
+        public int Plains;
+        public int Others;
+        public int PlainCollections;
+        public int Streams;
+
+        /// <summary>
+        /// true if there are only plain members (exclude collections).
+        /// </summary>
+        public bool IsPurePlain
+        {
+            get { return Others == 0 && Streams == 0 && PlainCollections == 0; }
+        }
+
+        /// <summary>
+        /// true if any complex member exists.
+        /// </summary>
+        public bool HasCoplexMember
+        {
+            get { return Others > 0; }
+        }
+
+        /// <summary>
+        /// true if any <see cref="Stream"/> member exists.
+        /// </summary>
+        public bool HasStream
+        {
+            get { return Streams > 0; }
         }
     }
 }

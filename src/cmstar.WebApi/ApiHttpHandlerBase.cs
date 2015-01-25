@@ -261,7 +261,7 @@ namespace cmstar.WebApi
                 {
                     var cacheProvider = method.CacheProvider;
                     var cacheKey = CacheKeyHelper.GetCacheKey(method, param);
-                    result = cacheProvider.Get(cacheKey);
+                    result = cacheKey == null ? null : cacheProvider.Get(cacheKey);
 
                     if (result == null)
                     {

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Web;
@@ -31,6 +33,7 @@ namespace cmstar.WebApi.Slim
 
         private readonly Dictionary<string, MemberCache> _memberMap;
         private readonly Func<object> _constructor;
+        private readonly string _streamMemberName;
         private readonly string _paramName;
 
         /// <summary>
@@ -66,6 +69,19 @@ namespace cmstar.WebApi.Slim
             var props = paramType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
             foreach (var prop in props)
             {
+                if (prop.PropertyType == typeof(Stream))
+                {
+                    if (_streamMemberName != null)
+                    {
+                        var msg = string.Format(
+                            "There can be only one member with type Stream int type {0} from method {1}.",
+                            paramType, paramInfoMap.Method.Name);
+                        throw new ArgumentException(msg, "paramInfoMap");
+                    }
+
+                    _streamMemberName = prop.Name;
+                }
+
                 var setter = PropertyAccessorGenerator.CreateSetter(prop);
                 var m = new MemberCache
                 {
@@ -81,6 +97,19 @@ namespace cmstar.WebApi.Slim
             {
                 if (_memberMap.ContainsKey(field.Name) && memerPriority != MemberPriority.Field)
                     continue;
+
+                if (field.FieldType == typeof(Stream))
+                {
+                    if (_streamMemberName != null)
+                    {
+                        var msg = string.Format(
+                            "There can be only one member with type Stream int type {0} from method {1}.",
+                            paramType, paramInfoMap.Method.Name);
+                        throw new ArgumentException(msg, "paramInfoMap");
+                    }
+
+                    _streamMemberName = field.Name;
+                }
 
                 var setter = FieldAccessorGenerator.CreateSetter(field);
                 var m = new MemberCache
@@ -107,19 +136,35 @@ namespace cmstar.WebApi.Slim
 
             var instance = _constructor();
 
-            foreach (var key in request.ExplicicParamKeys())
+            IEnumerable keys;
+            if (_streamMemberName == null)
+            {
+                keys = request.ExplicicParamKeys();
+            }
+            else
+            {
+                keys = request.QueryString.Keys;
+
+                request.InputStream.Position = 0;
+                var m = _memberMap[_streamMemberName];
+                m.Setter(instance, request.InputStream);
+            }
+
+            foreach (string key in keys)
             {
                 // the key may be null in http params
-                if (key == null)
+                if (key == null || key == _streamMemberName)
                     continue;
 
                 MemberCache m;
                 if (!_memberMap.TryGetValue(key, out m))
                     continue;
 
-                var httpParam = request.ExplicicParam(key);
-                object value;
+                var httpParam = _streamMemberName == null
+                    ? request.ExplicicParam(key)
+                    : request.QueryString[key];
 
+                object value;
                 try
                 {
                     value = m.IsGenericCollection

@@ -60,16 +60,25 @@ namespace cmstar.WebApi
         private static ICacheKeyBuilder ResolveCacheKeyBuilder(ApiMethodInfo apiMethodInfo)
         {
             var method = apiMethodInfo.Method;
+            var methodParamStat = TypeHelper.GetMethodParamStat(method);
 
-            if (TypeHelper.IsPlainMethod(method))
+            if (methodParamStat.HasStream)
+                return NotSupportedCacheKeyBuilder.Instance;
+
+            if (methodParamStat.IsPurePlain)
                 return new PlainMethodCacheKeyBuilder();
 
             var ps = method.GetParameters();
             if (ps.Length == 1)
             {
-                var parameterType = ps[0].ParameterType;
-                if (TypeHelper.IsPlainType(parameterType))
-                    return new SinglePlainTypeCacheKeyBuilder(parameterType);
+                var paramType = ps[0].ParameterType;
+                var paramTypeStat = TypeHelper.GetTypeMemberStat(paramType);
+
+                if (paramTypeStat.HasStream)
+                    return NotSupportedCacheKeyBuilder.Instance;
+
+                if (paramTypeStat.IsPurePlain)
+                    return new SinglePlainTypeCacheKeyBuilder(paramType);
             }
 
             return new ComplexTypeCacheKeyBuilder();
@@ -78,6 +87,18 @@ namespace cmstar.WebApi
         private interface ICacheKeyBuilder
         {
             string BuildCacheKey(ApiMethodInfo apiMethodInfo, IDictionary<string, object> paramValueMap);
+        }
+
+        private class NotSupportedCacheKeyBuilder : ICacheKeyBuilder
+        {
+            public static readonly NotSupportedCacheKeyBuilder Instance = new NotSupportedCacheKeyBuilder();
+
+            private NotSupportedCacheKeyBuilder() { }
+
+            public string BuildCacheKey(ApiMethodInfo apiMethodInfo, IDictionary<string, object> paramValueMap)
+            {
+                return null;
+            }
         }
 
         private class PlainMethodCacheKeyBuilder : ICacheKeyBuilder

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Web;
 
 namespace cmstar.WebApi.Slim
@@ -16,6 +18,7 @@ namespace cmstar.WebApi.Slim
     public class InlineParamHttpParamDecoder : IRequestDecoder
     {
         private readonly ApiMethodParamInfoMap _paramInfoMap;
+        private readonly string _streamParamName;
 
         /// <summary>
         /// 初始化<see cref="InlineParamHttpParamDecoder"/>的新实例。
@@ -28,12 +31,27 @@ namespace cmstar.WebApi.Slim
             foreach (var kv in paramInfoMap.ParamInfos)
             {
                 var paramInfo = kv.Value;
-                if (paramInfo.Type.IsSubclassOf(typeof(IConvertible)))
+                var paramType = paramInfo.Type;
+
+                if (paramType.IsSubclassOf(typeof(IConvertible)))
                 {
                     var msg = string.Format(
                         "The parameter \"{0}\" (type {1}) of method {2} cannot be convert from the query string.",
-                        paramInfo.Name, paramInfo.Type, paramInfoMap.Method.Name);
+                        paramInfo.Name, paramType, paramInfoMap.Method.Name);
                     throw new ArgumentException(msg, "paramInfoMap");
+                }
+
+                if (paramType == typeof(Stream))
+                {
+                    if (_streamParamName != null)
+                    {
+                        var msg = string.Format(
+                            "There can be only one parameter with type Stream on method {0}",
+                            paramInfoMap.Method.Name);
+                        throw new ArgumentException(msg, "paramInfoMap");
+                    }
+
+                    _streamParamName = paramInfo.Name;
                 }
             }
 
@@ -52,10 +70,22 @@ namespace cmstar.WebApi.Slim
             if (_paramInfoMap.ParamCount == 0)
                 return new Dictionary<string, object>(0);
 
-            var keys = request.ExplicicParamKeys();
             var paramValueMap = new Dictionary<string, object>();
+            IEnumerable keys;
 
-            foreach (var key in keys)
+            if (_streamParamName == null)
+            {
+                keys = request.ExplicicParamKeys();
+            }
+            else
+            {
+                keys = request.QueryString.Keys;
+
+                request.InputStream.Position = 0;
+                paramValueMap.Add(_streamParamName, request.InputStream);
+            }
+
+            foreach (string key in keys)
             {
                 if (key == null)
                     continue;
