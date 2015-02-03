@@ -22,6 +22,8 @@ namespace cmstar.WebApi.Slim
         protected const string MetaRequestFormatPost = "post";
         protected const string MetaRequestFormatGet = "get";
         protected const string MetaResponseFormatPlain = "plain";
+        private const int OutputBodyLimitLower = 1024;
+        private const int OutputBodyLimitUpper = 65536;
 
         /// <summary>
         /// 获取指定的API方法所对应的参数解析器。
@@ -287,9 +289,30 @@ namespace cmstar.WebApi.Slim
                 sb.AppendLine();
                 sb.Append("Length: ").Append(bodyLength);
 
-                var body = ReadRequestBody(request);
-                sb.AppendLine();
-                sb.Append("Body: ").Append(body);
+                // 输出body部分按照下述逻辑判定：
+                // 1 1K以下的数据直接输出；
+                // 2 64K以上的数据不输出；
+                // 3 之间的数据校验是否是文本，若为文本则输出；
+                bool canOutputBody;
+                if (bodyLength < OutputBodyLimitLower)
+                {
+                    canOutputBody = true;
+                }
+                else if (bodyLength >= OutputBodyLimitUpper)
+                {
+                    canOutputBody = false;
+                }
+                else
+                {
+                    canOutputBody = IsTextRequestBody(request.InputStream);
+                }
+
+                if (canOutputBody)
+                {
+                    var body = ReadRequestBody(request.InputStream);
+                    sb.AppendLine();
+                    sb.Append("Body: ").Append(body);
+                }
             }
 
             if (apiResponse != null)
@@ -318,11 +341,42 @@ namespace cmstar.WebApi.Slim
             return new NotSupportedException(msg);
         }
 
-        private string ReadRequestBody(HttpRequest request)
+        private bool IsTextRequestBody(Stream inputStream)
         {
             // 重读InputStream
-            request.InputStream.Position = 0;
-            var streamReader = new StreamReader(request.InputStream);
+            inputStream.Position = 0;
+
+            // 使用检测\0\0的方式校验，实际上在ASCII和utf8下文本中一个\0都不会有；
+            // 但utf16可能会存在一个\0，从兼容性考虑这里校验两个更为保险
+            var buffer = new byte[128];
+            int len;
+            while ((len = inputStream.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                bool preZero = false;
+                for (int i = 0; i < len; i++)
+                {
+                    if (buffer[i] == '\0')
+                    {
+                        if (preZero)
+                            return false;
+
+                        preZero = true;
+                    }
+                    else
+                    {
+                        preZero = false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        private string ReadRequestBody(Stream inputStream)
+        {
+            // 重读InputStream
+            inputStream.Position = 0;
+            var streamReader = new StreamReader(inputStream);
             var body = streamReader.ReadToEnd();
 
             return body;
