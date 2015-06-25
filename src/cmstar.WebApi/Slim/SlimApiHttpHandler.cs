@@ -77,7 +77,9 @@ namespace cmstar.WebApi.Slim
                 {
                     if (!paramTypeStat.HasCoplexMember)
                     {
-                        decoderMap[MetaRequestFormatPost] = new SingleObjectHttpParamDecoder(paramInfoMap);
+                        var singleObjectHttpParamDecoder = new SingleObjectHttpParamDecoder(paramInfoMap);
+                        decoderMap[MetaRequestFormatGet] = singleObjectHttpParamDecoder;
+                        decoderMap[MetaRequestFormatPost] = singleObjectHttpParamDecoder;
                     }
 
                     decoderMap[MetaRequestFormatJson] = new SingleObjectJsonDecoder(paramInfoMap);
