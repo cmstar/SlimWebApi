@@ -10,6 +10,16 @@ namespace cmstar.WebApi
     /// </summary>
     public abstract class ApiHttpHandlerBase : IHttpHandler
     {
+        /// <summary>
+        /// 400错误的异常码。
+        /// </summary>
+        public const int Code400 = 400;
+
+        /// <summary>
+        /// 500错误的异常码。
+        /// </summary>
+        public const int Code500 = 500;
+
         private static readonly Dictionary<Type, ApiHandlerState> HandlerStates
             = new Dictionary<Type, ApiHandlerState>();
 
@@ -25,6 +35,7 @@ namespace cmstar.WebApi
 
             var handlerState = GetCurrentTypeHandler();
             var requestState = CreateRequestState(context, handlerState);
+            LogSetup = handlerState.LogSetup;
 
             try
             {
@@ -41,6 +52,11 @@ namespace cmstar.WebApi
         {
             get { return true; }
         }
+
+        /// <summary>
+        /// 获取日志相关的配置信息。
+        /// </summary>
+        protected LogSetup LogSetup { get; private set; }
 
         /// <summary>
         /// 对WebAPI进行注册和配置。
@@ -123,12 +139,7 @@ namespace cmstar.WebApi
         protected virtual void OnSuccess(HttpContext context, object requestState, ApiResponse apiResponse)
         {
             WriteResponse(context, requestState, apiResponse);
-
-            if (LogSuccessRequests && Logger.IsInfoEnabled)
-            {
-                var requestDescription = GetRequestDescription(context, requestState, apiResponse);
-                Logger.Info(requestDescription);
-            }
+            WriteLog(LogSetup.SuccessLogLevel, () => GetRequestDescription(context, requestState, apiResponse));
         }
 
         /// <summary>
@@ -141,16 +152,13 @@ namespace cmstar.WebApi
         {
             var apiException = exception as ApiException;
             var apiResponse = apiException == null
-                ? new ApiResponse(500, "Internal error.")
+                ? new ApiResponse(Code500, "Internal error.")
                 : new ApiResponse(apiException.Code, apiException.Description);
 
             WriteResponse(context, requestState, apiResponse);
 
-            if (Logger.IsErrorEnabled)
-            {
-                var requestDescription = GetRequestDescription(context, requestState, apiResponse);
-                Logger.Error(requestDescription, exception);
-            }
+            var logLevel = apiResponse.Code == Code400 ? LogSetup.Code400LogLevel : LogLevel.Error;
+            WriteLog(logLevel, () => GetRequestDescription(context, requestState, apiResponse), exception);
         }
 
         /// <summary>
@@ -160,17 +168,11 @@ namespace cmstar.WebApi
         /// <param name="requestState">用于保存当前API请求信息的对象实例。</param>
         protected virtual void OnMethodNotFound(HttpContext context, object requestState)
         {
-            const int code = 400;
             const string msg = "Bad entry.";
 
-            var apiResponse = new ApiResponse(code, msg);
+            var apiResponse = new ApiResponse(Code400, msg);
             WriteResponse(context, requestState, apiResponse);
-
-            if (Logger.IsWarnEnabled)
-            {
-                var requestDescription = GetRequestDescription(context, requestState, apiResponse);
-                Logger.Warn(requestDescription);
-            }
+            WriteLog(LogSetup.Code400LogLevel, () => GetRequestDescription(context, requestState, apiResponse));
         }
 
         /// <summary>
@@ -180,23 +182,17 @@ namespace cmstar.WebApi
         /// <param name="requestState">用于保存当前API请求信息的对象实例。</param>
         protected virtual void OnDecoderNotFound(HttpContext context, object requestState)
         {
-            const int code = 400;
             const string msg = "Unsupported format.";
 
-            var apiResponse = new ApiResponse(code, msg);
+            var apiResponse = new ApiResponse(Code400, msg);
             WriteResponse(context, requestState, apiResponse);
-
-            if (Logger.IsWarnEnabled)
-            {
-                var requestDescription = GetRequestDescription(context, requestState, apiResponse);
-                Logger.Warn(requestDescription);
-            }
+            WriteLog(LogSetup.Code400LogLevel, () => GetRequestDescription(context, requestState, apiResponse));
         }
 
         /// <summary>
         /// 指定是否将处理成功的API请求写入日志。
         /// </summary>
-        protected bool LogSuccessRequests
+        protected virtual bool LogSuccessRequests
         {
             get { return true; }
         }
@@ -218,9 +214,142 @@ namespace cmstar.WebApi
         /// 获取当前API使用的<see cref="ILog"/>实例。
         /// </summary>
         /// <returns>当前API使用的<see cref="ILog"/>实例。</returns>
-        protected virtual ILog Logger
+        protected ILog Logger
         {
-            get { return _log ?? (_log = LogManager.GetLogger(GetType())); }
+            get
+            {
+                if (_log == null)
+                {
+                    _log = LogSetup == null || LogSetup.LoggerName == null
+                        ? LogManager.GetLogger(GetType())
+                        : LogManager.GetLogger(LogSetup.LoggerName);
+                }
+
+                return _log;
+            }
+        }
+
+        /// <summary>
+        /// 在<see cref="Setup"/>方法执行之前，在同一个<see cref="ApiSetup"/>对象上执行此方法。
+        /// </summary>
+        /// <param name="setup"><see cref="ApiSetup"/>。</param>
+        protected virtual void PreSetup(ApiSetup setup)
+        {
+        }
+
+        /// <summary>
+        /// 在<see cref="Setup"/>方法执行之后，在同一个<see cref="ApiSetup"/>对象上执行此方法。
+        /// </summary>
+        /// <param name="setup"><see cref="ApiSetup"/>。</param>
+        protected virtual void PostSetup(ApiSetup setup)
+        {
+        }
+
+        /// <summary>
+        /// 写日志。
+        /// </summary>
+        /// <param name="logLevel">
+        /// 指定日志的级别。
+        /// <see cref="LogLevel.All"/>将作为<see cref="LogLevel.Info"/>处理。
+        /// </param>
+        /// <param name="msg">信息。</param>
+        /// <param name="ex">异常。</param>
+        protected void WriteLog(LogLevel logLevel, object msg, Exception ex = null)
+        {
+            if (logLevel == LogLevel.Info || logLevel == LogLevel.All)
+            {
+                Logger.Info(msg, ex);
+                return;
+            }
+
+            switch (logLevel)
+            {
+                case LogLevel.Debug:
+                    Logger.Debug(msg, ex);
+                    break;
+
+                case LogLevel.Warn:
+                    Logger.Warn(msg, ex);
+                    break;
+
+                case LogLevel.Error:
+                    Logger.Error(msg, ex);
+                    break;
+
+                case LogLevel.Fatal:
+                    Logger.Fatal(msg, ex);
+                    break;
+
+                case LogLevel.Trace:
+                    Logger.Trace(msg, ex);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// 写日志。
+        /// </summary>
+        /// <param name="logLevel">
+        /// 指定日志的级别。
+        /// <see cref="LogLevel.All"/>将作为<see cref="LogLevel.Info"/>处理。
+        /// </param>
+        /// <param name="getMsgCallback">获取日志信息的方法。</param>
+        /// <param name="ex">异常。</param>
+        protected void WriteLog(LogLevel logLevel, Func<string> getMsgCallback, Exception ex = null)
+        {
+            string msg;
+            if (logLevel == LogLevel.Info || logLevel == LogLevel.All)
+            {
+                if (!Logger.IsInfoEnabled)
+                    return;
+
+                msg = getMsgCallback();
+                Logger.Info(msg, ex);
+                return;
+            }
+
+            switch (logLevel)
+            {
+                case LogLevel.Debug:
+                    if (!Logger.IsDebugEnabled)
+                        return;
+
+                    msg = getMsgCallback();
+                    Logger.Debug(msg, ex);
+                    break;
+
+                case LogLevel.Warn:
+                    if (!Logger.IsWarnEnabled)
+                        return;
+
+                    msg = getMsgCallback();
+                    Logger.Warn(msg, ex);
+                    break;
+
+                case LogLevel.Error:
+                    if (!Logger.IsErrorEnabled)
+                        return;
+
+                    msg = getMsgCallback();
+                    Logger.Error(msg, ex);
+                    break;
+
+                case LogLevel.Fatal:
+                    if (!Logger.IsFatalEnabled)
+                        return;
+
+                    msg = getMsgCallback();
+                    Logger.Fatal(msg, ex);
+                    break;
+
+                case LogLevel.Trace:
+                    if (!Logger.IsTraceEnabled)
+                        return;
+
+                    msg = getMsgCallback();
+                    Logger.Trace(msg, ex);
+                    break;
+            }
         }
 
         private void PerformProcessRequest(
@@ -307,9 +436,12 @@ namespace cmstar.WebApi
                     return handlerState;
 
                 var setup = new ApiSetup(type);
+                PreSetup(setup);
                 Setup(setup);
+                PostSetup(setup);
 
                 handlerState = new ApiHandlerState();
+                handlerState.LogSetup = (LogSetup)setup.Log.Clone();
 
                 foreach (var apiMethodInfo in setup.ApiMethodInfos)
                 {

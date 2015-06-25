@@ -15,6 +15,7 @@ namespace cmstar.WebApi
             BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
 
         private readonly List<ApiMethodInfo> _apiMethodInfos;
+        private readonly LogSetup _logSetup;
 
         /// <summary>
         /// 初始化<see cref="ApiSetup"/>的新实例。
@@ -25,6 +26,7 @@ namespace cmstar.WebApi
             ArgAssert.NotNull(callerType, "callerType");
 
             _apiMethodInfos = new List<ApiMethodInfo>();
+            _logSetup = LogSetup.Default();
             CallerType = callerType;
         }
 
@@ -42,6 +44,14 @@ namespace cmstar.WebApi
         /// 获取缓存的超时时间。若API方法注册中没有单独指定超时时间，则套用此超时时间。
         /// </summary>
         public TimeSpan CacheExpiration { get; private set; }
+
+        /// <summary>
+        /// 获取日志相关的配置入口。
+        /// </summary>
+        public LogSetup Log
+        {
+            get { return _logSetup; }
+        }
 
         /// <summary>
         /// 获取于当前实例注册的所有API方法注册信息的序列。

@@ -15,7 +15,12 @@ namespace cmstar.WebApi
 
         private readonly Dictionary<string, IRequestDecoder> _decoders
             = new Dictionary<string, IRequestDecoder>(StringComparer.OrdinalIgnoreCase);
-        
+
+        /// <summary>
+        /// 获取或设置日志想的配置信息。
+        /// </summary>
+        public LogSetup LogSetup { get; set; }
+
         /// <summary>
         /// 添加一个API方法注册信息。
         /// </summary>
