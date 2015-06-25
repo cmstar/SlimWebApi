@@ -26,6 +26,16 @@ namespace cmstar.WebApi.Slim
         private const int OutputBodyLimitUpper = 65536;
 
         /// <summary>
+        /// 获取请求方的IP地址。
+        /// </summary>
+        /// <param name="request">当前请求对应的<see cref="HttpRequest"/>实例。</param>
+        /// <returns>请求方的IP地址。</returns>
+        protected virtual string GetUserHostAddress(HttpRequest request)
+        {
+            return request.UserHostAddress;
+        }
+
+        /// <summary>
         /// 获取指定的API方法所对应的参数解析器。
         /// </summary>
         /// <param name="method">包含API方法的有关信息。</param>
@@ -282,7 +292,7 @@ namespace cmstar.WebApi.Slim
         {
             var request = context.Request;
             var sb = new StringBuilder();
-            sb.AppendLine(request.UserHostAddress);
+            sb.AppendLine(GetUserHostAddress(request));
             sb.Append("Url: ").Append(request.RawUrl);
 
             var bodyLength = request.InputStream.Length;
