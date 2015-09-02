@@ -70,9 +70,15 @@ namespace cmstar.WebApi.Slim
             }
         }
 
-        public static object Deserialize(TextReader reader, Type type)
+        public static object Deserialize(TextReader reader, Type type, bool keepReaderOpen)
         {
-            return GetSerializer().Deserialize(reader, type);
+            var serializer = GetSerializer();
+            var contract = serializer.ContractResolver.ResolveContract(type);
+
+            using (var jsonReader = new JsonReader(reader) { AutoCloseInternalReader = !keepReaderOpen })
+            {
+                return contract.Read(jsonReader, new JsonDeserializingState());
+            }
         }
 
         private static JsonContract GetCustomFormatDateTimeContract()

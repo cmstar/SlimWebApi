@@ -58,7 +58,7 @@ namespace cmstar.WebApi.Slim
             {
                 // 不调用StreamReader.Dispose以保持InputStream不被关掉
                 var textReader = new StreamReader(request.InputStream);
-                value = JsonHelper.Deserialize(textReader, _paramType);
+                value = JsonHelper.Deserialize(textReader, _paramType, true);
             }
             else
             {
