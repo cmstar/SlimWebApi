@@ -35,11 +35,13 @@ namespace cmstar.WebApi
 
             // 注册静态方法
             setup.Method((Func<IList<double>, double>)SimpleServiceProvider.Sum);
-            setup.Method((Func<string, string, string>)string.Concat);
 
             // 使用非单例模式注册API方法
             Func<SimpleServiceProvider> serviceProvider = () => new SimpleServiceProvider();
             setup.Method(serviceProvider, x => (Func<Guid>)x.GetGuid);
+
+            // 也可以使用lambda表达式注册静态方法，但不推荐
+            setup.Method((Func<object>)null, x => (Func<string, string, string>)string.Concat);
 
             // 注册匿名方法（并取个名字）
             Func<int, int, int> plus = (x, y) => x + y;

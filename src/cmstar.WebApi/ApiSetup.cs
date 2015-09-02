@@ -821,10 +821,22 @@ namespace cmstar.WebApi
             if (unaryExpression != null)
                 body = unaryExpression.Operand;
 
-            // exp: CreateDelegate(methodSignature, instance, methodInfo)
             var methodCallExpression = (MethodCallExpression)body;
+
+            /* 
+             * http://stackoverflow.com/questions/8225302/get-the-name-of-a-method-using-an-expression
+             * C# 5.0 compiler does behave differently depending on the target framework, for .Net 4.0,
+             * it generates Call to Delegate.CreateDelegate, while for .Net 4.5, it's the new
+             * MethodInfo.CreateDelegate
+             */
+#if NET35 || NET40
+            // exp: CreateDelegate(methodSignature, instance, methodInfo)
             var methodConstantExpression = (ConstantExpression)methodCallExpression.Arguments[2];
             var methodInfo = (MethodInfo)methodConstantExpression.Value;
+#else
+            var constantExpression = (ConstantExpression)methodCallExpression.Object;
+            var methodInfo = (MethodInfo)constantExpression.Value;
+#endif
 
             return methodInfo;
         }
