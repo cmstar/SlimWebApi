@@ -224,16 +224,8 @@ namespace cmstar.WebApi.Slim
             }
             catch (Exception ex)
             {
-                var jsonContractException = ex as JsonContractException;
-                if (jsonContractException != null)
-                    throw new ApiException(400, "Bad JSON. " + jsonContractException.Message, ex);
-
-                var jsonFormatException = ex as JsonFormatException;
-                if (jsonFormatException != null)
-                    throw new ApiException(400, "Bad JSON. " + jsonFormatException.Message, ex);
-
-                if (ex is InvalidCastException)
-                    throw new ApiException(400, "Invalid parameter value.", ex);
+                if (ex is JsonContractException || ex is JsonFormatException || ex is InvalidCastException)
+                    throw new ApiException(Code400, "Bad request.", ex);
 
                 throw;
             }
