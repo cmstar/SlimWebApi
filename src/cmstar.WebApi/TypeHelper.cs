@@ -218,10 +218,15 @@ namespace cmstar.WebApi
                 }
 
                 var elementType = GetElementType(t);
-                if (elementType != null && IsSimpleType(elementType))
+                if (elementType != null)
                 {
-                    output.PlainCollections++;
-                    continue;
+                    output.Collections++;
+
+                    if (IsSimpleType(elementType))
+                    {
+                        output.PlainCollections++;
+                        continue;
+                    }
                 }
 
                 output.Others++;
@@ -298,6 +303,7 @@ namespace cmstar.WebApi
         public int Plains;
         public int Others;
         public int PlainCollections;
+        public int Collections;
         public int Streams;
 
         /// <summary>
