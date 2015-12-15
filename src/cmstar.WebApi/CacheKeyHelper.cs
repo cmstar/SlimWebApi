@@ -62,7 +62,7 @@ namespace cmstar.WebApi
             var method = apiMethodInfo.Method;
             var methodParamStat = TypeHelper.GetMethodParamStat(method);
 
-            if (methodParamStat.HasStream)
+            if (methodParamStat.HasFileInput)
                 return NotSupportedCacheKeyBuilder.Instance;
 
             if (methodParamStat.IsPurePlain)
@@ -74,7 +74,7 @@ namespace cmstar.WebApi
                 var paramType = ps[0].ParameterType;
                 var paramTypeStat = TypeHelper.GetTypeMemberStat(paramType);
 
-                if (paramTypeStat.HasStream)
+                if (paramTypeStat.HasFileInput)
                     return NotSupportedCacheKeyBuilder.Instance;
 
                 if (paramTypeStat.IsPurePlain)

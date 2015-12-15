@@ -19,6 +19,7 @@ namespace cmstar.WebApi.Slim
     {
         private readonly ApiMethodParamInfoMap _paramInfoMap;
         private readonly string _streamParamName;
+        private readonly string _httpFileCollectionParamName;
 
         /// <summary>
         /// 初始化<see cref="InlineParamHttpParamDecoder"/>的新实例。
@@ -36,7 +37,7 @@ namespace cmstar.WebApi.Slim
                 if (paramType.IsSubclassOf(typeof(IConvertible)))
                 {
                     var msg = string.Format(
-                        "The parameter \"{0}\" (type {1}) of method {2} cannot be convert from the query string.",
+                        "The values for parameter '{0}' ({1}) of method '{2}' cannot be convert from the query string.",
                         paramInfo.Name, paramType, paramInfoMap.Method.Name);
                     throw new ArgumentException(msg, "paramInfoMap");
                 }
@@ -45,13 +46,20 @@ namespace cmstar.WebApi.Slim
                 {
                     if (_streamParamName != null)
                     {
-                        var msg = string.Format(
-                            "There can be only one parameter with type Stream on method {0}",
-                            paramInfoMap.Method.Name);
-                        throw new ArgumentException(msg, "paramInfoMap");
+                        throw FileParamConflictError(paramInfoMap.Method.Name, "paramInfoMap");
                     }
 
                     _streamParamName = paramInfo.Name;
+                }
+
+                if (paramType == typeof(HttpFileCollection))
+                {
+                    if (_streamParamName != null || _httpFileCollectionParamName != null)
+                    {
+                        throw FileParamConflictError(paramInfoMap.Method.Name, "paramInfoMap");
+                    }
+
+                    _httpFileCollectionParamName = paramInfo.Name;
                 }
             }
 
@@ -73,7 +81,7 @@ namespace cmstar.WebApi.Slim
             var paramValueMap = new Dictionary<string, object>();
             IEnumerable keys;
 
-            if (_streamParamName == null)
+            if (CanReadForm())
             {
                 keys = request.ExplicicParamKeys();
             }
@@ -81,28 +89,62 @@ namespace cmstar.WebApi.Slim
             {
                 keys = request.QueryString.Keys;
 
-                request.InputStream.Position = 0;
-                paramValueMap.Add(_streamParamName, request.InputStream);
+                if (_streamParamName != null)
+                {
+                    request.InputStream.Position = 0;
+                    paramValueMap.Add(_streamParamName, request.InputStream);
+                }
+                else
+                {
+                    paramValueMap.Add(_httpFileCollectionParamName, request.Files);
+                }
             }
 
             foreach (string key in keys)
             {
-                if (key == null)
+                if (key == null || key == _streamParamName || key == _httpFileCollectionParamName)
                     continue;
 
                 ApiParamInfo paramInfo;
                 if (!_paramInfoMap.TryGetParamInfo(key, out paramInfo))
                     continue;
 
-                var paramValue = request.ExplicicParam(key);
-                var value = paramInfo.IsGenericCollection
-                    ? TypeHelper.ConvertToCollection(paramValue, paramInfo.Type)
-                    : TypeHelper.ConvertString(paramValue, paramInfo.Type);
+                var paramValue = CanReadForm() 
+                    ? request.ExplicicParam(key) 
+                    : request.QueryString[key];
+                
+                object value;
+                try
+                {
+                    value = paramInfo.IsGenericCollection
+                        ? TypeHelper.ConvertToCollection(paramValue, paramInfo.Type)
+                        : TypeHelper.ConvertString(paramValue, paramInfo.Type);
+                }
+                catch (Exception ex)
+                {
+                    var msg = string.Format(
+                        "Parameter '{0}' - failed on converting value '{1}' to type {2}.",
+                        key, paramValue, paramInfo.Type);
+                    throw new InvalidCastException(msg, ex);
+                }
 
                 paramValueMap.Add(paramInfo.Name, value);
             }
 
             return paramValueMap;
+        }
+
+        private bool CanReadForm()
+        {
+            return _streamParamName == null && _httpFileCollectionParamName == null;
+        }
+
+        private Exception FileParamConflictError(string methodName, string parameterName)
+        {
+            var msg = string.Format(
+                "There can be only one parameter declared as Stream or HttpFileCollection on the method '{0}'.",
+                methodName);
+            return new ArgumentException(msg, parameterName);
         }
     }
 }

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Web;
 using cmstar.Util;
 
 namespace cmstar.WebApi
@@ -211,9 +212,9 @@ namespace cmstar.WebApi
                     continue;
                 }
 
-                if (t == typeof(Stream))
+                if (t == typeof(Stream) || t == typeof(HttpFileCollection))
                 {
-                    output.Streams++;
+                    output.HasFileInput = true;
                     continue;
                 }
 
@@ -270,7 +271,7 @@ namespace cmstar.WebApi
             var collection = Activator.CreateInstance(collectionType);
             var appendMethod = typeof(TypeHelper)
                 .GetMethod("PerformAppending", BindingFlags.Instance | BindingFlags.NonPublic)
-                .MakeGenericMethod(new[] { elementType });
+                .MakeGenericMethod(elementType);
 
             appendMethod.Invoke(null, new[] { collection, elements });
             return collection;
@@ -304,14 +305,13 @@ namespace cmstar.WebApi
         public int Others;
         public int PlainCollections;
         public int Collections;
-        public int Streams;
 
         /// <summary>
         /// true if there are only plain members (exclude collections).
         /// </summary>
         public bool IsPurePlain
         {
-            get { return Others == 0 && Streams == 0 && PlainCollections == 0; }
+            get { return Others == 0 && PlainCollections == 0 && !HasFileInput; }
         }
 
         /// <summary>
@@ -323,11 +323,8 @@ namespace cmstar.WebApi
         }
 
         /// <summary>
-        /// true if any <see cref="Stream"/> member exists.
+        /// true if any <see cref="Stream"/> or <see cref="HttpFileCollection"/> member exists.
         /// </summary>
-        public bool HasStream
-        {
-            get { return Streams > 0; }
-        }
+        public bool HasFileInput { get; set; }
     }
 }

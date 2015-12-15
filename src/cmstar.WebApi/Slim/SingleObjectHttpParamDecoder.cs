@@ -34,6 +34,7 @@ namespace cmstar.WebApi.Slim
         private readonly Dictionary<string, MemberCache> _memberMap;
         private readonly Func<object> _constructor;
         private readonly string _streamMemberName;
+        private readonly string _httpFileCollectionMemmberName;
         private readonly string _paramName;
 
         /// <summary>
@@ -69,17 +70,24 @@ namespace cmstar.WebApi.Slim
             var props = paramType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
             foreach (var prop in props)
             {
-                if (prop.PropertyType == typeof(Stream))
+                if (paramType == typeof(Stream))
                 {
                     if (_streamMemberName != null)
                     {
-                        var msg = string.Format(
-                            "There can be only one member with type Stream int type {0} from method {1}.",
-                            paramType, paramInfoMap.Method.Name);
-                        throw new ArgumentException(msg, "paramInfoMap");
+                        throw FileParamConflictError(paramType, "paramInfoMap");
                     }
 
-                    _streamMemberName = prop.Name;
+                    _streamMemberName = paramInfo.Name;
+                }
+
+                if (paramType == typeof(HttpFileCollection))
+                {
+                    if (_streamMemberName != null || _httpFileCollectionMemmberName != null)
+                    {
+                        throw FileParamConflictError(paramType, "paramInfoMap");
+                    }
+
+                    _httpFileCollectionMemmberName = paramInfo.Name;
                 }
 
                 var setter = PropertyAccessorGenerator.CreateSetter(prop);
@@ -137,7 +145,7 @@ namespace cmstar.WebApi.Slim
             var instance = _constructor();
 
             IEnumerable keys;
-            if (_streamMemberName == null)
+            if (CanReadForm())
             {
                 keys = request.ExplicicParamKeys();
             }
@@ -145,22 +153,30 @@ namespace cmstar.WebApi.Slim
             {
                 keys = request.QueryString.Keys;
 
-                request.InputStream.Position = 0;
-                var m = _memberMap[_streamMemberName];
-                m.Setter(instance, request.InputStream);
+                if (_streamMemberName != null)
+                {
+                    request.InputStream.Position = 0;
+                    var m = _memberMap[_streamMemberName];
+                    m.Setter(instance, request.InputStream);
+                }
+                else
+                {
+                    var m = _memberMap[_httpFileCollectionMemmberName];
+                    m.Setter(instance, request.Files);
+                }
             }
 
             foreach (string key in keys)
             {
                 // the key may be null in http params
-                if (key == null || key == _streamMemberName)
+                if (key == null || key == _streamMemberName || key == _httpFileCollectionMemmberName)
                     continue;
 
                 MemberCache m;
                 if (!_memberMap.TryGetValue(key, out m))
                     continue;
 
-                var httpParam = _streamMemberName == null
+                var httpParam = CanReadForm()
                     ? request.ExplicicParam(key)
                     : request.QueryString[key];
 
@@ -183,6 +199,19 @@ namespace cmstar.WebApi.Slim
             }
 
             return new Dictionary<string, object>(1) { { _paramName, instance } };
+        }
+
+        private bool CanReadForm()
+        {
+            return _streamMemberName == null && _httpFileCollectionMemmberName == null;
+        }
+
+        private Exception FileParamConflictError(Type type, string parameterName)
+        {
+            var msg = string.Format(
+                "There can be only one member declared as Stream or HttpFileCollection int the type {0}",
+                type);
+            return new ArgumentException(msg, parameterName);
         }
 
         private class MemberCache

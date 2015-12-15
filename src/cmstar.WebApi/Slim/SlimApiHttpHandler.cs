@@ -63,7 +63,7 @@ namespace cmstar.WebApi.Slim
                 var inlineParamHttpParamDecoder = new InlineParamHttpParamDecoder(paramInfoMap);
                 decoderMap[MetaRequestFormatGet] = inlineParamHttpParamDecoder;
 
-                if (!methodParamStat.HasStream)
+                if (!methodParamStat.HasFileInput)
                 {
                     decoderMap[MetaRequestFormatPost] = inlineParamHttpParamDecoder;
                     decoderMap[MetaRequestFormatJson] = new InlineParamJsonDecoder(paramInfoMap);
@@ -74,7 +74,7 @@ namespace cmstar.WebApi.Slim
                 var paramType = param[0].ParameterType;
                 var paramTypeStat = TypeHelper.GetTypeMemberStat(paramType);
 
-                if (paramTypeStat.HasStream)
+                if (paramTypeStat.HasFileInput)
                 {
                     if (paramTypeStat.HasCoplexMember)
                     {
@@ -97,7 +97,7 @@ namespace cmstar.WebApi.Slim
             }
             else // param.Length > 1 || methodParamStat.HasCoplexMember
             {
-                if (methodParamStat.HasStream)
+                if (methodParamStat.HasFileInput)
                 {
                     throw NoSupportedDecoderError(method.Method);
                 }
@@ -287,35 +287,49 @@ namespace cmstar.WebApi.Slim
             sb.AppendLine(GetUserHostAddress(request));
             sb.Append("Url: ").Append(request.RawUrl);
 
-            var bodyLength = request.InputStream.Length;
-            if (bodyLength > 0)
+            if (request.Files.Count == 0)
             {
-                sb.AppendLine();
-                sb.Append("Length: ").Append(bodyLength);
-
-                // 输出body部分按照下述逻辑判定：
-                // 1 1K以下的数据直接输出；
-                // 2 64K以上的数据不输出；
-                // 3 之间的数据校验是否是文本，若为文本则输出；
-                bool canOutputBody;
-                if (bodyLength < OutputBodyLimitLower)
+                var bodyLength = request.InputStream.Length;
+                if (bodyLength > 0)
                 {
-                    canOutputBody = true;
-                }
-                else if (bodyLength >= OutputBodyLimitUpper)
-                {
-                    canOutputBody = false;
-                }
-                else
-                {
-                    canOutputBody = IsTextRequestBody(request.InputStream);
-                }
-
-                if (canOutputBody)
-                {
-                    var body = ReadRequestBody(request.InputStream);
                     sb.AppendLine();
-                    sb.Append("Body: ").Append(body);
+                    sb.Append("Length: ").Append(bodyLength);
+
+                    // 输出body部分按照下述逻辑判定：
+                    // 1 1K以下的数据直接输出；
+                    // 2 64K以上的数据不输出；
+                    // 3 之间的数据校验是否是文本，若为文本则输出；
+                    bool canOutputBody;
+                    if (bodyLength < OutputBodyLimitLower)
+                    {
+                        canOutputBody = true;
+                    }
+                    else if (bodyLength >= OutputBodyLimitUpper)
+                    {
+                        canOutputBody = false;
+                    }
+                    else
+                    {
+                        canOutputBody = IsTextRequestBody(request.InputStream);
+                    }
+
+                    if (canOutputBody)
+                    {
+                        var body = ReadRequestBody(request.InputStream);
+                        sb.AppendLine();
+                        sb.Append("Body: ").Append(body);
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < request.Files.Count; i++)
+                {
+                    var file = request.Files[i];
+                    sb.AppendLine();
+                    sb.Append("File: ").AppendLine(file.FileName);
+                    sb.Append("Content-Type: ").AppendLine(file.ContentType);
+                    sb.Append("Length: ").Append(file.ContentLength);
                 }
             }
 
