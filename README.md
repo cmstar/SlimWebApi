@@ -15,6 +15,10 @@
             _lastValue = _random.Next(1000);
             return x + y + _lastValue;
         }
+
+        public static void Save(string value)
+        {
+        }
     }
 
 现在让我们按下面的步骤，将上面的PlusRandom方法发布为WebAPI。
@@ -27,8 +31,12 @@
         {
             public override void Setup(ApiSetup setup)
             {
+                // 实例方法
                 var serviceProvider = new SimpleServiceProvider();
                 setup.Method((Func<int, int, int>)serviceProvider.PlusRandom);
+            
+                // 静态方法
+                setup.Method((Action<string>)SimpleServiceProvider.Save);
             }
         }
 
@@ -145,10 +153,98 @@ JSON比起HTTP参数，能够传递更为复杂的数据结构。
 
 ## 注册API方法
 
-### 通过委托注册
+前面的例子中给出了API方法注册的入口
+
+    public class SimpleExample : SlimApiHttpHandler
+    {
+        public override void Setup(ApiSetup setup)
+        {
+            // 在这里通过setup实例进行方法注册
+        }
+    }
+
+### 通过委托注册与方法的重命名
+
+前面的例子中，使用委托的方式注册了`SimpleServiceProvider`中的两个方法：
+
+    setup.Method((Func<int, int, int>)serviceProvider.PlusRandom);
+    setup.Method((Action<string>)serviceProvider.Save);
+
+对应调用时的`~method`即为方法名称，其实也可以对调用名称进行重命名：
+
+    setup.Method((Func<int, int, int>)serviceProvider.PlusRandom).Name("plus");
+
+则对应的调用`PlusRandom`方法的`~method`变为了plus。
+
+利用委托机制，可以注册匿名方法：
+
+    Func<int, int, int> multiple = (x, y) => x * y;
+    setup.Method(multiple).Name("multiple");
 
 ### 通过`MethodInfo`注册
 
-### 自动批量注册
+可以直接注册`MethodInfo`：
 
-## 开启缓存
+    // 静态方法
+    var method = typeof(SimpleServiceProvider).GetMethod("Save");
+    setup.Method(null, method); 
+
+    // 实例方法
+    method = typeof(SimpleServiceProvider).GetMethod("PlusRandom");
+    setup.Method(new SimpleServiceProvider(), method);
+
+*如果你想，明显可以注册私有方法。*
+
+### 批量注册
+
+可以利用`ApiMethodAttribute`特性标记方法
+
+    public class SimpleServiceProvider
+    {
+        [ApiMethod]
+        public int Plus(int x, int y) { return x + y; }
+
+        [ApiMethod]
+        public void Save(string value) {  }
+
+        // 没有ApiMethod不会被注册
+        public void WillNotBeRegistered() {  }
+    }
+
+之后通过使用`Auto`方法注册所有有特性的方法：
+
+    setup.Auto(new SimpleServiceProvider());
+
+`Auto`方法要求提供包含待注册方法的实例，对于静态类，则使用`FromType`方法，如：
+
+    setup.FromType(typeof(SomeStaticClass));
+
+如果不想使用`ApiMethodAttribute`，可以通过重载方法的参数指定需要注册的方法的范围，例如下面的例子注册类型内所有非私有的静态方法：
+
+    setup.Auto(new SimpleServiceProvider(),
+        parseAttribute: false, 
+        bindingFlags: BindingFlags.Static | BindingFlags.Public);
+
+## 处理文件流
+
+若方法参数使用两个特定的类型之一`System.IO.Stream`及`System.Web.HttpFileCollection`作为输入参数，则该参数的值将为该次请求的：
+
+- Stream类型的参数将获得HttpContext.Current.Request.InputStream；
+- HttpFileCollection类型的参数将获得HttpContext.Current.Request.Files；
+
+比如可以用下面这个方法处理HTTP文件上传，并且在URL中接收id和name两个参数，方法最终返回被上传文件的URL地址
+
+    [ApiMethod]
+    public void Upload(int id, string name, HttpFileCollection files)
+    {
+        for (int i = 0; i < files.Count; i++)
+        {
+            var file = files[i];
+            // process the file
+        }
+    }
+
+
+## 其他需要注意的
+
+- 若通过对象实例进行注册，则实例将被保存下来，该实例不会被垃圾回收。
