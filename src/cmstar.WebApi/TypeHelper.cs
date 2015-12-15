@@ -119,6 +119,18 @@ namespace cmstar.WebApi
         }
 
         /// <summary>
+        /// Determine whether an instance of the specified type can be converted from a string
+        /// by <see cref="ConvertToCollection"/> or <see cref="ConvertString"/>.
+        /// </summary>
+        /// <param name="type">The type.</param>
+        /// <returns>true if the convertion is supported; otherwise false.</returns>
+        public static bool CanConvertFromString(Type type)
+        {
+            var elementType = GetElementType(type);
+            return IsSimpleType(elementType ?? type);
+        }
+
+        /// <summary>
         /// Converts a string to a collection specifed by the <paramref name="collectionType"/>. 
         /// </summary>
         /// <param name="value">The string to convert.</param>

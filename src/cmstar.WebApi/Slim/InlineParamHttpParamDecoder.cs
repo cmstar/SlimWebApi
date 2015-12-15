@@ -34,14 +34,6 @@ namespace cmstar.WebApi.Slim
                 var paramInfo = kv.Value;
                 var paramType = paramInfo.Type;
 
-                if (paramType.IsSubclassOf(typeof(IConvertible)))
-                {
-                    var msg = string.Format(
-                        "The values for parameter '{0}' ({1}) of method '{2}' cannot be convert from the query string.",
-                        paramInfo.Name, paramType, paramInfoMap.Method.Name);
-                    throw new ArgumentException(msg, "paramInfoMap");
-                }
-
                 if (paramType == typeof(Stream))
                 {
                     if (_streamParamName != null)
@@ -50,6 +42,7 @@ namespace cmstar.WebApi.Slim
                     }
 
                     _streamParamName = paramInfo.Name;
+                    continue;
                 }
 
                 if (paramType == typeof(HttpFileCollection))
@@ -60,6 +53,15 @@ namespace cmstar.WebApi.Slim
                     }
 
                     _httpFileCollectionParamName = paramInfo.Name;
+                    continue;
+                }
+
+                if (!TypeHelper.CanConvertFromString(paramType))
+                {
+                    var msg = string.Format(
+                        "The values for parameter '{0}' ({1}) of method '{2}' cannot be converted from the query string.",
+                        paramInfo.Name, paramType, paramInfoMap.Method.Name);
+                    throw new ArgumentException(msg, "paramInfoMap");
                 }
             }
 
@@ -109,10 +111,10 @@ namespace cmstar.WebApi.Slim
                 if (!_paramInfoMap.TryGetParamInfo(key, out paramInfo))
                     continue;
 
-                var paramValue = CanReadForm() 
-                    ? request.ExplicicParam(key) 
+                var paramValue = CanReadForm()
+                    ? request.ExplicicParam(key)
                     : request.QueryString[key];
-                
+
                 object value;
                 try
                 {
