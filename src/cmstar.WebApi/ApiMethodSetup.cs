@@ -47,6 +47,17 @@ namespace cmstar.WebApi
         }
 
         /// <summary>
+        /// 指定输出结果所使用的压缩方式。
+        /// </summary>
+        /// <param name="compressionMethod">API数据输出时的压缩方式。</param>
+        /// <returns>当前<see cref="ApiMethodSetup"/>实例。</returns>
+        public ApiMethodSetup Compression(ApiCompressionMethods compressionMethod)
+        {
+            _apiMethodInfo.Setting.CompressionMethods = compressionMethod;
+            return this;
+        }
+
+        /// <summary>
         /// 为当前注册的方法单独指定缓存提供器。
         /// </summary>
         /// <param name="cacheProvider">缓存提供器。</param>

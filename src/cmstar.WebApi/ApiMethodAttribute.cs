@@ -93,6 +93,16 @@ namespace cmstar.WebApi
         }
 
         /// <summary>
+        /// 指定对于此API方法使用何种压缩方式输出结果。
+        /// 默认值为<see cref="ApiCompressionMethods.None"/>。
+        /// </summary>
+        public ApiCompressionMethods CompressionMethods
+        {
+            get { return _setting.CompressionMethods; }
+            set { _setting.CompressionMethods = value; }
+        }
+
+        /// <summary>
         /// 获取方法的配置信息。
         /// </summary>
         /// <returns>方法的配置信息。</returns>

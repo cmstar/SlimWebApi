@@ -127,5 +127,23 @@ namespace cmstar.WebApi
             ApiMethodContext.Current.SetCachedResult(_value);
             return _value;
         }
+
+        [ApiMethod(CompressionMethods = ApiCompressionMethods.GZip)]
+        public string ForceGzipString()
+        {
+            return Guid.NewGuid().ToString();
+        }
+
+        [ApiMethod(CompressionMethods = ApiCompressionMethods.Defalte)]
+        public string ForceDeflateString()
+        {
+            return Guid.NewGuid().ToString();
+        }
+
+        [ApiMethod(CompressionMethods = ApiCompressionMethods.Auto)]
+        public string AutoCompressionString()
+        {
+            return Guid.NewGuid().ToString();
+        }
     }
 }

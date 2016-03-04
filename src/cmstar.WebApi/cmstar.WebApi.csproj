@@ -45,6 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ApiCompressionMethods.cs" />
     <Compile Include="ApiException.cs" />
     <Compile Include="ApiHandlerState.cs" />
     <Compile Include="ApiHttpHandlerBase.cs" />
@@ -58,6 +59,9 @@
     <Compile Include="ApiSetup.cs" />
     <Compile Include="CacheKeyHelper.cs" />
     <Compile Include="EmptyParamMethodRequestDecoder.cs" />
+    <Compile Include="Filters\CompressionFilter.cs" />
+    <Compile Include="Filters\DeflateCompressionFilter.cs" />
+    <Compile Include="Filters\GzipCompressionFilter.cs" />
     <Compile Include="HttpContextExtention.cs" />
     <Compile Include="HttpRuntimeApiCacheProvider.cs" />
     <Compile Include="IApiCacheProvider.cs" />

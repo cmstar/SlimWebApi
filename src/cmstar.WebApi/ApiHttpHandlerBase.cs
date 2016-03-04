@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Web;
+using cmstar.WebApi.Filters;
 using Common.Logging;
 
 namespace cmstar.WebApi
@@ -420,6 +422,9 @@ namespace cmstar.WebApi
                     PostMethodInvoke(method, param);
                 }
 
+                // 按需使用压缩流传输
+                AppendCompressionFilter(context, method);
+
                 var apiResponse = new ApiResponse(result);
                 OnSuccess(context, requestState, apiResponse);
             }
@@ -435,6 +440,52 @@ namespace cmstar.WebApi
                     OnSuccess(context, requestState, apiResponse);
                 }
             }
+        }
+
+        private void AppendCompressionFilter(HttpContext context, ApiMethodInfo method)
+        {
+            var compressionMethod = ParseCompressionMethods(context.Request, method.Setting.CompressionMethods);
+
+            string contentEncoding;
+            Stream filter;
+
+            switch (compressionMethod)
+            {
+                case ApiCompressionMethods.Defalte:
+                    contentEncoding = "deflate";
+                    filter = new DeflateCompressionFilter(context.Response.Filter);
+                    break;
+
+                case ApiCompressionMethods.GZip:
+                    contentEncoding = "gzip";
+                    filter = new GzipCompressionFilter(context.Response.Filter);
+                    break;
+
+                default:
+                    return;
+            }
+
+            context.Response.Headers["Content-Encoding"] = contentEncoding;
+            context.Response.Filter = filter;
+        }
+
+        private ApiCompressionMethods ParseCompressionMethods(HttpRequest request, ApiCompressionMethods compressionMethod)
+        {
+            if (compressionMethod != ApiCompressionMethods.Auto)
+                return compressionMethod;
+
+            var header = request.Headers["Accept-Encoding"];
+            if (header == null)
+                return ApiCompressionMethods.None;
+
+            // 由于deflate比gzip稍快一些，体积也较小，优先使用deflate
+            if (header.Contains("deflate"))
+                return ApiCompressionMethods.Defalte;
+
+            if (header.Contains("gzip"))
+                return ApiCompressionMethods.GZip;
+
+            return ApiCompressionMethods.None;
         }
 
         private ApiHandlerState GetCurrentTypeHandler()
