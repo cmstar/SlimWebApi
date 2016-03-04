@@ -35,7 +35,7 @@ namespace cmstar.WebApi
     {
         public static double Sum(IList<double> values)
         {
-            return values.Sum();
+            return values == null ? 0 : values.Sum();
         }
 
         private readonly Random _random = new Random();
