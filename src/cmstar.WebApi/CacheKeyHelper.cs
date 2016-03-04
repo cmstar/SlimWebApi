@@ -23,7 +23,7 @@ namespace cmstar.WebApi
         /// <returns>缓存键的前缀。</returns>
         public static string GetCacheKeyPrefix(ApiMethodInfo apiMethodInfo)
         {
-            return apiMethodInfo.CacheNamespace + apiMethodInfo.MethodName;
+            return apiMethodInfo.Setting.CacheNamespace + apiMethodInfo.Setting.MethodName;
         }
 
         /// <summary>

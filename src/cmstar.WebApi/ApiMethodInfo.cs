@@ -13,17 +13,16 @@ namespace cmstar.WebApi
         private readonly bool _isStaticMethod;
         private readonly Func<object> _provider;
         private readonly Func<object, object[], object> _invoker;
-        private string _methodName;
-        private bool _autoCacheEnabled;
-        private TimeSpan _cacheExpiration = TimeSpan.Zero;
+        private readonly ApiMethodSetting _setting;
 
         /// <summary>
         /// 初始化<see cref="ApiMethodInfo"/>的新实例。
         /// </summary>
         /// <param name="provider">返回一个对象，该对象为提供API逻辑实现的类型实例。</param>
         /// <param name="methodInfo">被注册为WebAPI的方法。</param>
+        /// <param name="methodSetting">用于获取或保存此WebAPI方法的设置信息。若为null，则套用默认的设置。</param>
         /// <exception cref="ArgumentNullException">当<paramref name="methodInfo"/>为null。</exception>
-        public ApiMethodInfo(Func<object> provider, MethodInfo methodInfo)
+        public ApiMethodInfo(Func<object> provider, MethodInfo methodInfo, ApiMethodSetting methodSetting)
         {
             ArgAssert.NotNull(methodInfo, "methodInfo");
 
@@ -36,8 +35,14 @@ namespace cmstar.WebApi
 
             ParamInfoMap = new ApiMethodParamInfoMap(methodInfo);
 
-            _methodName = methodInfo.Name;
             _invoker = MethodInvokerGenerator.CreateDelegate(methodInfo);
+            _setting = methodSetting ?? new ApiMethodSetting();
+
+            // 若没有指定方法入口的名称，套用方法自身的名称
+            if (string.IsNullOrWhiteSpace(_setting.MethodName))
+            {
+                _setting.MethodName = methodInfo.Name;
+            }
         }
 
         /// <summary>
@@ -54,65 +59,11 @@ namespace cmstar.WebApi
         }
 
         /// <summary>
-        /// 获取调用当前WebAPI所使用的名称。
+        /// 获取当前实例所关联的Web API方法的设置信息。
         /// </summary>
-        public string MethodName
+        public ApiMethodSetting Setting
         {
-            get
-            {
-                return _methodName;
-            }
-            set
-            {
-                ArgAssert.NotNullOrEmptyOrWhitespace(value, "value");
-                _methodName = value;
-            }
-        }
-
-        /// <summary>
-        /// 获取当前WebAPI所用缓存的超时时间。若未开启缓存，则为<see cref="TimeSpan.Zero"/>。
-        /// </summary>
-        public TimeSpan CacheExpiration
-        {
-            get
-            {
-                return _cacheExpiration;
-            }
-            set
-            {
-                if (value.Ticks <= 0)
-                    throw new ArgumentException("The expiration must be greater than zero.", "value");
-
-                _cacheExpiration = value;
-            }
-        }
-
-        /// <summary>
-        /// 获取当前WebAPI所使用的缓存提供器。
-        /// </summary>
-        public IApiCacheProvider CacheProvider { get; set; }
-
-        /// <summary>
-        /// 获取当前WebAPI注册中使用的缓存命名空间。
-        /// </summary>
-        public string CacheNamespace { get; set; }
-
-        /// <summary>
-        /// 是否允许对当前方法进行自动缓存。
-        /// </summary>
-        public bool AutoCacheEnabled
-        {
-            get
-            {
-                return _autoCacheEnabled;
-            }
-            set
-            {
-                if (value && CacheProvider == null)
-                    throw new ArgumentException("The cache provider must be specified.", "value");
-
-                _autoCacheEnabled = value;
-            }
+            get { return _setting; }
         }
 
         /// <summary>

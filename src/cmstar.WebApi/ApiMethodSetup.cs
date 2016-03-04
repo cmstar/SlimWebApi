@@ -19,15 +19,15 @@ namespace cmstar.WebApi
             ArgAssert.NotNull(setup, "setup");
             ArgAssert.NotNull(apiMethodInfo, "apiMethodInfo");
 
-            apiMethodInfo.CacheProvider = setup.CacheProvider;
+            apiMethodInfo.Setting.CacheProvider = setup.CacheProvider;
 
             if (setup.CacheExpiration.Ticks > 0)
             {
-                apiMethodInfo.CacheExpiration = setup.CacheExpiration;
+                apiMethodInfo.Setting.CacheExpiration = setup.CacheExpiration;
             }
 
             // 缓存命名空间优先使用承载方法的类型的名称
-            apiMethodInfo.CacheNamespace = apiMethodInfo.Method.DeclaringType != null
+            apiMethodInfo.Setting.CacheNamespace = apiMethodInfo.Method.DeclaringType != null
                 ? apiMethodInfo.Method.DeclaringType.FullName
                 : setup.CallerType.FullName;
 
@@ -42,7 +42,7 @@ namespace cmstar.WebApi
         public ApiMethodSetup Name(string name)
         {
             ArgAssert.NotNullOrEmptyOrWhitespace(name, "name");
-            _apiMethodInfo.MethodName = name;
+            _apiMethodInfo.Setting.MethodName = name;
             return this;
         }
 
@@ -54,7 +54,7 @@ namespace cmstar.WebApi
         public ApiMethodSetup CacheProvider(IApiCacheProvider cacheProvider)
         {
             ArgAssert.NotNull(cacheProvider, "cacheProvider");
-            _apiMethodInfo.CacheProvider = cacheProvider;
+            _apiMethodInfo.Setting.CacheProvider = cacheProvider;
             return this;
         }
 
@@ -69,7 +69,7 @@ namespace cmstar.WebApi
                 throw new ArgumentOutOfRangeException(
                     "expiration", "The expiration time must be greater than zero.");
 
-            _apiMethodInfo.CacheExpiration = expiration;
+            _apiMethodInfo.Setting.CacheExpiration = expiration;
             return this;
         }
 
@@ -80,7 +80,7 @@ namespace cmstar.WebApi
         /// <returns>当前<see cref="ApiMethodSetup"/>实例。</returns>
         public ApiMethodSetup CacheNamespace(string ns)
         {
-            _apiMethodInfo.CacheNamespace = ns ?? string.Empty;
+            _apiMethodInfo.Setting.CacheNamespace = ns ?? string.Empty;
             return this;
         }
 
@@ -91,13 +91,13 @@ namespace cmstar.WebApi
         /// <returns>当前<see cref="ApiMethodSetup"/>实例。</returns>
         public ApiMethodSetup EnableAutoCache()
         {
-            if (_apiMethodInfo.CacheProvider == null)
+            if (_apiMethodInfo.Setting.CacheProvider == null)
             {
                 throw new InvalidOperationException(
                     "The cache provider must be specified if the base provider is not set.");
             }
 
-            _apiMethodInfo.AutoCacheEnabled = true;
+            _apiMethodInfo.Setting.AutoCacheEnabled = true;
             return this;
         }
     }

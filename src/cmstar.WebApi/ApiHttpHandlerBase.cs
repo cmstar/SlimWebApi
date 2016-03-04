@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Web;
 using Common.Logging;
@@ -20,8 +21,8 @@ namespace cmstar.WebApi
         /// </summary>
         public const int Code500 = 500;
 
-        private static readonly Dictionary<Type, ApiHandlerState> HandlerStates
-            = new Dictionary<Type, ApiHandlerState>();
+        private static readonly ConcurrentDictionary<Type, ApiHandlerState> HandlerStates
+            = new ConcurrentDictionary<Type, ApiHandlerState>();
 
         private ILog _log;
 
@@ -190,14 +191,6 @@ namespace cmstar.WebApi
         }
 
         /// <summary>
-        /// 指定是否将处理成功的API请求写入日志。
-        /// </summary>
-        protected virtual bool LogSuccessRequests
-        {
-            get { return true; }
-        }
-
-        /// <summary>
         /// 处理<see cref="ApiMethodInfo"/>的调用过程中出现的异常。
         /// </summary>
         /// <param name="ex"><see cref="ApiMethodInfo"/>的调用过程中出现的异常。</param>
@@ -242,6 +235,24 @@ namespace cmstar.WebApi
         /// </summary>
         /// <param name="setup"><see cref="ApiSetup"/>。</param>
         protected virtual void PostSetup(ApiSetup setup)
+        {
+        }
+
+        /// <summary>
+        /// 在一个被注册的API方法被实际调用前执行此过程。
+        /// </summary>
+        /// <param name="method">包含被调用的方法的信息。</param>
+        /// <param name="param">调用方法的参数。</param>
+        protected virtual void PreMethodInvoke(ApiMethodInfo method, IDictionary<string, object> param)
+        {
+        }
+
+        /// <summary>
+        /// 在一个被注册的API方法被实际调用后执行此过程。
+        /// </summary>
+        /// <param name="method">包含被调用的方法的信息。</param>
+        /// <param name="param">调用方法的参数。</param>
+        protected virtual void PostMethodInvoke(ApiMethodInfo method, IDictionary<string, object> param)
         {
         }
 
@@ -380,29 +391,33 @@ namespace cmstar.WebApi
                 ApiMethodContext.Current = new ApiMethodContext
                 {
                     Raw = context,
-                    CacheProvider = method.CacheProvider,
-                    CacheExpiration = method.CacheExpiration,
+                    CacheProvider = method.Setting.CacheProvider,
+                    CacheExpiration = method.Setting.CacheExpiration,
                     CacheKeyProvider = () => CacheKeyHelper.GetCacheKey(method, param)
                 };
 
                 object result;
-                if (method.AutoCacheEnabled)
+                if (method.Setting.AutoCacheEnabled)
                 {
-                    var cacheProvider = method.CacheProvider;
+                    var cacheProvider = method.Setting.CacheProvider;
                     var cacheKey = CacheKeyHelper.GetCacheKey(method, param);
                     result = cacheKey == null ? null : cacheProvider.Get(cacheKey);
 
                     if (result == null)
                     {
                         methodInvocationStarted = true;
+                        PreMethodInvoke(method, param);
                         result = method.Invoke(param);
-                        cacheProvider.Add(cacheKey, result, method.CacheExpiration);
+                        cacheProvider.Add(cacheKey, result, method.Setting.CacheExpiration);
+                        PostMethodInvoke(method, param);
                     }
                 }
                 else
                 {
                     methodInvocationStarted = true;
+                    PreMethodInvoke(method, param);
                     result = method.Invoke(param);
+                    PostMethodInvoke(method, param);
                 }
 
                 var apiResponse = new ApiResponse(result);
@@ -425,49 +440,43 @@ namespace cmstar.WebApi
         private ApiHandlerState GetCurrentTypeHandler()
         {
             var type = GetType();
+            var handlerState = HandlerStates.GetOrAdd(type, CreateCurrentTypeHandler);
+            return handlerState;
+        }
 
-            ApiHandlerState handlerState;
-            if (HandlerStates.TryGetValue(type, out handlerState))
-                return handlerState;
+        private ApiHandlerState CreateCurrentTypeHandler(Type type)
+        {
+            var setup = new ApiSetup(type);
+            PreSetup(setup);
+            Setup(setup);
+            PostSetup(setup);
 
-            lock (HandlerStates)
+            var handlerState = new ApiHandlerState();
+            handlerState.LogSetup = (LogSetup)setup.Log.Clone();
+
+            foreach (var apiMethodInfo in setup.ApiMethodInfos)
             {
-                if (HandlerStates.TryGetValue(type, out handlerState))
-                    return handlerState;
+                var methodName = apiMethodInfo.Setting.MethodName;
 
-                var setup = new ApiSetup(type);
-                PreSetup(setup);
-                Setup(setup);
-                PostSetup(setup);
-
-                handlerState = new ApiHandlerState();
-                handlerState.LogSetup = (LogSetup)setup.Log.Clone();
-
-                foreach (var apiMethodInfo in setup.ApiMethodInfos)
+                // 由于函数可能有重载，名称是一样的，这里自动对方法名称进行改名
+                for (var i = 2; handlerState.GetMethod(methodName) != null; i++)
                 {
-                    var methodName = apiMethodInfo.MethodName;
-
-                    // 由于函数可能有重载，名称是一样的，这里自动对方法名称进行改名
-                    for (var i = 2; handlerState.GetMethod(methodName) != null; i++)
-                    {
-                        methodName = apiMethodInfo.MethodName + i;
-                    }
-
-                    handlerState.AddMethod(methodName, apiMethodInfo);
-
-                    var decoderMap = ResolveDecoders(apiMethodInfo);
-                    if (decoderMap != null)
-                    {
-                        foreach (var decoder in decoderMap)
-                        {
-                            handlerState.AddDecoder(methodName, decoder.Key, decoder.Value);
-                        }
-                    }
+                    methodName = apiMethodInfo.Setting.MethodName + i;
                 }
 
-                HandlerStates.Add(type, handlerState);
-                return handlerState;
+                handlerState.AddMethod(methodName, apiMethodInfo);
+
+                var decoderMap = ResolveDecoders(apiMethodInfo);
+                if (decoderMap != null)
+                {
+                    foreach (var decoder in decoderMap)
+                    {
+                        handlerState.AddDecoder(methodName, decoder.Key, decoder.Value);
+                    }
+                }
             }
+
+            return handlerState;
         }
     }
 }

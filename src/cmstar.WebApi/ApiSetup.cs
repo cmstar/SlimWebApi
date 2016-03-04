@@ -772,28 +772,8 @@ namespace cmstar.WebApi
                     foreach (ApiMethodAttribute apiMethodAttr in attrs)
                     {
                         var provider = methodInfo.IsStatic ? null : providerCreator(methodInfo);
-                        var apiSetupInfo = AppendMethod(provider, methodInfo);
-
-                        if (!string.IsNullOrEmpty(apiMethodAttr.Name))
-                        {
-                            apiSetupInfo.Name(apiMethodAttr.Name);
-                        }
-
-                        if (apiMethodAttr.CacheExpiration > 0)
-                        {
-                            apiSetupInfo.CacheExpiration(TimeSpan.FromSeconds(apiMethodAttr.CacheExpiration));
-                        }
-
-                        if (!string.IsNullOrEmpty(apiMethodAttr.CacheNamespace))
-                        {
-                            apiSetupInfo.CacheNamespace(apiMethodAttr.CacheNamespace);
-                        }
-
-                        if (apiMethodAttr.AutoCacheEnabled)
-                        {
-                            apiSetupInfo.EnableAutoCache();
-                        }
-
+                        var apiMethodSetting = apiMethodAttr.GetUnderlyingSetting();
+                        var apiSetupInfo = AppendMethod(provider, methodInfo, apiMethodSetting);
                         methodSetups.Add(apiSetupInfo);
                     }
                 }
@@ -856,9 +836,10 @@ namespace cmstar.WebApi
             return AppendMethod(() => provider, method);
         }
 
-        private ApiMethodSetup AppendMethod(Func<object> provider, MethodInfo method)
+        private ApiMethodSetup AppendMethod(
+            Func<object> provider, MethodInfo method, ApiMethodSetting apiMethodSetting = null)
         {
-            var apiMethodInfo = new ApiMethodInfo(provider, method);
+            var apiMethodInfo = new ApiMethodInfo(provider, method, apiMethodSetting);
             var apiMethodSetup = new ApiMethodSetup(this, apiMethodInfo);
 
             _apiMethodInfos.Add(apiMethodInfo);

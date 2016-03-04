@@ -52,6 +52,7 @@
     <Compile Include="ApiMethodContext.cs" />
     <Compile Include="ApiMethodInfo.cs" />
     <Compile Include="ApiMethodParamInfoMap.cs" />
+    <Compile Include="ApiMethodSetting.cs" />
     <Compile Include="ApiMethodSetup.cs" />
     <Compile Include="ApiParamInfo.cs" />
     <Compile Include="ApiSetup.cs" />
