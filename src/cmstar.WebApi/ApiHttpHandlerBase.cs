@@ -62,6 +62,33 @@ namespace cmstar.WebApi
         protected LogSetup LogSetup { get; private set; }
 
         /// <summary>
+        /// 在<see cref="Setup"/>方法执行前触发此事件。
+        /// </summary>
+        public event Action<ApiSetup> PreSetup;
+
+        /// <summary>
+        /// 在<see cref="Setup"/>方法执行后触发此事件。
+        /// </summary>
+        public event Action<ApiSetup> PostSetup;
+
+        /// <summary>
+        /// 在每个API方法执行前触发此事件。
+        /// 回调参数包扩：
+        /// 被调用的API方法的信息；
+        /// 传递给被调用方法的参数。
+        /// </summary>
+        public event Action<ApiMethodInfo, IDictionary<string, object>> MethodInvoking;
+
+        /// <summary>
+        /// 在每个API方法执行后触发此事件。
+        /// 回调参数包扩：
+        /// 被调用的API方法的信息；
+        /// 传递给被调用方法的参数；
+        /// 调用的方法所抛出的异常，若无异常，则为null。
+        /// </summary>
+        public event Action<ApiMethodInfo, IDictionary<string, object>, Exception> MethodInvoked;
+
+        /// <summary>
         /// 对WebAPI进行注册和配置。
         /// </summary>
         /// <param name="setup">提供用于Web API注册与配置的方法。</param>
@@ -225,40 +252,6 @@ namespace cmstar.WebApi
         }
 
         /// <summary>
-        /// 在<see cref="Setup"/>方法执行之前，在同一个<see cref="ApiSetup"/>对象上执行此方法。
-        /// </summary>
-        /// <param name="setup"><see cref="ApiSetup"/>。</param>
-        protected virtual void PreSetup(ApiSetup setup)
-        {
-        }
-
-        /// <summary>
-        /// 在<see cref="Setup"/>方法执行之后，在同一个<see cref="ApiSetup"/>对象上执行此方法。
-        /// </summary>
-        /// <param name="setup"><see cref="ApiSetup"/>。</param>
-        protected virtual void PostSetup(ApiSetup setup)
-        {
-        }
-
-        /// <summary>
-        /// 在一个被注册的API方法被实际调用前执行此过程。
-        /// </summary>
-        /// <param name="method">包含被调用的方法的信息。</param>
-        /// <param name="param">调用方法的参数。</param>
-        protected virtual void PreMethodInvoke(ApiMethodInfo method, IDictionary<string, object> param)
-        {
-        }
-
-        /// <summary>
-        /// 在一个被注册的API方法被实际调用后执行此过程。
-        /// </summary>
-        /// <param name="method">包含被调用的方法的信息。</param>
-        /// <param name="param">调用方法的参数。</param>
-        protected virtual void PostMethodInvoke(ApiMethodInfo method, IDictionary<string, object> param)
-        {
-        }
-
-        /// <summary>
         /// 写日志。
         /// </summary>
         /// <param name="logLevel">
@@ -408,18 +401,14 @@ namespace cmstar.WebApi
                     if (result == null)
                     {
                         methodInvocationStarted = true;
-                        PreMethodInvoke(method, param);
-                        result = method.Invoke(param);
+                        result = MethodInvoke(method, param);
                         cacheProvider.Add(cacheKey, result, method.Setting.CacheExpiration);
-                        PostMethodInvoke(method, param);
                     }
                 }
                 else
                 {
                     methodInvocationStarted = true;
-                    PreMethodInvoke(method, param);
-                    result = method.Invoke(param);
-                    PostMethodInvoke(method, param);
+                    result = MethodInvoke(method, param);
                 }
 
                 // 按需使用压缩流传输
@@ -439,6 +428,33 @@ namespace cmstar.WebApi
                 {
                     OnSuccess(context, requestState, apiResponse);
                 }
+            }
+        }
+
+        private object MethodInvoke(ApiMethodInfo apiMethod, IDictionary<string, object> param)
+        {
+            try
+            {
+                if (MethodInvoking != null)
+                {
+                    MethodInvoking(apiMethod, param);
+                }
+
+                var result = apiMethod.Invoke(param);
+
+                if (MethodInvoked != null)
+                {
+                    MethodInvoked(apiMethod, param, null);
+                }
+                return result;
+            }
+            catch (Exception ex)
+            {
+                if (MethodInvoked != null)
+                {
+                    MethodInvoked(apiMethod, param, ex);
+                }
+                throw;
             }
         }
 
@@ -498,9 +514,18 @@ namespace cmstar.WebApi
         private ApiHandlerState CreateCurrentTypeHandler(Type type)
         {
             var setup = new ApiSetup(type);
-            PreSetup(setup);
+
+            if (PreSetup != null)
+            {
+                PreSetup(setup);
+            }
+
             Setup(setup);
-            PostSetup(setup);
+
+            if (PostSetup != null)
+            {
+                PostSetup(setup);
+            }
 
             var handlerState = new ApiHandlerState();
             handlerState.LogSetup = (LogSetup)setup.Log.Clone();
