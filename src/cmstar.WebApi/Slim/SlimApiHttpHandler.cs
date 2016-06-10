@@ -14,14 +14,41 @@ namespace cmstar.WebApi.Slim
     /// </summary>
     public abstract class SlimApiHttpHandler : ApiHttpHandlerBase
     {
-        protected static string MetaParamMethodName = "~method";
-        protected static string MetaParamFormat = "~format";
-        protected static string MetaParamCallback = "~callback";
+        /// <summary>
+        /// 指定被调用的方法的名称的参数。
+        /// </summary>
+        public static string MetaParamMethodName = "~method";
 
-        protected const string MetaRequestFormatJson = "json";
-        protected const string MetaRequestFormatPost = "post";
-        protected const string MetaRequestFormatGet = "get";
-        protected const string MetaResponseFormatPlain = "plain";
+        /// <summary>
+        /// 指定数据的序列化方式的参数。
+        /// </summary>
+        public static string MetaParamFormat = "~format";
+
+        /// <summary>
+        /// 指定回执的JSONP回调方法名称的参数。
+        /// </summary>
+        public static string MetaParamCallback = "~callback";
+
+        /// <summary>
+        /// 指定使用JSON请求。
+        /// </summary>
+        public const string MetaRequestFormatJson = "json";
+
+        /// <summary>
+        /// 指定使用GET方法请求。
+        /// </summary>
+        public const string MetaRequestFormatPost = "post";
+
+        /// <summary>
+        /// 指定使用POST方法请求。
+        /// </summary>
+        public const string MetaRequestFormatGet = "get";
+
+        /// <summary>
+        /// 指定回执的MIME类型为text/plain。
+        /// </summary>
+        public const string MetaResponseFormatPlain = "plain";
+
         private const int OutputBodyLimitLower = 1024;
         private const int OutputBodyLimitUpper = 65536;
 
