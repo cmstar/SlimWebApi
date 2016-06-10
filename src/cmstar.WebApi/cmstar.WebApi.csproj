@@ -57,6 +57,8 @@
     <Compile Include="ApiMethodSetup.cs" />
     <Compile Include="ApiParamInfo.cs" />
     <Compile Include="ApiSetup.cs" />
+    <Compile Include="ApiSetup_Delegates.cs" />
+    <Compile Include="ApiSetup_Lambdas.cs" />
     <Compile Include="CacheKeyHelper.cs" />
     <Compile Include="EmptyParamMethodRequestDecoder.cs" />
     <Compile Include="Filters\CompressionFilter.cs" />
