@@ -17,6 +17,21 @@ namespace cmstar.WebApi
             = new Dictionary<string, IRequestDecoder>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
+        /// 在每个API方法执行前触发此事件。
+        /// </summary>
+        public event Action<ApiMethodInfo, IDictionary<string, object>> MethodInvoking;
+
+        /// <summary>
+        /// 在每个API方法执行后触发此事件。
+        /// </summary>
+        public event Action<ApiMethodInfo, IDictionary<string, object>, Exception> MethodInvoked;
+
+        /// <summary>
+        /// 当前API方法的相关信息是否已经初始化。
+        /// </summary>
+        public bool Initialized { get; set; }
+
+        /// <summary>
         /// 获取或设置日志想的配置信息。
         /// </summary>
         public LogSetup LogSetup { get; set; }
@@ -69,6 +84,33 @@ namespace cmstar.WebApi
 
             IRequestDecoder decoder;
             return _decoders.TryGetValue(key, out decoder) ? decoder : null;
+        }
+
+        /// <summary>
+        /// 触发<see cref="MethodInvoking"/>事件。
+        /// </summary>
+        /// <param name="apieMethodInfo">调用的API方法的信息。</param>
+        /// <param name="param">调用的API方法的输入参数。</param>
+        public void OnMethodInvoking(ApiMethodInfo apieMethodInfo, IDictionary<string, object> param)
+        {
+            if (MethodInvoking != null)
+            {
+                MethodInvoking(apieMethodInfo, param);
+            }
+        }
+
+        /// <summary>
+        /// 触发<see cref="MethodInvoked"/>事件。
+        /// </summary>
+        /// <param name="apieMethodInfo">调用的API方法的信息。</param>
+        /// <param name="param">调用的API方法的输入参数。</param>
+        /// <param name="ex">调用的方法所抛出的异常。若无异常，为null。</param>
+        public void OnMethodInvoked(ApiMethodInfo apieMethodInfo, IDictionary<string, object> param, Exception ex)
+        {
+            if (MethodInvoked != null)
+            {
+                MethodInvoked(apieMethodInfo, param, ex);
+            }
         }
     }
 }
