@@ -71,6 +71,9 @@
     <Compile Include="LogSetup.cs" />
     <Compile Include="NoCacheApiCacheProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Routing\ApiRouteConfig.cs" />
+    <Compile Include="Routing\ApiRouteHandler.cs" />
+    <Compile Include="Routing\ApiRouteMapping.cs" />
     <Compile Include="Slim\JsonHelper.cs" />
     <Compile Include="Slim\MethodParamContract.cs" />
     <Compile Include="Slim\InlineParamHttpParamDecoder.cs" />
