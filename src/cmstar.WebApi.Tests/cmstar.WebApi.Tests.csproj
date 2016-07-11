@@ -59,6 +59,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Global.asax" />
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
@@ -67,6 +68,9 @@
     </Compile>
     <Compile Include="CacheExample.ashx.cs">
       <DependentUpon>CacheExample.ashx</DependentUpon>
+    </Compile>
+    <Compile Include="Global.asax.cs">
+      <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Routing\ApiRouteMappingTests.cs" />
     <Compile Include="ServiceClasses.cs" />

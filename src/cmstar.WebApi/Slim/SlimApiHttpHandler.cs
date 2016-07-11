@@ -160,32 +160,41 @@ namespace cmstar.WebApi.Slim
             var requestState = new SlimApiRequestState();
             var request = context.Request;
 
-            // 元参数可以两种方式体现（中括号内内容为可选）：
+            // 元参数可以多种方式体现（中括号内内容为可选）：
             // 形式1：http://domain/entry?~method=METHOD[&~format=FORMAT][&~callback=CALLBACK]
             // 形式2：http://domain/entry?METHOD[.FORMAT][(CALLBACK)]
-            // 形式2优先级高于形式1
+            // 形式3使用路由：http://domain/entry/{~method}/[{~format}/][{~callback}/]
+            // 优先级自上而下
 
-            string method = null;
-            string callback = null;
-            string format = null;
+            // 形式1
+            var method = request.ExplicicParam(MetaParamMethodName);
+            var callback = request.ExplicicParam(MetaParamCallback);
+            var format = request.ExplicicParam(MetaParamFormat);
 
-            // 先从形式2中获取
-            var mixedMetaParams = request.QueryString[null];
-            if (mixedMetaParams != null)
+            // 形式2
+            if (method == null)
             {
-                ParseMixedMetaParams(mixedMetaParams, out method, out format, out callback);
+                var mixedMetaParams = request.QueryString[null];
+                if (mixedMetaParams != null)
+                {
+                    ParseMixedMetaParams(mixedMetaParams, out method, ref format, ref callback);
+                }
             }
 
-            // 未从形式2中获取的参数再从形式1中获取
-            if (string.IsNullOrEmpty(method))
-                method = request.ExplicicParam(MetaParamMethodName);
+            // 形式3
+            if (RouteData != null)
+            {
+                if (method == null)
+                    method = RouteData.Param(MetaParamMethodName);
 
-            if (string.IsNullOrEmpty(callback))
-                callback = request.ExplicicParam(MetaParamCallback);
+                if (callback == null)
+                    callback = RouteData.Param(MetaParamCallback);
 
-            if (string.IsNullOrEmpty(format))
-                format = request.ExplicicParam(MetaParamFormat);
+                if (format == null)
+                    format = RouteData.Param(MetaParamFormat);
+            }
 
+            // format参数可包含多段
             if (!string.IsNullOrEmpty(format))
             {
                 var formatOptions = format.Split(TypeHelper.CollectionElementSpliter);
@@ -427,11 +436,9 @@ namespace cmstar.WebApi.Slim
             return body;
         }
 
-        private void ParseMixedMetaParams(string input, out string method, out string format, out string callback)
+        private void ParseMixedMetaParams(string input, out string method, ref string format, ref string callback)
         {
             // METHOD.FORMAT(CALLBACK)
-            format = callback = null;
-
             const int followedByFomat = 1;
             const int followedByCallback = 2;
 
@@ -483,7 +490,10 @@ namespace cmstar.WebApi.Slim
                     position++;
                 }
 
-                format = input.Substring(formatStartIndex, paramLength);
+                if (format == null)
+                {
+                    format = input.Substring(formatStartIndex, paramLength);
+                }
             }
 
             if (followedBy == followedByCallback)
@@ -507,7 +517,10 @@ namespace cmstar.WebApi.Slim
                         return;
                 }
 
-                callback = input.Substring(callbackStartIndex, paramLength);
+                if (callback == null)
+                {
+                    callback = input.Substring(callbackStartIndex, paramLength);
+                }
             }
         }
 

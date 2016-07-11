@@ -1,17 +1,30 @@
 ﻿using System.Collections.Generic;
 using System.Web;
+using System.Web.Routing;
 
 namespace cmstar.WebApi
 {
     internal static class HttpContextExtention
     {
         /// <summary>
+        /// 从路由信息中获取指定的参数值。
+        /// </summary>
+        /// <param name="routeData">路由信息。</param>
+        /// <param name="key">参数的名称。</param>
+        /// <returns>参数的值。无此参数时返回null。</returns>
+        public static string Param(this RouteData routeData, string key)
+        {
+            var res = routeData.Values[key];
+            return res == null ? null : res.ToString();
+        }
+
+        /// <summary>
         /// 按照先<see cref="HttpRequest.QueryString"/>后<see cref="HttpRequest.Form"/>的
         /// 顺序查询指定名称的HTTP请求参数。此方法不会查询cookie及服务器变量。
         /// </summary>
         /// <param name="request">请求对象。</param>
         /// <param name="key">参数的名称。</param>
-        /// <returns>参数的值。</returns>
+        /// <returns>参数的值。无此参数时返回null。</returns>
         public static string ExplicicParam(this HttpRequest request, string key)
         {
             return request.QueryString[key] ?? request.Form[key];

@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Web;
+using System.Web.Routing;
 using cmstar.WebApi.Filters;
 using Common.Logging;
 
@@ -57,6 +58,12 @@ namespace cmstar.WebApi
         {
             get { return true; }
         }
+
+        /// <summary>
+        /// 获取或设置当前处理的请求上下文中所使用的路由信息。
+        /// 若为null则对于当前请求的数据解析过程不使用路由信息。
+        /// </summary>
+        public RouteData RouteData { get; set; }
 
         /// <summary>
         /// 获取日志相关的配置信息。

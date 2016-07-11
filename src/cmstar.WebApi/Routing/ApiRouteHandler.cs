@@ -13,6 +13,11 @@ namespace cmstar.WebApi.Routing
         public IHttpHandler GetHttpHandler(RequestContext requestContext)
         {
             var handler = new T();
+            var apiHttpHandler = handler as ApiHttpHandlerBase;
+            if (apiHttpHandler != null)
+            {
+                apiHttpHandler.RouteData = requestContext.RouteData;
+            }
             return handler;
         }
     }
