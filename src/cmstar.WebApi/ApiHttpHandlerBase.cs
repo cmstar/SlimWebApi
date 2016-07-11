@@ -56,7 +56,7 @@ namespace cmstar.WebApi
 
         public virtual bool IsReusable
         {
-            get { return true; }
+            get { return false; }
         }
 
         /// <summary>
