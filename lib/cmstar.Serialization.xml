@@ -1050,10 +1050,10 @@
             the <see cref="T:cmstar.Serialization.Json.Contracts.ContractMemberInfo"/> as the values.
             </summary>
         </member>
-        <member name="T:cmstar.Serialization.Json.Contracts.DictionaryContract">
+        <member name="T:cmstar.Serialization.Json.Contracts.DataRecordContract">
             <summary>
-            The contract for dictonaries.
-            It maps the key-value pairs in the dictionary to JSON properties.
+            The contract for <see cref="T:System.Data.IDataRecord"/>.
+            Serialize IDataRecords like POCOs.
             </summary>
         </member>
         <member name="T:cmstar.Serialization.Json.JsonContract">
@@ -1146,6 +1146,41 @@
         <member name="P:cmstar.Serialization.Json.JsonContract.UnderlyingType">
             <summary>
             Gets the underlying type of the current <see cref="T:cmstar.Serialization.Json.JsonContract"/>.
+            </summary>
+        </member>
+        <member name="T:cmstar.Serialization.Json.Contracts.DataRowContract">
+            <summary>
+            The contract for <see cref="T:System.Data.DataRow"/>.
+            Serialize DataRows like POCOs.
+            </summary>
+        </member>
+        <member name="T:cmstar.Serialization.Json.Contracts.DataTableContract">
+            <summary>
+            The contract for <see cref="T:System.Data.DataTable"/>.
+            Treat the whole table as a colleciton of <see cref="T:System.Data.DataRow"/>s,
+            and each <see cref="T:System.Data.DataRow"/> as a POCO.
+            </summary>
+        </member>
+        <member name="T:cmstar.Serialization.Json.Contracts.DbNullContract">
+            <summary>
+            The contract for <see cref="T:System.DBNull"/>.
+            The <see cref="F:System.DBNull.Value"/> is serialized to JSON null.
+            </summary>
+        </member>
+        <member name="T:cmstar.Serialization.Json.Contracts.DictionaryContract">
+            <summary>
+            The contract for dictonaries.
+            It maps the key-value pairs in the dictionary to JSON properties.
+            </summary>
+        </member>
+        <member name="F:cmstar.Serialization.Json.Contracts.DictionaryContract.GenericDictionaryTypeDefinition">
+            <summary>
+            The type definition for generic dictionries.
+            </summary>
+        </member>
+        <member name="F:cmstar.Serialization.Json.Contracts.DictionaryContract.DictionaryTypeDefinition">
+            <summary>
+            The type definition for non-generic dictionries.
             </summary>
         </member>
         <member name="M:cmstar.Serialization.Json.Contracts.DictionaryContract.#ctor(System.Type)">
@@ -1321,11 +1356,6 @@
             </summary>
             <param name="type">The type to resolve.</param>
             <returns>The instance of <see cref="T:cmstar.Serialization.Json.JsonContract"/> for the type.</returns>
-        </member>
-        <member name="F:cmstar.Serialization.Json.JsonContractResolver.SyncRoot">
-            <summary>
-            An object that can be used to synchronize access the cache of JSON contracts.
-            </summary>
         </member>
         <member name="M:cmstar.Serialization.Json.JsonContractResolver.#ctor">
             <summary>
@@ -1887,6 +1917,36 @@
             </summary>
             <param name="obj">The object to be serialized.</param>
             <returns>The JSON string.</returns>
+        </member>
+        <member name="M:cmstar.Serialization.Json.JsonSerializer.Format(System.String,cmstar.Serialization.Formatting)">
+            <summary>
+            Format a JSON using the given <see cref="T:cmstar.Serialization.Formatting"/>.
+            </summary>
+            <param name="json">The JSON.</param>
+            <param name="formatting">The value of <see cref="T:cmstar.Serialization.Formatting"/>.</param>
+            <returns>The formatted JSON.</returns>
+        </member>
+        <member name="M:cmstar.Serialization.Json.JsonSerializer.Format(System.String,System.String,System.String)">
+            <summary>
+            Format a JSON using the given indent-mark and new-line character(s).
+            </summary>
+            <param name="json">The JSON.</param>
+            <param name="indentMark">
+            The indent-mark.
+            If the given value is null, <see cref="F:cmstar.Serialization.IndentedTextWriter.DefaultIndentMark"/> is to be used.
+            </param>
+            <param name="newLine">
+            The new-line character(s).
+            If the given value is null, <see cref="P:System.Environment.NewLine"/> is to be used.
+            </param>
+            <returns>The formatted JSON.</returns>
+        </member>
+        <member name="M:cmstar.Serialization.Json.JsonSerializer.CopyTo(System.String,cmstar.Serialization.Json.JsonWriter)">
+            <summary>
+            Parse a JSON string and write the result into the specified <see cref="T:cmstar.Serialization.Json.JsonWriter"/>.
+            </summary>
+            <param name="json">The JSON.</param>
+            <param name="jsonWriter">The <see cref="T:cmstar.Serialization.Json.JsonWriter"/>.</param>
         </member>
         <member name="M:cmstar.Serialization.Json.JsonSerializer.Deserialize``1(System.String)">
             <summary>
