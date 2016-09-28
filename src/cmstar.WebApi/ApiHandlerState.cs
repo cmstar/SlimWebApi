@@ -24,7 +24,7 @@ namespace cmstar.WebApi
         /// <summary>
         /// 在每个API方法执行后触发此事件。
         /// </summary>
-        public event Action<ApiMethodInfo, IDictionary<string, object>, Exception> MethodInvoked;
+        public event Action<ApiMethodInfo, IDictionary<string, object>, object, Exception> MethodInvoked;
 
         /// <summary>
         /// 当前API方法的相关信息是否已经初始化。
@@ -104,12 +104,14 @@ namespace cmstar.WebApi
         /// </summary>
         /// <param name="apieMethodInfo">调用的API方法的信息。</param>
         /// <param name="param">调用的API方法的输入参数。</param>
+        /// <param name="result">调用的方法的返回值。若方法没有返回值，或调用过程中出现异常，为null。</param>
         /// <param name="ex">调用的方法所抛出的异常。若无异常，为null。</param>
-        public void OnMethodInvoked(ApiMethodInfo apieMethodInfo, IDictionary<string, object> param, Exception ex)
+        public void OnMethodInvoked(
+            ApiMethodInfo apieMethodInfo, IDictionary<string, object> param, object result, Exception ex)
         {
             if (MethodInvoked != null)
             {
-                MethodInvoked(apieMethodInfo, param, ex);
+                MethodInvoked(apieMethodInfo, param, result, ex);
             }
         }
     }
