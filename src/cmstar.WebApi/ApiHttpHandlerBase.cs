@@ -75,6 +75,7 @@ namespace cmstar.WebApi
         /// 回调参数包扩：
         /// 被调用的API方法的信息；
         /// 传递给被调用方法的参数。
+        /// 此事件回调早于<see cref="ApiMethodSetting.MethodInvoking"/>。
         /// </summary>
         public event Action<ApiMethodInfo, IDictionary<string, object>> MethodInvoking
         {
@@ -88,6 +89,7 @@ namespace cmstar.WebApi
         /// 被调用的API方法的信息；
         /// 传递给被调用方法的参数；
         /// 调用的方法所抛出的异常，若无异常，则为null。
+        /// 此事件回调晚于<see cref="ApiMethodSetting.MethodInvoked"/>。
         /// </summary>
         public event Action<ApiMethodInfo, IDictionary<string, object>, Exception> MethodInvoked
         {
@@ -456,12 +458,29 @@ namespace cmstar.WebApi
             try
             {
                 handlerState.OnMethodInvoking(apiMethod, param);
+
+                if (apiMethod.Setting.MethodInvoking != null)
+                {
+                    apiMethod.Setting.MethodInvoking(apiMethod, param);
+                }
+
                 var result = apiMethod.Invoke(param);
+
+                if (apiMethod.Setting.MethodInvoked != null)
+                {
+                    apiMethod.Setting.MethodInvoked(apiMethod, param, result, null);
+                }
+
                 handlerState.OnMethodInvoked(apiMethod, param, null);
                 return result;
             }
             catch (Exception ex)
             {
+                if (apiMethod.Setting.MethodInvoked != null)
+                {
+                    apiMethod.Setting.MethodInvoked(apiMethod, param, null, ex);
+                }
+
                 handlerState.OnMethodInvoked(apiMethod, param, ex);
                 throw;
             }

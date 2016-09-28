@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace cmstar.WebApi
 {
@@ -13,7 +14,7 @@ namespace cmstar.WebApi
         private string _methodName;
 
         /// <summary>
-        /// 获取调用当前WebAPI所使用的名称。
+        /// 获取或设置调用当前WebAPI所使用的名称。
         /// </summary>
         public string MethodName
         {
@@ -29,7 +30,7 @@ namespace cmstar.WebApi
         }
 
         /// <summary>
-        /// 获取当前WebAPI所用缓存的超时时间。若未开启缓存，则为<see cref="TimeSpan.Zero"/>。
+        /// 获取或设置当前WebAPI所用缓存的超时时间。若未开启缓存，则为<see cref="TimeSpan.Zero"/>。
         /// </summary>
         public TimeSpan CacheExpiration
         {
@@ -61,12 +62,12 @@ namespace cmstar.WebApi
         }
 
         /// <summary>
-        /// 获取当前WebAPI所使用的缓存提供器。
+        /// 获取或设置当前WebAPI所使用的缓存提供器。
         /// </summary>
         public IApiCacheProvider CacheProvider { get; set; }
 
         /// <summary>
-        /// 获取当前WebAPI注册中使用的缓存命名空间。
+        /// 获取或设置当前WebAPI注册中使用的缓存命名空间。
         /// </summary>
         public string CacheNamespace { get; set; }
 
@@ -78,5 +79,21 @@ namespace cmstar.WebApi
             get { return _autoCacheEnabled && CacheProvider != null; }
             set { _autoCacheEnabled = value; }
         }
+
+        /// <summary>
+        /// 获取或设置一个方法，在当前WebAPI被调用前执行此方法。
+        /// 此方法的第一个参数指向当前被调用的WebAPI方法的注册信息；
+        /// 第二个参数为当前被调用的WebAPI方法的参数表。
+        /// </summary>
+        public Action<ApiMethodInfo, IDictionary<string, object>> MethodInvoking { get; set; }
+
+        /// <summary>
+        /// 获取或设置一个方法，在当前WebAPI被调用后（即便调用期间出现异常）执行此方法。
+        /// 此方法的第一个参数指向当前被调用的WebAPI方法的注册信息；
+        /// 第二个参数为当前被调用的WebAPI方法的参数表；
+        /// 第三个参数为当前被调用的WebAPI方法的返回值，若方法没有返回值，或调用期间出现异常，则为null；
+        /// 第四个参数为WebAPI方法调用过程中的异常，若没有异常，则为null。
+        /// </summary>
+        public Action<ApiMethodInfo, IDictionary<string, object>, object, Exception> MethodInvoked { get; set; }
     }
 }

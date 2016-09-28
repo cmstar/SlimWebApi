@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace cmstar.WebApi
 {
@@ -35,6 +36,15 @@ namespace cmstar.WebApi
         }
 
         /// <summary>
+        /// 设置API方法的名称。
+        /// </summary>
+        /// <returns>API方法的名称。</returns>
+        public string Name()
+        {
+            return _apiMethodInfo.Setting.MethodName;
+        }
+
+        /// <summary>
         /// 设置API方法的名称。若未使用此方法设置名称，将使用默认的名称（一般同注册的方法名）。
         /// </summary>
         /// <param name="name">API方法的名称，可以是任意非空字符串。</param>
@@ -44,6 +54,15 @@ namespace cmstar.WebApi
             ArgAssert.NotNullOrEmptyOrWhitespace(name, "name");
             _apiMethodInfo.Setting.MethodName = name;
             return this;
+        }
+
+        /// <summary>
+        /// 获取输出结果所使用的压缩方式。
+        /// </summary>
+        /// <returns>输出结果所使用的压缩方式。</returns>
+        public ApiCompressionMethods Compression()
+        {
+            return _apiMethodInfo.Setting.CompressionMethods;
         }
 
         /// <summary>
@@ -109,6 +128,30 @@ namespace cmstar.WebApi
             }
 
             _apiMethodInfo.Setting.AutoCacheEnabled = true;
+            return this;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="callback">回调方法，若为null，则不会被执行。</param>
+        /// <returns>当前<see cref="ApiMethodSetup"/>实例。</returns>
+        public ApiMethodSetup MethodInvoking(
+            Action<ApiMethodInfo, IDictionary<string, object>> callback)
+        {
+            _apiMethodInfo.Setting.MethodInvoking = callback;
+            return this;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="callback">回调方法，若为null，则不会被执行。</param>
+        /// <returns>当前<see cref="ApiMethodSetup"/>实例。</returns>
+        public ApiMethodSetup MethodInvoked(
+            Action<ApiMethodInfo, IDictionary<string, object>, object, Exception> callback)
+        {
+            _apiMethodInfo.Setting.MethodInvoked = callback;
             return this;
         }
     }
