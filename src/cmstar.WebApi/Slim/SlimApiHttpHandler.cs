@@ -194,9 +194,23 @@ namespace cmstar.WebApi.Slim
                     format = RouteData.Param(MetaParamFormat);
             }
 
-            // format参数可包含多段
-            if (!string.IsNullOrEmpty(format))
+            if (string.IsNullOrEmpty(format))
             {
+                // 没有通过参数直接指定格式的情况下，尝试从Content-Type判断
+                switch (request.ContentType)
+                {
+                    case "application/json":
+                        requestState.RequestFormat = MetaRequestFormatJson;
+                        break;
+
+                    case "application/x-www-form-urlencoded":
+                        requestState.RequestFormat = MetaRequestFormatPost;
+                        break;
+                }
+            }
+            else
+            {
+                // format参数可包含多段使用逗号隔开的值（e.g. json,plain）
                 var formatOptions = format.Split(TypeHelper.CollectionElementSpliter);
                 var ignoreCaseComparer = StringComparer.OrdinalIgnoreCase;
 
