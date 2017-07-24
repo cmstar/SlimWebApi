@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cmstar.WebApi.Tests", "src\
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net45", "net45", "{102167FA-8039-4BF9-B56A-943F393434E4}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net35", "net35", "{759BF681-2A63-499B-AE9D-ACAACC539169}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cmstar.WebApi.Net35", "src\cmstar.WebApi.Net35\cmstar.WebApi.Net35.csproj", "{8F8A8160-12A6-4E07-BD1E-C6F42C0C9614}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,6 +27,10 @@ Global
 		{6DF91451-CD41-49DD-AF88-13B8857285E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6DF91451-CD41-49DD-AF88-13B8857285E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6DF91451-CD41-49DD-AF88-13B8857285E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8F8A8160-12A6-4E07-BD1E-C6F42C0C9614}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F8A8160-12A6-4E07-BD1E-C6F42C0C9614}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8F8A8160-12A6-4E07-BD1E-C6F42C0C9614}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8F8A8160-12A6-4E07-BD1E-C6F42C0C9614}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -30,5 +38,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{8E1E094B-1F4F-4BF6-B55D-1A4E361B07CC} = {102167FA-8039-4BF9-B56A-943F393434E4}
 		{6DF91451-CD41-49DD-AF88-13B8857285E2} = {102167FA-8039-4BF9-B56A-943F393434E4}
+		{8F8A8160-12A6-4E07-BD1E-C6F42C0C9614} = {759BF681-2A63-499B-AE9D-ACAACC539169}
 	EndGlobalSection
 EndGlobal

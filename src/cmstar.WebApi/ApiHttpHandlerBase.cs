@@ -1,11 +1,17 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Web;
 using System.Web.Routing;
 using cmstar.WebApi.Filters;
 using Common.Logging;
+
+#if NET35
+using cmstar.Net35Compact;
+#else
+using System.Collections.Concurrent;
+using System.Threading.Tasks;
+#endif
 
 namespace cmstar.WebApi
 {

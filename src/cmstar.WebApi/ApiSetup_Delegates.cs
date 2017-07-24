@@ -1,4 +1,7 @@
 ﻿using System;
+#if NET35
+using cmstar.WebApi.NetFuture;
+#endif
 
 namespace cmstar.WebApi
 {

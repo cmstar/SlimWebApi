@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Reflection;
+#if NET35
+using cmstar.WebApi.NetFuture;
+#endif
 
 namespace cmstar.WebApi
 {

@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Reflection;
 using cmstar.RapidReflection.Emit;
+#if NET35
+using cmstar.WebApi.NetFuture;
+#endif
 
 namespace cmstar.WebApi
 {
@@ -39,7 +42,11 @@ namespace cmstar.WebApi
             _setting = methodSetting ?? new ApiMethodSetting();
 
             // 若没有指定方法入口的名称，套用方法自身的名称
-            if (string.IsNullOrWhiteSpace(_setting.MethodName))
+#if NET35
+            if (!_setting.MethodName.IsNullOrWhiteSpace())
+#else
+            if (!string.IsNullOrWhiteSpace(_setting.MethodName))
+#endif
             {
                 _setting.MethodName = methodInfo.Name;
             }

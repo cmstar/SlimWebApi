@@ -1,4 +1,7 @@
 ﻿using System;
+#if  NET35
+using cmstar.WebApi.NetFuture;
+#endif
 
 namespace cmstar.WebApi
 {
@@ -38,7 +41,11 @@ namespace cmstar.WebApi
             }
             set
             {
+#if NET35
+                if (!value.IsNullOrWhiteSpace())
+#else
                 if (!string.IsNullOrWhiteSpace(value))
+#endif
                 {
                     _setting.MethodName = value;
                 }
@@ -85,7 +92,11 @@ namespace cmstar.WebApi
             }
             set
             {
+#if NET35
+                if (!value.IsNullOrWhiteSpace())
+#else
                 if (!string.IsNullOrWhiteSpace(value))
+#endif
                 {
                     _setting.CacheNamespace = value;
                 }
