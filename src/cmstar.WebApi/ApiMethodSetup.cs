@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Common.Logging;
 
 namespace cmstar.WebApi
 {
@@ -57,6 +58,15 @@ namespace cmstar.WebApi
         }
 
         /// <summary>
+        /// 设置当前WebAPI成功执行后输出日志信息所使用的日志级别。
+        /// </summary>
+        public ApiMethodSetup SuccessLogLevel(LogLevel logLevel)
+        {
+            _apiMethodInfo.Setting.SuccessLogLevel = logLevel;
+            return this;
+        }
+
+        /// <summary>
         /// 获取输出结果所使用的压缩方式。
         /// </summary>
         /// <returns>输出结果所使用的压缩方式。</returns>
@@ -97,7 +107,7 @@ namespace cmstar.WebApi
         {
             if (expiration.Ticks <= 0)
                 throw new ArgumentOutOfRangeException(
-                    "expiration", "The expiration time must be greater than zero.");
+                    nameof(expiration), "The expiration time must be greater than zero.");
 
             _apiMethodInfo.Setting.CacheExpiration = expiration;
             return this;
@@ -132,7 +142,9 @@ namespace cmstar.WebApi
         }
 
         /// <summary>
-        /// 
+        /// 设置一个方法，在当前WebAPI被调用前执行此方法。
+        /// 此方法的第一个参数指向当前被调用的WebAPI方法的注册信息；
+        /// 第二个参数为当前被调用的WebAPI方法的参数表。
         /// </summary>
         /// <param name="callback">回调方法，若为null，则不会被执行。</param>
         /// <returns>当前<see cref="ApiMethodSetup"/>实例。</returns>
@@ -144,7 +156,11 @@ namespace cmstar.WebApi
         }
 
         /// <summary>
-        /// 
+        /// 设置一个方法，在当前WebAPI被调用后（即便调用期间出现异常）执行此方法。
+        /// 此方法的第一个参数指向当前被调用的WebAPI方法的注册信息；
+        /// 第二个参数为当前被调用的WebAPI方法的参数表；
+        /// 第三个参数为当前被调用的WebAPI方法的返回值，若方法没有返回值，或调用期间出现异常，则为null；
+        /// 第四个参数为WebAPI方法调用过程中的异常，若没有异常，则为null。
         /// </summary>
         /// <param name="callback">回调方法，若为null，则不会被执行。</param>
         /// <returns>当前<see cref="ApiMethodSetup"/>实例。</returns>

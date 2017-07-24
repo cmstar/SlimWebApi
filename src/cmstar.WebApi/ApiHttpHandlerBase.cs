@@ -202,10 +202,17 @@ namespace cmstar.WebApi
         /// <param name="context">当前请求的<see cref="HttpContext"/>实例。</param>
         /// <param name="requestState">用于保存当前API请求信息的对象实例。</param>
         /// <param name="apiResponse">用于表示API返回的数据。</param>
-        protected virtual void OnSuccess(HttpContext context, object requestState, ApiResponse apiResponse)
+        /// <param name="apiLogLevel">当前API方法所使用的日志级别。</param>
+        protected virtual void OnSuccess(
+            HttpContext context, object requestState, ApiResponse apiResponse, LogLevel apiLogLevel)
         {
             WriteResponse(context, requestState, apiResponse);
-            WriteLog(LogSetup.SuccessLogLevel, () => GetRequestDescription(context, requestState, apiResponse));
+
+            // API方法的日志级别低于handler的默认日志级别时就不需要输出日志了。
+            if (apiLogLevel != LogLevel.Off && (int)apiLogLevel >= (int)LogSetup.SuccessLogLevel)
+            {
+                WriteLog(apiLogLevel, () => GetRequestDescription(context, requestState, apiResponse));
+            }
         }
 
         /// <summary>
@@ -403,11 +410,12 @@ namespace cmstar.WebApi
 #endif
         {
             var methodInvocationStarted = false;
+            ApiMethodInfo method = null;
 
             try
             {
                 var methodName = RetriveRequestMethodName(context, requestState);
-                var method = handlerState.GetMethod(methodName);
+                method = handlerState.GetMethod(methodName);
                 if (method == null)
                 {
                     OnMethodNotFound(context, requestState);
@@ -469,7 +477,7 @@ namespace cmstar.WebApi
                 AppendCompressionFilter(context, method);
 
                 var apiResponse = new ApiResponse(result);
-                OnSuccess(context, requestState, apiResponse);
+                OnSuccess(context, requestState, apiResponse, method.Setting.SuccessLogLevel);
             }
             catch (Exception ex)
             {
@@ -480,7 +488,10 @@ namespace cmstar.WebApi
                 }
                 else
                 {
-                    OnSuccess(context, requestState, apiResponse);
+                    // ReSharper disable once ConstantNullCoalescingCondition
+                    // ReSharper disable once ConstantConditionalAccessQualifier
+                    var apiLogLevel = method?.Setting.SuccessLogLevel ?? LogSetup.DefaultSuccessLogLevel;
+                    OnSuccess(context, requestState, apiResponse, apiLogLevel);
                 }
             }
         }

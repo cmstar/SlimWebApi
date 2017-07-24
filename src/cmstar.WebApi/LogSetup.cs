@@ -10,6 +10,12 @@ namespace cmstar.WebApi
     public class LogSetup : ICloneable
     {
         /// <summary>
+        /// API请求处理成功时的默认日志级别。
+        /// <see cref="Default"/>方法创建的实例使用此日志级别。
+        /// </summary>
+        public const LogLevel DefaultSuccessLogLevel = LogLevel.Debug;
+
+        /// <summary>
         /// 获取一个新的<see cref="LogSetup"/>实例，其中的各项配置已初始化为预定义的值。
         /// </summary>
         /// <returns></returns>

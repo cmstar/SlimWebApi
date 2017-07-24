@@ -1,4 +1,6 @@
 ﻿using System;
+using Common.Logging;
+
 #if  NET35
 using cmstar.WebApi.NetFuture;
 #endif
@@ -111,6 +113,15 @@ namespace cmstar.WebApi
         {
             get { return _setting.CompressionMethods; }
             set { _setting.CompressionMethods = value; }
+        }
+
+        /// <summary>
+        /// 指定此API方法成功执行后输出日志信息所使用的日志级别。
+        /// </summary>
+        public LogLevel SuccessLogLevel
+        {
+            get { return _setting.SuccessLogLevel; }
+            set { _setting.SuccessLogLevel = value; }
         }
 
         /// <summary>

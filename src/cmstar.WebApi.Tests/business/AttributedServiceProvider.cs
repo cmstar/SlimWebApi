@@ -1,4 +1,5 @@
 using System;
+using Common.Logging;
 
 namespace cmstar.WebApi
 {
@@ -18,6 +19,13 @@ namespace cmstar.WebApi
 
             return 0;
         }
+
+        // 单独指定方法成功执行时输出日志的日志级别
+        [ApiMethod(SuccessLogLevel = LogLevel.Fatal)]
+        public void FatalLog() { }
+
+        [ApiMethod(SuccessLogLevel = LogLevel.Trace)]
+        public void TraceLog() { }
 
         // 在特性上配置缓存超时并开启自动缓存
         [ApiMethod(AutoCacheEnabled = true, CacheExpiration = 3)]

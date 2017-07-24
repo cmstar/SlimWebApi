@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Common.Logging;
 
 namespace cmstar.WebApi
 {
@@ -8,7 +9,6 @@ namespace cmstar.WebApi
     /// </summary>
     public class ApiMethodSetting
     {
-        private ApiCompressionMethods _compressionMethods = ApiCompressionMethods.None;
         private TimeSpan _cacheExpiration = TimeSpan.Zero;
         private bool _autoCacheEnabled;
         private string _methodName;
@@ -41,7 +41,7 @@ namespace cmstar.WebApi
             set
             {
                 if (value.Ticks <= 0)
-                    throw new ArgumentException("The expiration time must be greater than zero.", "value");
+                    throw new ArgumentException("The expiration time must be greater than zero.", nameof(value));
 
                 _cacheExpiration = value;
             }
@@ -55,11 +55,7 @@ namespace cmstar.WebApi
         /// 压缩需要消耗计算资源，而且对于较小的数据的压缩并不会显著缩小体积（甚至可能更大），
         /// 需要评估API方法返回数据的体积加以评估以确定是否使用显式的压缩配置。
         /// </remarks>
-        public ApiCompressionMethods CompressionMethods
-        {
-            get { return _compressionMethods; }
-            set { _compressionMethods = value; }
-        }
+        public ApiCompressionMethods CompressionMethods { get; set; } = ApiCompressionMethods.None;
 
         /// <summary>
         /// 获取或设置当前WebAPI所使用的缓存提供器。
@@ -79,6 +75,11 @@ namespace cmstar.WebApi
             get { return _autoCacheEnabled && CacheProvider != null; }
             set { _autoCacheEnabled = value; }
         }
+
+        /// <summary>
+        /// 获取或设置当前WebAPI成功执行后输出日志信息所使用的日志级别。
+        /// </summary>
+        public LogLevel SuccessLogLevel { get; set; } = LogSetup.DefaultSuccessLogLevel;
 
         /// <summary>
         /// 获取或设置一个方法，在当前WebAPI被调用前执行此方法。

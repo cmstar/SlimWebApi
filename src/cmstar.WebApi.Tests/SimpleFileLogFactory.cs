@@ -1,9 +1,9 @@
 using System;
-using System.Collections.Specialized;
 using System.Configuration;
 using System.IO;
 using System.Text;
 using Common.Logging;
+using Common.Logging.Configuration;
 using Common.Logging.Factory;
 using Common.Logging.Simple;
 
