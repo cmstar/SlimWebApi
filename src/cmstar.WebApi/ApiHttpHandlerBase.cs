@@ -40,10 +40,13 @@ namespace cmstar.WebApi
         private ILog _log;
 
 #if NET35
+        /// <inheritdoc cref="IHttpHandler.IsReusable" />
         public bool IsReusable => false;
 
+        /// <inheritdoc cref="IHttpHandler.ProcessRequest" />
         public void ProcessRequest(HttpContext context)
 #else
+        /// <inheritdoc cref="HttpTaskAsyncHandler.ProcessRequestAsync" />
         public override async Task ProcessRequestAsync(HttpContext context)
 #endif
         {
@@ -51,6 +54,11 @@ namespace cmstar.WebApi
 
             // 接口数据不应有缓存
             httpResponse.CacheControl = "no-cache";
+
+            // 开启输出缓冲，一方面提高输出性能——毕竟API输出总是不太大；
+            // 另一方面避免“Server cannot set content type after HTTP headers have been sent”错误：
+            // https://stackoverflow.com/questions/33546723/server-cannot-set-content-type-after-http-headers-have-been-sent-on-rowcommand
+            httpResponse.BufferOutput = true;
 
             var handlerState = GetCurrentTypeHandler();
             TryInitHandlerState(handlerState);
