@@ -423,14 +423,16 @@ namespace cmstar.WebApi
                 }
 
                 var param = DecodeParam(context, requestState, decoder) ?? new Dictionary<string, object>(0);
-
-                ApiMethodContext.Current = new ApiMethodContext
+                var apiMethodContext = new ApiMethodContext
                 {
                     Raw = context,
                     CacheProvider = method.Setting.CacheProvider,
                     CacheExpiration = method.Setting.CacheExpiration,
                     CacheKeyProvider = () => CacheKeyHelper.GetCacheKey(method, param)
                 };
+
+                // 绑定本次请求的ApiMethodContext
+                ApiMethodContext.Current = apiMethodContext;
 
                 object result;
                 if (method.Setting.AutoCacheEnabled)
@@ -446,7 +448,7 @@ namespace cmstar.WebApi
 #if NET35
                         result = MethodInvoke(handlerState, method, param);
 #else
-                        result = await MethodInvokeAsync(handlerState, method, param);
+                        result = await MethodInvokeAsync(apiMethodContext, handlerState, method, param);
 #endif
 
                         cacheProvider.Add(cacheKey, result, method.Setting.CacheExpiration);
@@ -459,7 +461,7 @@ namespace cmstar.WebApi
 #if NET35
                     result = MethodInvoke(handlerState, method, param);
 #else
-                    result = await MethodInvokeAsync(handlerState, method, param);
+                    result = await MethodInvokeAsync(apiMethodContext, handlerState, method, param);
 #endif
                 }
 
@@ -485,10 +487,15 @@ namespace cmstar.WebApi
 
 #if NET35
         private object MethodInvoke(
-            ApiHandlerState handlerState, ApiMethodInfo apiMethod, IDictionary<string, object> param)
+            ApiHandlerState handlerState,
+            ApiMethodInfo apiMethod,
+            IDictionary<string, object> param)
 #else
         private async Task<object> MethodInvokeAsync(
-            ApiHandlerState handlerState, ApiMethodInfo apiMethod, IDictionary<string, object> param)
+            ApiMethodContext apiMethodContext,
+            ApiHandlerState handlerState,
+            ApiMethodInfo apiMethod,
+            IDictionary<string, object> param)
 #endif
         {
             try
@@ -499,6 +506,7 @@ namespace cmstar.WebApi
 #if NET35
                 var result = apiMethod.Invoke(param);
 #else
+                // 异步和非异步方法采用不同形式处理
                 object result;
                 if (apiMethod.IsAsyncMethod)
                 {
@@ -506,7 +514,21 @@ namespace cmstar.WebApi
                 }
                 else
                 {
-                    result = apiMethod.Invoke(param);
+                    // 对于非异步API，为了避免业务代码编码时的“不小心”导致的死锁[0]-[1]，总是调用线程池线程执行。
+                    // 在await过程中，当前工作线程会被还回线程池，所以总的线程消耗还是1个，只是多了些线程切换成本，
+                    // 能够避免潜在的死锁，还是值得的。
+                    // ref
+                    // [0] https://blog.stephencleary.com/2012/07/dont-block-on-async-code.html
+                    // [1] https://stackoverflow.com/questions/15021304/an-async-await-example-that-causes-a-deadlock
+                    result = await Task.Run(() =>
+                    {
+                        // 切换到新的线程池线程后，就不在同一个调用上下文（CallContext）中了，对应的CallContext数据
+                        // 就不再能取到。这里将这些数据重新设置好，使其可以正常使用。
+                        HttpContext.Current = apiMethodContext.Raw;
+                        ApiMethodContext.Current = apiMethodContext;
+
+                        return apiMethod.Invoke(param);
+                    });
                 }
 #endif
 

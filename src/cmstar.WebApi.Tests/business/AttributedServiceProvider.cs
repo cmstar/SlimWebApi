@@ -10,6 +10,12 @@ namespace cmstar.WebApi
         [ApiMethod]
         public int Zero()
         {
+            // 可以通过 ApiMethodContext.Current.Raw 直接访问当前请求的 HttpContext。
+            // 当日，也可以直接通过 HttpContext.Current。
+            ApiMethodContext.Current.Raw.Response.Headers.Add(
+                "Custom-Head",
+                $"raw {ApiMethodContext.Current.Raw != null}");
+
             return 0;
         }
 
