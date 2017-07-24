@@ -42,7 +42,7 @@ namespace cmstar.WebApi
             set
             {
 #if NET35
-                if (!value.IsNullOrWhiteSpace())
+                if (!StringUtils.IsNullOrWhiteSpace(value))
 #else
                 if (!string.IsNullOrWhiteSpace(value))
 #endif
@@ -93,7 +93,7 @@ namespace cmstar.WebApi
             set
             {
 #if NET35
-                if (!value.IsNullOrWhiteSpace())
+                if (!StringUtils.IsNullOrWhiteSpace(value))
 #else
                 if (!string.IsNullOrWhiteSpace(value))
 #endif

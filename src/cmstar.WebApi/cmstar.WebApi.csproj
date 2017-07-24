@@ -73,12 +73,14 @@
     <Compile Include="HttpRuntimeApiCacheProvider.cs" />
     <Compile Include="IApiCacheProvider.cs" />
     <Compile Include="IRequestDecoder.cs" />
+    <Compile Include="LogMessage.cs" />
     <Compile Include="LogSetup.cs" />
     <Compile Include="NoCacheApiCacheProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Routing\ApiRouteConfig.cs" />
     <Compile Include="Routing\ApiRouteHandler.cs" />
     <Compile Include="Routing\ApiRouteMapping.cs" />
+    <Compile Include="SingleEntryDictionary.cs" />
     <Compile Include="Slim\JsonHelper.cs" />
     <Compile Include="Slim\MethodParamContract.cs" />
     <Compile Include="Slim\InlineParamHttpParamDecoder.cs" />

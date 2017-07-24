@@ -2,9 +2,9 @@
 
 namespace cmstar.WebApi.NetFuture
 {
-    internal static class StringEx
+    internal static class StringUtils
     {
-        public static bool IsNullOrWhiteSpace(this string value)
+        public static bool IsNullOrWhiteSpace(string value)
         {
             return string.IsNullOrEmpty(value) || value.All(char.IsWhiteSpace);
         }

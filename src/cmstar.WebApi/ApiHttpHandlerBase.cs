@@ -18,7 +18,11 @@ namespace cmstar.WebApi
     /// <summary>
     /// <see cref="IHttpHandler"/>的实现，包含了基本的API处理流程。这是一个抽象类。
     /// </summary>
+#if NET35
     public abstract class ApiHttpHandlerBase : IHttpHandler
+#else
+    public abstract class ApiHttpHandlerBase : HttpTaskAsyncHandler
+#endif
     {
         /// <summary>
         /// 400错误的异常码。
@@ -35,12 +39,17 @@ namespace cmstar.WebApi
 
         private ILog _log;
 
+#if NET35
+        public bool IsReusable => false;
+
         public void ProcessRequest(HttpContext context)
+#else
+        public override async Task ProcessRequestAsync(HttpContext context)
+#endif
         {
             var httpResponse = context.Response;
 
-            httpResponse.AddHeader("Pragma", "No-Cache");
-            httpResponse.Expires = 0;
+            // 接口数据不应有缓存
             httpResponse.CacheControl = "no-cache";
 
             var handlerState = GetCurrentTypeHandler();
@@ -51,18 +60,17 @@ namespace cmstar.WebApi
 
             try
             {
+#if NET35
                 PerformProcessRequest(context, handlerState, requestState);
+#else
+                await PerformProcessRequestAsync(context, handlerState, requestState);
+#endif
             }
             catch (Exception ex)
             {
                 Logger.Fatal("Can not process the request.", ex);
                 throw;
             }
-        }
-
-        public virtual bool IsReusable
-        {
-            get { return false; }
         }
 
         /// <summary>
@@ -185,7 +193,7 @@ namespace cmstar.WebApi
         /// <param name="requestState">用于保存当前API请求信息的对象实例。</param>
         /// <param name="apiResponse">用于表示API返回的数据。</param>
         /// <returns>描述信息。</returns>
-        protected abstract string GetRequestDescription(
+        protected abstract LogMessage GetRequestDescription(
             HttpContext context, object requestState, ApiResponse apiResponse);
 
         /// <summary>
@@ -270,7 +278,7 @@ namespace cmstar.WebApi
             {
                 if (_log == null)
                 {
-                    _log = LogSetup == null || LogSetup.LoggerName == null
+                    _log = LogSetup?.LoggerName == null
                         ? LogManager.GetLogger(GetType())
                         : LogManager.GetLogger(LogSetup.LoggerName);
                 }
@@ -329,9 +337,9 @@ namespace cmstar.WebApi
         /// </param>
         /// <param name="getMsgCallback">获取日志信息的方法。</param>
         /// <param name="ex">异常。</param>
-        protected void WriteLog(LogLevel logLevel, Func<string> getMsgCallback, Exception ex = null)
+        protected void WriteLog(LogLevel logLevel, Func<LogMessage> getMsgCallback, Exception ex = null)
         {
-            string msg;
+            LogMessage msg;
             if (logLevel == LogLevel.Info || logLevel == LogLevel.All)
             {
                 if (!Logger.IsInfoEnabled)
@@ -386,8 +394,13 @@ namespace cmstar.WebApi
             }
         }
 
+#if NET35
         private void PerformProcessRequest(
             HttpContext context, ApiHandlerState handlerState, object requestState)
+#else
+        private async Task PerformProcessRequestAsync(
+            HttpContext context, ApiHandlerState handlerState, object requestState)
+#endif
         {
             var methodInvocationStarted = false;
 
@@ -429,14 +442,25 @@ namespace cmstar.WebApi
                     if (result == null)
                     {
                         methodInvocationStarted = true;
+
+#if NET35
                         result = MethodInvoke(handlerState, method, param);
+#else
+                        result = await MethodInvokeAsync(handlerState, method, param);
+#endif
+
                         cacheProvider.Add(cacheKey, result, method.Setting.CacheExpiration);
                     }
                 }
                 else
                 {
                     methodInvocationStarted = true;
+
+#if NET35
                     result = MethodInvoke(handlerState, method, param);
+#else
+                    result = await MethodInvokeAsync(handlerState, method, param);
+#endif
                 }
 
                 // 按需使用压缩流传输
@@ -459,35 +483,41 @@ namespace cmstar.WebApi
             }
         }
 
+#if NET35
         private object MethodInvoke(
             ApiHandlerState handlerState, ApiMethodInfo apiMethod, IDictionary<string, object> param)
+#else
+        private async Task<object> MethodInvokeAsync(
+            ApiHandlerState handlerState, ApiMethodInfo apiMethod, IDictionary<string, object> param)
+#endif
         {
             try
             {
                 handlerState.OnMethodInvoking(apiMethod, param);
+                apiMethod.Setting.MethodInvoking?.Invoke(apiMethod, param);
 
-                if (apiMethod.Setting.MethodInvoking != null)
-                {
-                    apiMethod.Setting.MethodInvoking(apiMethod, param);
-                }
-
+#if NET35
                 var result = apiMethod.Invoke(param);
-
-                if (apiMethod.Setting.MethodInvoked != null)
+#else
+                object result;
+                if (apiMethod.IsAsyncMethod)
                 {
-                    apiMethod.Setting.MethodInvoked(apiMethod, param, result, null);
+                    result = await apiMethod.InvokeAsync(param);
                 }
+                else
+                {
+                    result = apiMethod.Invoke(param);
+                }
+#endif
 
+                apiMethod.Setting.MethodInvoked?.Invoke(apiMethod, param, result, null);
                 handlerState.OnMethodInvoked(apiMethod, param, result, null);
+
                 return result;
             }
             catch (Exception ex)
             {
-                if (apiMethod.Setting.MethodInvoked != null)
-                {
-                    apiMethod.Setting.MethodInvoked(apiMethod, param, null, ex);
-                }
-
+                apiMethod.Setting.MethodInvoked?.Invoke(apiMethod, param, null, ex);
                 handlerState.OnMethodInvoked(apiMethod, param, null, ex);
                 throw;
             }

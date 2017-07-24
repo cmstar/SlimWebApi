@@ -76,9 +76,9 @@ namespace cmstar.WebApi.Slim
             {
                 decoderMap[MetaRequestFormatGet]
                     = decoderMap[MetaRequestFormatPost]
-                    = decoderMap[MetaRequestFormatJson]
-                    = decoderMap[string.Empty]
-                    = EmptyParamMethodRequestDecoder.Instance;
+                        = decoderMap[MetaRequestFormatJson]
+                            = decoderMap[string.Empty]
+                                = EmptyParamMethodRequestDecoder.Instance;
 
                 return decoderMap;
             }
@@ -329,21 +329,20 @@ namespace cmstar.WebApi.Slim
         /// <param name="requestState">用于保存当前API请求信息的对象实例。</param>
         /// <param name="apiResponse">用于表示API返回的数据。</param>
         /// <returns>描述信息。</returns>
-        protected override string GetRequestDescription(
+        protected override LogMessage GetRequestDescription(
             HttpContext context, object requestState, ApiResponse apiResponse)
         {
             var request = context.Request;
-            var sb = new StringBuilder();
-            sb.AppendLine(GetUserHostAddress(request));
-            sb.Append("Url: ").Append(request.RawUrl);
+            var logMessage = new LogMessage();
+            logMessage.SetProperty("Ip", GetUserHostAddress(request));
+            logMessage.SetProperty("Url", request.RawUrl);
 
             if (request.Files.Count == 0)
             {
                 var bodyLength = request.InputStream.Length;
                 if (bodyLength > 0)
                 {
-                    sb.AppendLine();
-                    sb.Append("Length: ").Append(bodyLength);
+                    logMessage.SetProperty("Length", bodyLength.ToString());
 
                     // 输出body部分按照下述逻辑判定：
                     // 1 1K以下的数据直接输出；
@@ -366,8 +365,7 @@ namespace cmstar.WebApi.Slim
                     if (canOutputBody)
                     {
                         var body = ReadRequestBody(request.InputStream);
-                        sb.AppendLine();
-                        sb.Append("Body: ").Append(body);
+                        logMessage.SetProperty("Body", body);
                     }
                 }
             }
@@ -376,29 +374,34 @@ namespace cmstar.WebApi.Slim
                 for (int i = 0; i < request.Files.Count; i++)
                 {
                     var file = request.Files[i];
-                    sb.AppendLine();
-                    sb.Append("File: ").AppendLine(file.FileName);
-                    sb.Append("Content-Type: ").AppendLine(file.ContentType);
-                    sb.Append("Length: ").Append(file.ContentLength);
+                    logMessage.SetProperty("File", file.FileName);
+                    logMessage.SetProperty("ContentType", file.ContentType);
+                    logMessage.SetProperty("Length", file.ContentLength.ToString());
                 }
             }
 
             if (apiResponse != null)
             {
+                var messageBuilder = new StringBuilder();
+
                 if (apiResponse.Code != 0)
                 {
-                    sb.AppendLine();
-                    sb.Append("Code: ").Append(apiResponse.Code);
+                    messageBuilder.Append('(').Append(apiResponse.Code).Append(')');
                 }
 
                 if (!string.IsNullOrEmpty(apiResponse.Message))
                 {
-                    sb.AppendLine();
-                    sb.Append("Message: ").Append(apiResponse.Message);
+                    if (messageBuilder.Length > 0)
+                    {
+                        messageBuilder.Append(' ');
+                    }
+                    messageBuilder.Append(apiResponse.Message);
                 }
+
+                logMessage.Message = messageBuilder.ToString();
             }
 
-            return sb.ToString();
+            return logMessage;
         }
 
         private Exception NoSupportedDecoderError(MethodInfo method)
@@ -538,7 +541,15 @@ namespace cmstar.WebApi.Slim
             }
         }
 
-        private class SlimApiRequestState
+        private static string Ping()
+        {
+            return "PONG";
+        }
+
+        /// <summary>
+        /// 保存请求处理过程中的数据。
+        /// </summary>
+        protected class SlimApiRequestState
         {
             public string MethodName;
             public string CallbackName;

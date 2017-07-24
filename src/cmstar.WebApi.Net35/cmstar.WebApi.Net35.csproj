@@ -25,7 +25,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;NET35</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -119,6 +119,9 @@
     <Compile Include="..\cmstar.WebApi\IRequestDecoder.cs">
       <Link>IRequestDecoder.cs</Link>
     </Compile>
+    <Compile Include="..\cmstar.WebApi\LogMessage.cs">
+      <Link>LogMessage.cs</Link>
+    </Compile>
     <Compile Include="..\cmstar.WebApi\LogSetup.cs">
       <Link>LogSetup.cs</Link>
     </Compile>
@@ -133,6 +136,9 @@
     </Compile>
     <Compile Include="..\cmstar.WebApi\Routing\ApiRouteMapping.cs">
       <Link>Routing\ApiRouteMapping.cs</Link>
+    </Compile>
+    <Compile Include="..\cmstar.WebApi\SingleEntryDictionary.cs">
+      <Link>SingleEntryDictionary.cs</Link>
     </Compile>
     <Compile Include="..\cmstar.WebApi\Slim\InlineParamHttpParamDecoder.cs">
       <Link>Slim\InlineParamHttpParamDecoder.cs</Link>

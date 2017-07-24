@@ -23,6 +23,9 @@ namespace cmstar.WebApi
 
             // 注册抽象类的静态方法
             setup.FromType(typeof(AbstractServiceProvider), false);
+
+            // 注册异步方法
+            setup.FromType(typeof(AsyncServiceProvider));
         }
     }
 }

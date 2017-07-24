@@ -65,6 +65,11 @@
     <Compile Include="AutoSetupExample.ashx.cs">
       <DependentUpon>AutoSetupExample.ashx</DependentUpon>
     </Compile>
+    <Compile Include="business\AbstractServiceProvider.cs" />
+    <Compile Include="business\AsyncServiceProvider.cs" />
+    <Compile Include="business\AttributedServiceProvider.cs" />
+    <Compile Include="business\DataStructrures.cs" />
+    <Compile Include="business\SimpleServiceProvider.cs" />
     <Compile Include="CacheExample.ashx.cs">
       <DependentUpon>CacheExample.ashx</DependentUpon>
     </Compile>
@@ -72,7 +77,6 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Routing\ApiRouteMappingTests.cs" />
-    <Compile Include="ServiceClasses.cs" />
     <Compile Include="ReflectionExample.ashx.cs">
       <DependentUpon>ReflectionExample.ashx</DependentUpon>
     </Compile>
