@@ -541,11 +541,6 @@ namespace cmstar.WebApi.Slim
             }
         }
 
-        private static string Ping()
-        {
-            return "PONG";
-        }
-
         /// <summary>
         /// 保存请求处理过程中的数据。
         /// </summary>
