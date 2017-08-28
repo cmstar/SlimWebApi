@@ -24,16 +24,6 @@ namespace cmstar.WebApi
     public abstract class ApiHttpHandlerBase : HttpTaskAsyncHandler
 #endif
     {
-        /// <summary>
-        /// 400错误的异常码。
-        /// </summary>
-        public const int Code400 = 400;
-
-        /// <summary>
-        /// 500错误的异常码。
-        /// </summary>
-        public const int Code500 = 500;
-
         private static readonly ConcurrentDictionary<Type, ApiHandlerState> HandlerStates
             = new ConcurrentDictionary<Type, ApiHandlerState>();
 
@@ -233,12 +223,15 @@ namespace cmstar.WebApi
         {
             var apiException = exception as ApiException;
             var apiResponse = apiException == null
-                ? new ApiResponse(Code500, "Internal error.")
+                ? new ApiResponse(ApiEnvironment.CodeInternalError, "Internal error.")
                 : new ApiResponse(apiException.Code, apiException.Description);
 
             WriteResponse(context, requestState, apiResponse);
 
-            var logLevel = apiResponse.Code == Code400 ? LogSetup.Code400LogLevel : LogLevel.Error;
+            var logLevel = apiResponse.Code == ApiEnvironment.CodeBadRequest
+                ? LogSetup.Code400LogLevel
+                : LogLevel.Error;
+
             WriteLog(logLevel, () => GetRequestDescription(context, requestState, apiResponse), exception);
         }
 
@@ -251,7 +244,7 @@ namespace cmstar.WebApi
         {
             const string msg = "Bad entry.";
 
-            var apiResponse = new ApiResponse(Code400, msg);
+            var apiResponse = new ApiResponse(ApiEnvironment.CodeBadRequest, msg);
             WriteResponse(context, requestState, apiResponse);
             WriteLog(LogSetup.Code400LogLevel, () => GetRequestDescription(context, requestState, apiResponse));
         }
@@ -265,7 +258,7 @@ namespace cmstar.WebApi
         {
             const string msg = "Unsupported format.";
 
-            var apiResponse = new ApiResponse(Code400, msg);
+            var apiResponse = new ApiResponse(ApiEnvironment.CodeBadRequest, msg);
             WriteResponse(context, requestState, apiResponse);
             WriteLog(LogSetup.Code400LogLevel, () => GetRequestDescription(context, requestState, apiResponse));
         }

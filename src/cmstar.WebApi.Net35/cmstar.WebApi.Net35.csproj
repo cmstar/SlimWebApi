@@ -51,6 +51,9 @@
     <Compile Include="..\cmstar.WebApi\ApiCompressionMethods.cs">
       <Link>ApiCompressionMethods.cs</Link>
     </Compile>
+    <Compile Include="..\cmstar.WebApi\ApiEnvironment.cs">
+      <Link>ApiEnvironment.cs</Link>
+    </Compile>
     <Compile Include="..\cmstar.WebApi\ApiException.cs">
       <Link>ApiException.cs</Link>
     </Compile>

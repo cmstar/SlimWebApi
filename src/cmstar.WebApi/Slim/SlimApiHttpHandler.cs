@@ -275,7 +275,7 @@ namespace cmstar.WebApi.Slim
             catch (Exception ex)
             {
                 if (ex is JsonContractException || ex is JsonFormatException || ex is InvalidCastException)
-                    throw new ApiException(Code400, "Bad request.", ex);
+                    throw new ApiException(ApiEnvironment.CodeBadRequest, "Bad request.", ex);
 
                 throw;
             }
@@ -404,15 +404,13 @@ namespace cmstar.WebApi.Slim
             return logMessage;
         }
 
-        private Exception NoSupportedDecoderError(MethodInfo method)
+        private static Exception NoSupportedDecoderError(MethodInfo method)
         {
-            var msg = string.Format(
-                "Can not resolve decoder for method {0} in type {1}.",
-                method.Name, method.DeclaringType);
+            var msg = $"Can not resolve decoder for method {method.Name} in type {method.DeclaringType}.";
             return new NotSupportedException(msg);
         }
 
-        private bool IsTextRequestBody(Stream inputStream)
+        private static bool IsTextRequestBody(Stream inputStream)
         {
             // 重读InputStream
             inputStream.Position = 0;
@@ -443,7 +441,7 @@ namespace cmstar.WebApi.Slim
             return true;
         }
 
-        private string ReadRequestBody(Stream inputStream)
+        private static string ReadRequestBody(Stream inputStream)
         {
             // 重读InputStream
             inputStream.Position = 0;
@@ -453,7 +451,7 @@ namespace cmstar.WebApi.Slim
             return body;
         }
 
-        private void ParseMixedMetaParams(string input, out string method, ref string format, ref string callback)
+        private static void ParseMixedMetaParams(string input, out string method, ref string format, ref string callback)
         {
             // METHOD.FORMAT(CALLBACK)
             const int followedByFomat = 1;

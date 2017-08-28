@@ -51,6 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ApiCompressionMethods.cs" />
+    <Compile Include="ApiEnvironment.cs" />
     <Compile Include="ApiException.cs" />
     <Compile Include="ApiHandlerState.cs" />
     <Compile Include="ApiHttpHandlerBase.cs" />
