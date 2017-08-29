@@ -40,5 +40,11 @@ namespace cmstar.WebApi
             await Task.Delay(10);
             throw new Exception("Some message.");
         }
+
+        [ApiMethod("timeout", AsyncTimeout = 2)]
+        public static async Task TimeoutAsync()
+        {
+            await Task.Delay(100 * 1000); // 100s
+        }
     }
 }

@@ -10,6 +10,7 @@ using Common.Logging;
 using cmstar.Net35Compact;
 #else
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Threading.Tasks;
 #endif
 
@@ -434,14 +435,13 @@ namespace cmstar.WebApi
                 var param = DecodeParam(context, requestState, decoder) ?? new Dictionary<string, object>(0);
                 var apiMethodContext = new ApiMethodContext
                 {
-                    Raw = context,
                     CacheProvider = method.Setting.CacheProvider,
                     CacheExpiration = method.Setting.CacheExpiration,
                     CacheKeyProvider = () => CacheKeyHelper.GetCacheKey(method, param)
                 };
 
                 // 绑定本次请求的ApiMethodContext
-                ApiMethodContext.Current = apiMethodContext;
+                ApiMethodContext.SwitchContext(context, apiMethodContext);
 
                 object result;
                 if (method.Setting.AutoCacheEnabled)
@@ -457,7 +457,7 @@ namespace cmstar.WebApi
 #if NET35
                         result = MethodInvoke(handlerState, method, param);
 #else
-                        result = await MethodInvokeAsync(apiMethodContext, handlerState, method, param);
+                        result = await MethodInvokeAsync(context, apiMethodContext, handlerState, method, param);
 #endif
 
                         cacheProvider.Add(cacheKey, result, method.Setting.CacheExpiration);
@@ -470,7 +470,7 @@ namespace cmstar.WebApi
 #if NET35
                     result = MethodInvoke(handlerState, method, param);
 #else
-                    result = await MethodInvokeAsync(apiMethodContext, handlerState, method, param);
+                    result = await MethodInvokeAsync(context, apiMethodContext, handlerState, method, param);
 #endif
                 }
 
@@ -498,12 +498,13 @@ namespace cmstar.WebApi
         }
 
 #if NET35
-        private object MethodInvoke(
+        private static  object MethodInvoke(
             ApiHandlerState handlerState,
             ApiMethodInfo apiMethod,
             IDictionary<string, object> param)
 #else
-        private async Task<object> MethodInvokeAsync(
+        private static async Task<object> MethodInvokeAsync(
+            HttpContext httpContext,
             ApiMethodContext apiMethodContext,
             ApiHandlerState handlerState,
             ApiMethodInfo apiMethod,
@@ -519,10 +520,10 @@ namespace cmstar.WebApi
                 var result = apiMethod.Invoke(param);
 #else
                 // 异步和非异步方法采用不同形式处理
-                object result;
+                Task<object> methodInvocationTask;
                 if (apiMethod.IsAsyncMethod)
                 {
-                    result = await apiMethod.InvokeAsync(param);
+                    methodInvocationTask = apiMethod.InvokeAsync(param);
                 }
                 else
                 {
@@ -532,16 +533,26 @@ namespace cmstar.WebApi
                     // ref
                     // [0] https://blog.stephencleary.com/2012/07/dont-block-on-async-code.html
                     // [1] https://stackoverflow.com/questions/15021304/an-async-await-example-that-causes-a-deadlock
-                    result = await Task.Run(() =>
+                    methodInvocationTask = Task.Run(() =>
                     {
                         // 切换到新的线程池线程后，就不在同一个调用上下文（CallContext）中了，对应的CallContext数据
                         // 就不再能取到。这里将这些数据重新设置好，使其可以正常使用。
-                        HttpContext.Current = apiMethodContext.Raw;
-                        ApiMethodContext.Current = apiMethodContext;
+                        ApiMethodContext.SwitchContext(httpContext, apiMethodContext);
 
                         return apiMethod.Invoke(param);
                     });
                 }
+
+                // 如果调用超时了，这里会抛出一个异常，以终止当前请求，但并不能结束异步方法的执行。
+                // 未来可以考虑在异步方法有 CancellationToken 类型的参数时，传一个进去方便其“自杀”。
+                var timeoutSeconds = GetAsyncTimeout(httpContext, apiMethod);
+                if (timeoutSeconds > 0
+                    && await Task.WhenAny(methodInvocationTask, Task.Delay(timeoutSeconds * 1000)) != methodInvocationTask)
+                {
+                    throw new ApiAsyncTimeoutException(apiMethod, timeoutSeconds);
+                }
+
+                var result = await methodInvocationTask;
 #endif
 
                 apiMethod.Setting.MethodInvoked?.Invoke(apiMethod, param, result, null);
@@ -556,6 +567,27 @@ namespace cmstar.WebApi
                 throw;
             }
         }
+
+#if !NET35
+        // 获取异步调用WebAPI方法时的超时时间。没有超时时返回0，否则是一个正数。
+        private static int GetAsyncTimeout(HttpContext httpContext, ApiMethodInfo apiMethod)
+        {
+            if (apiMethod.Setting.AsyncTimeout == 0)
+                return 0;
+
+            // 调试模式下不要超时，类似非异步请求的 executionTimeout 配置的处理方式。
+            if (httpContext.IsDebuggingEnabled || Debugger.IsAttached)
+                return 0;
+
+            // 由于前面的判定，这里 AsyncTimeout 肯定不是0了。
+            // 大于0是用户指定的超时，小于0则套用默认超时。
+            var timeoutSeconds = apiMethod.Setting.AsyncTimeout > 0
+                ? apiMethod.Setting.AsyncTimeout
+                : ApiEnvironment.AsyncTimeout;
+
+            return timeoutSeconds;
+        }
+#endif
 
         private void AppendCompressionFilter(HttpContext context, ApiMethodInfo method)
         {

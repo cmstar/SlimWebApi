@@ -20,7 +20,7 @@ namespace cmstar.WebApi
         private string _cacheKey;
 
         /// <summary>
-        /// 获取或设置本次API方法调用所关联的<see cref="ApiMethodContext"/>。
+        /// 获取本次API方法调用所使用的<see cref="ApiMethodContext"/>。
         /// </summary>
         public static ApiMethodContext Current
         {
@@ -29,10 +29,18 @@ namespace cmstar.WebApi
                 var context = HttpContext.Current.Items[ApiMethodContextHttpItemName] as ApiMethodContext;
                 return context ?? EmptyContext;
             }
-            set
-            {
-                HttpContext.Current.Items[ApiMethodContextHttpItemName] = value;
-            }
+        }
+
+        /// <summary>
+        /// 切换当前调用上下文，使切换后的<see cref="HttpContext.Current"/>和<see cref="Current"/>可以正确获取到。
+        /// </summary>
+        internal static void SwitchContext(HttpContext httpContext, ApiMethodContext apiMethodContext)
+        {
+            // 将 ApiMethodContext 存储在 HttpContext.Items 里。
+            httpContext.Items[ApiMethodContextHttpItemName] = apiMethodContext;
+
+            // 设置 HttpContext.Current 等同于设置 CallContext.HostContext。
+            HttpContext.Current = httpContext;
         }
 
         /// <summary>
@@ -44,7 +52,7 @@ namespace cmstar.WebApi
         /// 获取当前API方法所关联的原始<see cref="HttpContext"/>。
         /// 若当前并不处于HTTP请求上下文中，返回<c>null</c>。
         /// </summary>
-        public HttpContext Raw { get; internal set; }
+        public HttpContext Raw => HttpContext.Current;
 
         /// <summary>
         /// 获取当前被调用方法所关联的缓存值。
