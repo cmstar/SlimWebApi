@@ -7,12 +7,12 @@ namespace cmstar.WebApi
     {
         private int _value;
 
-        // ±ê¼ÇAPI·½·¨£¬²¢Ã»ÓĞ¿ªÆô»º´æ
+        // æ ‡è®°APIæ–¹æ³•ï¼Œå¹¶æ²¡æœ‰å¼€å¯ç¼“å­˜
         [ApiMethod]
         public int Zero()
         {
-            // ¿ÉÒÔÍ¨¹ı ApiMethodContext.Current.Raw Ö±½Ó·ÃÎÊµ±Ç°ÇëÇóµÄ HttpContext¡£
-            // µ±ÈÕ£¬Ò²¿ÉÒÔÖ±½ÓÍ¨¹ı HttpContext.Current¡£
+            // å¯ä»¥é€šè¿‡ ApiMethodContext.Current.Raw ç›´æ¥è®¿é—®å½“å‰è¯·æ±‚çš„ HttpContextã€‚
+            // å½“ç„¶ï¼Œä¹Ÿå¯ä»¥ç›´æ¥é€šè¿‡ HttpContext.Currentã€‚
             ApiMethodContext.Current.Raw.Response.Headers.Add(
                 "Custom-Head",
                 $"raw {ApiMethodContext.Current.Raw != null}");
@@ -20,25 +20,25 @@ namespace cmstar.WebApi
             return 0;
         }
 
-        // µ¥¶ÀÖ¸¶¨·½·¨³É¹¦Ö´ĞĞÊ±Êä³öÈÕÖ¾µÄÈÕÖ¾¼¶±ğ
+        // å•ç‹¬æŒ‡å®šæ–¹æ³•æˆåŠŸæ‰§è¡Œæ—¶è¾“å‡ºæ—¥å¿—çš„æ—¥å¿—çº§åˆ«
         [ApiMethod(SuccessLogLevel = LogLevel.Fatal)]
         public void FatalLog() { }
 
         [ApiMethod(SuccessLogLevel = LogLevel.Trace)]
         public void TraceLog() { }
 
-        // ÔÚÌØĞÔÉÏÅäÖÃ»º´æ³¬Ê±²¢¿ªÆô×Ô¶¯»º´æ
+        // åœ¨ç‰¹æ€§ä¸Šé…ç½®ç¼“å­˜è¶…æ—¶å¹¶å¼€å¯è‡ªåŠ¨ç¼“å­˜
         [ApiMethod(AutoCacheEnabled = true, CacheExpiration = 3)]
         public DateTime Now()
         {
             return DateTime.Now;
         }
 
-        // Ê¹ÓÃApiMethodContextÊÖ¹¤¹ÜÀí»º´æ£¬ÒÔÓ¦¶ÔÌØÊâµÄ³¡¾°£¨±ÈÈçAPIÄÚÍ¬Ê±ÓĞ¶ÁĞ´£©
+        // ä½¿ç”¨ApiMethodContextæ‰‹å·¥ç®¡ç†ç¼“å­˜ï¼Œä»¥åº”å¯¹ç‰¹æ®Šçš„åœºæ™¯ï¼ˆæ¯”å¦‚APIå†…åŒæ—¶æœ‰è¯»å†™ï¼‰
         [ApiMethod(CacheExpiration = 5)]
         public int ManualCache()
         {
-            // ´Ë·½·¨Ê¹ÓÃApiMethodContextÊÖ¹¤¹ÜÀí»º´æ
+            // æ­¤æ–¹æ³•ä½¿ç”¨ApiMethodContextæ‰‹å·¥ç®¡ç†ç¼“å­˜
             var value = ApiMethodContext.Current.GetCachedResult();
             if (value != null)
                 return (int)value;
