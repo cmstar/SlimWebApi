@@ -240,6 +240,7 @@ namespace cmstar.WebApi.NetFuture
             }
         }
 
+        /// <inheritdoc />
         public void Clear()
         {
             lock (_dictionary)
@@ -301,10 +302,12 @@ namespace cmstar.WebApi.NetFuture
             }
         }
 
+        /// <inheritdoc />
         public int Count => _dictionary.Count;
 
         bool ICollection<KeyValuePair<TKey, TValue>>.IsReadOnly => false;
 
+        /// <inheritdoc />
         public bool ContainsKey(TKey key)
         {
             lock (_dictionary)
@@ -329,6 +332,7 @@ namespace cmstar.WebApi.NetFuture
             }
         }
 
+        /// <inheritdoc />
         public bool TryGetValue(TKey key, out TValue value)
         {
             lock (_dictionary)
@@ -337,6 +341,7 @@ namespace cmstar.WebApi.NetFuture
             }
         }
 
+        /// <inheritdoc />
         public TValue this[TKey key]
         {
             get

@@ -8,29 +8,35 @@ namespace cmstar.WebApi
     /// </summary>
     public class NoCacheApiCacheProvider : IEnumerableApiCacheProvider
     {
+        /// <inheritdoc />
         public object Get(string key)
         {
             return null;
         }
 
+        /// <inheritdoc />
         public void Add(string key, object value, TimeSpan expiration)
         {
         }
 
+        /// <inheritdoc />
         public object Set(string key, object value, TimeSpan expiration)
         {
             return null;
         }
 
+        /// <inheritdoc />
         public void Remove(string key)
         {
         }
 
+        /// <inheritdoc />
         public IEnumerable<KeyValuePair<string, object>> KeyValues(string prefix)
         {
             return new KeyValuePair<string, object>[0];
         }
 
+        /// <inheritdoc />
         public void Clear(string prefix)
         {
         }

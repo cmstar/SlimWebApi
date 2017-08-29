@@ -10,6 +10,7 @@ namespace cmstar.WebApi.Routing
     public class ApiRouteHandler<T> : IRouteHandler
         where T : IHttpHandler, new()
     {
+        /// <inheritdoc />
         public IHttpHandler GetHttpHandler(RequestContext requestContext)
         {
             var handler = new T();

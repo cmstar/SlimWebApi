@@ -13,17 +13,20 @@ namespace cmstar.WebApi
         private static readonly Guid NullValuePlaceholder = Guid.NewGuid();
         private readonly Cache _cache = HttpRuntime.Cache;
 
+        /// <inheritdoc />
         public object Get(string key)
         {
             var value = _cache.Get(key);
             return NullValuePlaceholder.Equals(value) ? null : value;
         }
 
+        /// <inheritdoc />
         public void Add(string key, object value, TimeSpan expiration)
         {
             Set(key, value, expiration);
         }
 
+        /// <inheritdoc />
         public object Set(string key, object value, TimeSpan expiration)
         {
             var absoluteExpiration = DateTime.Now.Add(expiration);
@@ -32,11 +35,13 @@ namespace cmstar.WebApi
             return NullValuePlaceholder.Equals(oldValue) ? null : oldValue;
         }
 
+        /// <inheritdoc />
         public void Remove(string key)
         {
             _cache.Remove(key);
         }
 
+        /// <inheritdoc />
         public IEnumerable<KeyValuePair<string, object>> KeyValues(string prefix)
         {
             var e = _cache.GetEnumerator();
@@ -55,11 +60,11 @@ namespace cmstar.WebApi
             finally
             {
                 var disposable = e as IDisposable;
-                if (disposable != null)
-                    disposable.Dispose();
+                disposable?.Dispose();
             }
         }
 
+        /// <inheritdoc />
         public void Clear(string prefix)
         {
             foreach (var kv in KeyValues(prefix))

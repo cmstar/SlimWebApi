@@ -30,6 +30,7 @@ namespace cmstar.WebApi.Slim
             }
         }
 
+        /// <inheritdoc />
         protected override void DoWrite(
             JsonWriter writer,
             JsonSerializingState state,
@@ -39,6 +40,7 @@ namespace cmstar.WebApi.Slim
             throw new InvalidOperationException();
         }
 
+        /// <inheritdoc />
         protected override object DoRead(JsonReader reader, JsonDeserializingState state)
         {
             reader.Read();

@@ -45,10 +45,7 @@ namespace cmstar.WebApi
         /// <summary>
         /// 表示当前的消息是否有附加属性。
         /// </summary>
-        public bool HasProperties
-        {
-            get { return _properties != null; }
-        }
+        public bool HasProperties => _properties != null;
 
         /// <summary>
         /// 设置消息的附加属性。
@@ -94,6 +91,7 @@ namespace cmstar.WebApi
             return _properties;
         }
 
+        /// <inheritdoc />
         public override string ToString()
         {
             if (_properties == null)

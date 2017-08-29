@@ -46,6 +46,7 @@ namespace cmstar.WebApi
         /// </summary>
         public LogLevel Code400LogLevel;
 
+        /// <inheritdoc />
         public object Clone()
         {
             // 都是简单类型，直接用浅表拷贝即可

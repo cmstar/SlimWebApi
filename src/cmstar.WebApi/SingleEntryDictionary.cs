@@ -46,6 +46,7 @@ namespace cmstar.WebApi
             _comparer = equalityComparer ?? EqualityComparer<TKey>.Default;
         }
 
+        /// <inheritdoc />
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
         {
             return new Enumerator(this);
@@ -61,6 +62,7 @@ namespace cmstar.WebApi
             ((IDictionary<TKey, TValue>)this).Add(item.Key, item.Value);
         }
 
+        /// <inheritdoc />
         public void Clear()
         {
             if (_readOnly)
@@ -88,10 +90,10 @@ namespace cmstar.WebApi
         void ICollection<KeyValuePair<TKey, TValue>>.CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
         {
             if (array == null)
-                throw new ArgumentNullException("array");
+                throw new ArgumentNullException(nameof(array));
 
             if (arrayIndex < 0 || arrayIndex >= array.Length)
-                throw new ArgumentOutOfRangeException("arrayIndex");
+                throw new ArgumentOutOfRangeException(nameof(arrayIndex));
 
             if (_hasKey)
                 array[arrayIndex] = new KeyValuePair<TKey, TValue>(_key, _value);
@@ -102,24 +104,20 @@ namespace cmstar.WebApi
             return Remove(item.Key);
         }
 
-        int ICollection<KeyValuePair<TKey, TValue>>.Count
-        {
-            get { return _hasKey ? 0 : 1; }
-        }
+        int ICollection<KeyValuePair<TKey, TValue>>.Count => _hasKey ? 0 : 1;
 
-        bool ICollection<KeyValuePair<TKey, TValue>>.IsReadOnly
-        {
-            get { return _readOnly; }
-        }
+        bool ICollection<KeyValuePair<TKey, TValue>>.IsReadOnly => _readOnly;
 
+        /// <inheritdoc />
         public bool ContainsKey(TKey key)
         {
             if (key == null)
-                throw new ArgumentNullException("key");
+                throw new ArgumentNullException(nameof(key));
 
             return _hasKey && _comparer.Equals(_key, key);
         }
 
+        /// <inheritdoc />
         public void Add(TKey key, TValue value)
         {
             if (_readOnly)
@@ -129,13 +127,14 @@ namespace cmstar.WebApi
                 throw new InvalidOperationException("There can not be more than one key in the collection.");
 
             if (key == null)
-                throw new ArgumentNullException("key");
+                throw new ArgumentNullException(nameof(key));
 
             _hasKey = true;
             _key = key;
             _value = value;
         }
 
+        /// <inheritdoc />
         public bool Remove(TKey key)
         {
             if (_readOnly)
@@ -148,10 +147,11 @@ namespace cmstar.WebApi
             return true;
         }
 
+        /// <inheritdoc />
         public bool TryGetValue(TKey key, out TValue value)
         {
             if (key == null)
-                throw new ArgumentNullException("key");
+                throw new ArgumentNullException(nameof(key));
 
             if (!_hasKey || !_comparer.Equals(_key, key))
             {
@@ -163,6 +163,7 @@ namespace cmstar.WebApi
             return true;
         }
 
+        /// <inheritdoc />
         public TValue this[TKey key]
         {
             get
@@ -178,15 +179,11 @@ namespace cmstar.WebApi
             }
         }
 
-        public ICollection<TKey> Keys
-        {
-            get { return _hasKey ? new[] { _key } : new TKey[0]; }
-        }
+        /// <inheritdoc />
+        public ICollection<TKey> Keys => _hasKey ? new[] { _key } : new TKey[0];
 
-        public ICollection<TValue> Values
-        {
-            get { return _hasKey ? new[] { _value } : new TValue[0]; }
-        }
+        /// <inheritdoc />
+        public ICollection<TValue> Values => _hasKey ? new[] { _value } : new TValue[0];
 
         private class Enumerator : IEnumerator<KeyValuePair<TKey, TValue>>
         {
@@ -216,15 +213,9 @@ namespace cmstar.WebApi
                 _moved = false;
             }
 
-            public KeyValuePair<TKey, TValue> Current
-            {
-                get { return new KeyValuePair<TKey, TValue>(_parent._key, _parent._value); }
-            }
+            public KeyValuePair<TKey, TValue> Current => new KeyValuePair<TKey, TValue>(_parent._key, _parent._value);
 
-            object IEnumerator.Current
-            {
-                get { return Current; }
-            }
+            object IEnumerator.Current => Current;
         }
     }
 }
