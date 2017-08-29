@@ -8,10 +8,9 @@ namespace cmstar.WebApi
     /// </summary>
     public class ApiMethodContext
     {
-        private readonly static ApiMethodContext EmptyContext;
+        private const string ApiMethodContextHttpItemName = "CORE_WEBAPI_CONTEXT";
 
-        [ThreadStatic]
-        private static ApiMethodContext _currentContext;
+        private static readonly ApiMethodContext EmptyContext;
 
         static ApiMethodContext()
         {
@@ -27,21 +26,19 @@ namespace cmstar.WebApi
         {
             get
             {
-                return _currentContext ?? EmptyContext;
+                var context = HttpContext.Current.Items[ApiMethodContextHttpItemName] as ApiMethodContext;
+                return context ?? EmptyContext;
             }
             set
             {
-                _currentContext = value;
+                HttpContext.Current.Items[ApiMethodContextHttpItemName] = value;
             }
         }
 
         /// <summary>
         /// 获取当前API方法所使用的缓存键。
         /// </summary>
-        public string CacheKey
-        {
-            get { return _cacheKey ?? (_cacheKey = CacheKeyProvider()); }
-        }
+        public string CacheKey => _cacheKey ?? (_cacheKey = CacheKeyProvider());
 
         /// <summary>
         /// 获取当前API方法所关联的原始<see cref="HttpContext"/>。
