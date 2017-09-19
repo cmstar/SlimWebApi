@@ -29,7 +29,7 @@ namespace cmstar.WebApi
         /// <inheritdoc />
         public object Set(string key, object value, TimeSpan expiration)
         {
-            var absoluteExpiration = DateTime.Now.Add(expiration);
+            var absoluteExpiration = DateTime.UtcNow.Add(expiration);
             var oldValue = _cache.Add(key, value ?? NullValuePlaceholder, null, absoluteExpiration,
                 Cache.NoSlidingExpiration, CacheItemPriority.Default, null);
             return NullValuePlaceholder.Equals(oldValue) ? null : oldValue;
