@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System.Threading;
 using cmstar.Serialization.Json;
 using cmstar.Serialization.Json.Contracts;
 
@@ -11,35 +10,39 @@ namespace cmstar.WebApi.Slim
     /// <summary>
     /// 包含Slim WebAPI中与JSON序列化有关的方法。
     /// </summary>
-    internal static class JsonHelper
+    public static class JsonHelper
     {
-        private static readonly object SyncBlock = new object();
-        private static JsonSerializer _jsonSerializer;
+        private static readonly JsonDeserializingState ApiResponseDeserializingState;
+        private static readonly JsonSerializer Serializer;
 
-        public static JsonSerializer GetSerializer()
+        static JsonHelper()
         {
-            if (_jsonSerializer != null)
-                return _jsonSerializer;
+            var knonwContracts = new Dictionary<Type, JsonContract>();
+            var dateTimeContract = GetCustomFormatDateTimeContract();
+            knonwContracts.Add(typeof(DateTime), dateTimeContract);
 
-            lock (SyncBlock)
+            var jsonContractResolver = new JsonContractResolver(knonwContracts);
+            jsonContractResolver.CaseSensitive = false;
+            Serializer = new JsonSerializer(jsonContractResolver);
+
+            ApiResponseDeserializingState = new JsonDeserializingState
             {
-                Thread.MemoryBarrier();
-
-                if (_jsonSerializer != null)
-                    return _jsonSerializer;
-
-                var knonwContracts = new Dictionary<Type, JsonContract>();
-                var dateTimeContract = GetCustomFormatDateTimeContract();
-                knonwContracts.Add(typeof(DateTime), dateTimeContract);
-
-                var jsonContractResolver = new JsonContractResolver(knonwContracts);
-                jsonContractResolver.CaseSensitive = false;
-                _jsonSerializer = new JsonSerializer(jsonContractResolver);
-            }
-
-            return _jsonSerializer;
+                NullValueHandling = JsonDeserializationNullValueHandling.AsDefaultValue
+            };
         }
 
+        /// <summary>
+        /// 获取在 Slim WebAPI 的JSON交互中使用的<see cref="JsonSerializer"/>实例。
+        /// </summary>
+        /// <returns></returns>
+        public static JsonSerializer GetSerializer()
+        {
+            return Serializer;
+        }
+
+        /// <summary>
+        /// 序列化指定的对象。
+        /// </summary>
         public static string Serialize(object obj)
         {
             var stringBuilder = new StringBuilder(256);
@@ -62,6 +65,9 @@ namespace cmstar.WebApi.Slim
             return stringBuilder.ToString();
         }
 
+        /// <summary>
+        /// 反序列化给定的JSON到指定类型的实例。
+        /// </summary>
         public static object Deserialize(string json, Type type)
         {
             using (var reader = new StringReader(json))
@@ -70,6 +76,23 @@ namespace cmstar.WebApi.Slim
             }
         }
 
+        /// <summary>
+        /// 反序列化给定的JSON到<see cref="ApiResponse{T}"/>实例。
+        /// </summary>
+        public static ApiResponse<T> DeserializeApiResponse<T>(string json)
+        {
+            var serializer = GetSerializer();
+            var result = serializer.Deserialize<ApiResponse<T>>(json, ApiResponseDeserializingState);
+            return result;
+        }
+
+        /// <summary>
+        /// 从<paramref name="reader"/>读取JSON，并反序列化到指定类型的实例。
+        /// </summary>
+        /// <param name="reader">用于读取JSON的<see cref="TextReader"/>。</param>
+        /// <param name="type">目标类型。</param>
+        /// <param name="keepReaderOpen">若为false，则读取结束后关闭<paramref name="reader"/>。</param>
+        /// <returns>目标类型的实例。</returns>
         public static object Deserialize(TextReader reader, Type type, bool keepReaderOpen)
         {
             var serializer = GetSerializer();
