@@ -85,7 +85,7 @@ namespace cmstar.WebApi.Slim
 
             var paramInfoMap = method.ParamInfoMap;
             var methodParamStat = TypeHelper.GetMethodParamStat(method.Method);
-            if (!methodParamStat.HasCoplexMember)
+            if (!methodParamStat.HasComplexMember)
             {
                 var inlineParamHttpParamDecoder = new InlineParamHttpParamDecoder(paramInfoMap);
                 decoderMap[MetaRequestFormatGet] = inlineParamHttpParamDecoder;
@@ -103,7 +103,7 @@ namespace cmstar.WebApi.Slim
 
                 if (paramTypeStat.HasFileInput)
                 {
-                    if (paramTypeStat.HasCoplexMember)
+                    if (paramTypeStat.HasComplexMember)
                     {
                         throw NoSupportedDecoderError(method.Method);
                     }
@@ -112,7 +112,7 @@ namespace cmstar.WebApi.Slim
                 }
                 else
                 {
-                    if (!paramTypeStat.HasCoplexMember)
+                    if (!paramTypeStat.HasComplexMember)
                     {
                         var singleObjectHttpParamDecoder = new SingleObjectHttpParamDecoder(paramInfoMap);
                         decoderMap[MetaRequestFormatGet] = singleObjectHttpParamDecoder;
@@ -211,7 +211,7 @@ namespace cmstar.WebApi.Slim
             else
             {
                 // format参数可包含多段使用逗号隔开的值（e.g. json,plain）
-                var formatOptions = format.Split(TypeHelper.CollectionElementSpliter);
+                var formatOptions = format.Split(TypeHelper.CollectionElementSplitter);
                 var ignoreCaseComparer = StringComparer.OrdinalIgnoreCase;
 
                 foreach (var formatOption in formatOptions)

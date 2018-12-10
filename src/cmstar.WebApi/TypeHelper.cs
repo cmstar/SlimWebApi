@@ -24,15 +24,15 @@ namespace cmstar.WebApi
         /// The array contains only the <see cref="CollectionElementDelimiter"/> 
         /// and is used for splitting strings.
         /// </summary>
-        public static readonly char[] CollectionElementSpliter = { CollectionElementDelimiter };
+        public static readonly char[] CollectionElementSplitter = { CollectionElementDelimiter };
 
         /// <summary>
-        /// The generic defination of collections.
+        /// The generic definition of collections.
         /// </summary>
-        public static Type GenericCollecitonDefination = typeof(ICollection<>);
+        public static Type GenericCollectionDefinition = typeof(ICollection<>);
 
         /// <summary>
-        /// Returns an instance of <see cref="MemberTypeStat"/> which contains statistic infomation
+        /// Returns an instance of <see cref="MemberTypeStat"/> which contains statistic informatino
         /// for the parameters of the specified method.
         /// </summary>
         /// <param name="methodInfo">The method.</param>
@@ -48,7 +48,7 @@ namespace cmstar.WebApi
         }
 
         /// <summary>
-        /// Returns an instance of <see cref="MemberTypeStat"/> which contains statistic infomation
+        /// Returns an instance of <see cref="MemberTypeStat"/> which contains statistic informatino
         /// for the properties and fields in the specified type.
         /// </summary>
         /// <param name="type">The type.</param>
@@ -69,7 +69,7 @@ namespace cmstar.WebApi
         }
 
         /// <summary>
-        /// Determines wheter a type is a simple type.
+        /// Determines whether a type is a simple type.
         /// A simple type means that the instance can be convert from/to a string easily.
         /// </summary>
         /// <param name="type">The type.</param>
@@ -93,11 +93,11 @@ namespace cmstar.WebApi
         }
 
         /// <summary>
-        /// Determines wheter a type is a simple type or a generic colleciton whose elements are all simple.
+        /// Determines whether a type is a simple type or a generic collection whose elements are all simple.
         /// </summary>
         /// <param name="type">The type.</param>
         /// <returns>
-        /// true if the type is a simple type or a generic colleciton whose elements are all simple; otherwise false.
+        /// true if the type is a simple type or a generic collection whose elements are all simple; otherwise false.
         /// </returns>
         public static bool IsSimpleTypeOrCollection(Type type)
         {
@@ -112,10 +112,10 @@ namespace cmstar.WebApi
         /// Determines whether a type is a generic collection type.
         /// </summary>
         /// <param name="type">The type.</param>
-        /// <returns>true if the type is a generic colleciton type; otherwise false.</returns>
+        /// <returns>true if the type is a generic collection type; otherwise false.</returns>
         public static bool IsGenericCollection(Type type)
         {
-            return ReflectionUtils.GetGenericArguments(type, GenericCollecitonDefination) != null;
+            return ReflectionUtils.GetGenericArguments(type, GenericCollectionDefinition) != null;
         }
 
         /// <summary>
@@ -131,13 +131,13 @@ namespace cmstar.WebApi
         }
 
         /// <summary>
-        /// Converts a string to a collection specifed by the <paramref name="collectionType"/>. 
+        /// Converts a string to a collection specified by the <paramref name="collectionType"/>. 
         /// </summary>
         /// <param name="value">The string to convert.</param>
         /// <param name="collectionType">The type of the collection.</param>
         /// <returns>The instance of the specified type.</returns>
         /// <remarks>
-        /// The string is splitted into an array by <see cref="CollectionElementDelimiter"/>,
+        /// The string is split into an array by <see cref="CollectionElementDelimiter"/>,
         /// and then each element is to be convert the the target type of the collection.
         /// </remarks>
         public static object ConvertToCollection(string value, Type collectionType)
@@ -154,7 +154,7 @@ namespace cmstar.WebApi
 
             try
             {
-                var stringValues = value.Split(CollectionElementSpliter);
+                var stringValues = value.Split(CollectionElementSplitter);
                 var elements = CreateElementArray(elementType, stringValues);
 
                 if (collectionType.IsInterface || collectionType.IsArray)
@@ -170,7 +170,7 @@ namespace cmstar.WebApi
         }
 
         /// <summary>
-        /// Converts a string to an equivalant object of the specified type.
+        /// Converts a string to an equivalent object of the specified type.
         /// </summary>
         /// <param name="value">The string to convert.</param>
         /// <param name="type">The target type.</param>
@@ -252,8 +252,7 @@ namespace cmstar.WebApi
                 return false;
 
             // treat any non-zero numbers as true; only false if the value is exactly zero
-            double d;
-            if (double.TryParse(value, out d))
+            if (double.TryParse(value, out var d))
                 return !d.Equals(0D);
 
             return bool.Parse(value);
@@ -281,15 +280,16 @@ namespace cmstar.WebApi
         private static object CreateCollectionInstance(Type collectionType, Type elementType, IEnumerable elements)
         {
             var collection = Activator.CreateInstance(collectionType);
+
+            // ReSharper disable once PossibleNullReferenceException
             var appendMethod = typeof(TypeHelper)
-                .GetMethod("PerformAppending", BindingFlags.Instance | BindingFlags.NonPublic)
+                .GetMethod(nameof(PerformAppending), BindingFlags.Instance | BindingFlags.NonPublic)
                 .MakeGenericMethod(elementType);
 
             appendMethod.Invoke(null, new[] { collection, elements });
             return collection;
         }
 
-        // ReSharper disable UnusedMember.Local
         private static void PerformAppending<T>(ICollection<T> collection, IEnumerable elements)
         {
             foreach (var element in elements)
@@ -297,7 +297,6 @@ namespace cmstar.WebApi
                 collection.Add((T)element);
             }
         }
-        // ReSharper restore UnusedMember.Local
 
         private static Type GetElementType(Type collectionType)
         {
@@ -321,18 +320,12 @@ namespace cmstar.WebApi
         /// <summary>
         /// true if there are only plain members (exclude collections).
         /// </summary>
-        public bool IsPurePlain
-        {
-            get { return Others == 0 && PlainCollections == 0 && !HasFileInput; }
-        }
+        public bool IsPurePlain => Others == 0 && PlainCollections == 0 && !HasFileInput;
 
         /// <summary>
         /// true if any complex member exists.
         /// </summary>
-        public bool HasCoplexMember
-        {
-            get { return Others > 0; }
-        }
+        public bool HasComplexMember => Others > 0;
 
         /// <summary>
         /// true if any <see cref="Stream"/> or <see cref="HttpFileCollection"/> member exists.
