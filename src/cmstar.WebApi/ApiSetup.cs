@@ -11,7 +11,7 @@ namespace cmstar.WebApi
     public partial class ApiSetup
     {
         private const BindingFlags DefaultBindingFlags =
-            BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
+            BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static;
 
         private readonly List<ApiMethodInfo> _apiMethodInfos;
         private readonly LogSetup _logSetup;
@@ -113,7 +113,7 @@ namespace cmstar.WebApi
         public IEnumerable<ApiMethodSetup> Auto<TProvider>(
             TProvider provider, bool parseAttribute = true, BindingFlags bindingFlags = DefaultBindingFlags)
         {
-            var methods = typeof(TProvider).GetMethods(bindingFlags);
+            var methods = GetMethods(typeof(TProvider), bindingFlags);
             return AppendMethods(methods, m => (() => provider), parseAttribute);
         }
 
@@ -130,7 +130,7 @@ namespace cmstar.WebApi
         public IEnumerable<ApiMethodSetup> Auto<TProvider>(
             Func<TProvider> provider, bool parseAttribute = true, BindingFlags bindingFlags = DefaultBindingFlags)
         {
-            var methods = typeof(TProvider).GetMethods(bindingFlags);
+            var methods = GetMethods(typeof(TProvider), bindingFlags);
             return AppendMethods(methods, m => (() => provider()), parseAttribute);
         }
 
@@ -173,9 +173,22 @@ namespace cmstar.WebApi
                 return provider;
             };
 
-            var methods = providerType.GetMethods(bindingFlags);
+            var methods = GetMethods(providerType, bindingFlags);
             var methodSetups = AppendMethods(methods, providerCreator, parseAttribute);
             return methodSetups;
+        }
+
+        private MethodInfo[] GetMethods(Type type, BindingFlags bingBindingFlags)
+        {
+            var methods = type.GetMethods(bingBindingFlags);
+
+            // 默认去掉 .net 底层基类里的方法。如果确实需要这些方法，只能一个一个注册，不能通过自动注册。
+            if (methods.Length > 0)
+            {
+                methods = methods.Where(x => x.DeclaringType != typeof(object)).ToArray();
+            }
+
+            return methods;
         }
 
         private List<ApiMethodSetup> AppendMethods(
