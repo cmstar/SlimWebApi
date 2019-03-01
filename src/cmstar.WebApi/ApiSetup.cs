@@ -11,7 +11,7 @@ namespace cmstar.WebApi
     public partial class ApiSetup
     {
         private const BindingFlags DefaultBindingFlags =
-            BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static;
+            BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy;
 
         private readonly List<ApiMethodInfo> _apiMethodInfos;
         private readonly LogSetup _logSetup;
