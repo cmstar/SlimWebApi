@@ -92,6 +92,7 @@
     <Compile Include="Slim\SingleObjectJsonDecoder.cs" />
     <Compile Include="Slim\SlimApiHttpHandler.cs" />
     <Compile Include="ApiResponse.cs" />
+    <Compile Include="Slim\SlimApiRequestState.cs" />
     <Compile Include="TypeHelper.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

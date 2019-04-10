@@ -166,6 +166,9 @@
     <Compile Include="..\cmstar.WebApi\Slim\SlimApiHttpHandler.cs">
       <Link>Slim\SlimApiHttpHandler.cs</Link>
     </Compile>
+    <Compile Include="..\cmstar.WebApi\Slim\SlimApiRequestState.cs">
+      <Link>Slim\SlimApiRequestState.cs</Link>
+    </Compile>
     <Compile Include="..\cmstar.WebApi\TypeHelper.cs">
       <Link>TypeHelper.cs</Link>
     </Compile>
