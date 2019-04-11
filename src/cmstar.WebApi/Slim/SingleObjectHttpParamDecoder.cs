@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -144,31 +143,23 @@ namespace cmstar.WebApi.Slim
 
             var instance = _constructor();
 
-            IEnumerable keys;
-            if (CanReadForm())
+            if (_streamMemberName != null)
             {
-                keys = request.ExplicicParamKeys();
-            }
-            else
-            {
-                keys = request.QueryString.Keys;
-
-                if (_streamMemberName != null)
-                {
-                    request.InputStream.Position = 0;
-                    var m = _memberMap[_streamMemberName];
-                    m.Setter(instance, request.InputStream);
-                }
-                else
-                {
-                    var m = _memberMap[_httpFileCollectionMemmberName];
-                    m.Setter(instance, request.Files);
-                }
+                request.InputStream.Position = 0;
+                var m = _memberMap[_streamMemberName];
+                m.Setter(instance, request.InputStream);
             }
 
-            foreach (string key in keys)
+            if (_httpFileCollectionMemmberName != null)
             {
-                // the key may be null in http params
+                var m = _memberMap[_httpFileCollectionMemmberName];
+                m.Setter(instance, request.Files);
+            }
+
+            var requestParam = HttpParamDecoderHelper.AllParam(request, state);
+            foreach (var p in requestParam)
+            {
+                var key = p.Key;
                 if (key == null || key == _streamMemberName || key == _httpFileCollectionMemmberName)
                     continue;
 
@@ -176,10 +167,7 @@ namespace cmstar.WebApi.Slim
                 if (!_memberMap.TryGetValue(key, out m))
                     continue;
 
-                var httpParam = CanReadForm()
-                    ? request.ExplicicParam(key)
-                    : request.QueryString[key];
-
+                var httpParam = p.Value;
                 object value;
                 try
                 {
@@ -199,11 +187,6 @@ namespace cmstar.WebApi.Slim
             }
 
             return new Dictionary<string, object>(1) { { _paramName, instance } };
-        }
-
-        private bool CanReadForm()
-        {
-            return _streamMemberName == null && _httpFileCollectionMemmberName == null;
         }
 
         private Exception FileParamConflictError(Type type, string parameterName)

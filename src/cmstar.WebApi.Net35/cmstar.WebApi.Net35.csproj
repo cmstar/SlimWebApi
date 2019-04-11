@@ -145,6 +145,9 @@
     <Compile Include="..\cmstar.WebApi\SingleEntryDictionary.cs">
       <Link>SingleEntryDictionary.cs</Link>
     </Compile>
+    <Compile Include="..\cmstar.WebApi\Slim\HttpParamDecoderHelper.cs">
+      <Link>Slim\HttpParamDecoderHelper.cs</Link>
+    </Compile>
     <Compile Include="..\cmstar.WebApi\Slim\InlineParamHttpParamDecoder.cs">
       <Link>Slim\InlineParamHttpParamDecoder.cs</Link>
     </Compile>

@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using System.Web;
 using System.Web.Routing;
 
@@ -46,6 +48,17 @@ namespace cmstar.WebApi
             foreach (var key in request.Form.AllKeys)
             {
                 yield return key;
+            }
+        }
+
+        /// <summary>
+        /// 以文本形式从请求的HTTP body中读取所有的内容。
+        /// </summary>
+        public static string TextBody(this HttpRequest request, Encoding encoding)
+        {
+            using (var reader = new StreamReader(request.InputStream, encoding))
+            {
+                return reader.ReadToEnd();
             }
         }
     }

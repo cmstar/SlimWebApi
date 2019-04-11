@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Web;
@@ -81,29 +80,21 @@ namespace cmstar.WebApi.Slim
                 return new Dictionary<string, object>(0);
 
             var paramValueMap = new Dictionary<string, object>();
-            IEnumerable keys;
-
-            if (CanReadForm())
+            if (_streamParamName != null)
             {
-                keys = request.ExplicicParamKeys();
-            }
-            else
-            {
-                keys = request.QueryString.Keys;
-
-                if (_streamParamName != null)
-                {
-                    request.InputStream.Position = 0;
-                    paramValueMap.Add(_streamParamName, request.InputStream);
-                }
-                else
-                {
-                    paramValueMap.Add(_httpFileCollectionParamName, request.Files);
-                }
+                request.InputStream.Position = 0;
+                paramValueMap.Add(_streamParamName, request.InputStream);
             }
 
-            foreach (string key in keys)
+            if (_httpFileCollectionParamName != null)
             {
+                paramValueMap.Add(_httpFileCollectionParamName, request.Files);
+            }
+
+            var requestParam = HttpParamDecoderHelper.AllParam(request, state);
+            foreach (var p in requestParam)
+            {
+                var key = p.Key;
                 if (key == null || key == _streamParamName || key == _httpFileCollectionParamName)
                     continue;
 
@@ -111,10 +102,7 @@ namespace cmstar.WebApi.Slim
                 if (!_paramInfoMap.TryGetParamInfo(key, out paramInfo))
                     continue;
 
-                var paramValue = CanReadForm()
-                    ? request.ExplicicParam(key)
-                    : request.QueryString[key];
-
+                var paramValue = p.Value;
                 object value;
                 try
                 {
@@ -134,11 +122,6 @@ namespace cmstar.WebApi.Slim
             }
 
             return paramValueMap;
-        }
-
-        private bool CanReadForm()
-        {
-            return _streamParamName == null && _httpFileCollectionParamName == null;
         }
 
         private Exception FileParamConflictError(string methodName, string parameterName)

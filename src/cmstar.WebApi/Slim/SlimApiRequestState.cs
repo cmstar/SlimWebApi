@@ -26,7 +26,5 @@
         /// 若为 false，则根据具体请求给定：JSONP 请求使用 text/javascript；JSON 格式则为 application/json。
         /// </summary>
         public bool UsePlainText;
-
-        public bool IsJsonpRequest => !string.IsNullOrEmpty(CallbackName);
     }
 }

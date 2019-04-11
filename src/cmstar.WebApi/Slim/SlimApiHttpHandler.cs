@@ -49,6 +49,11 @@ namespace cmstar.WebApi.Slim
         /// </summary>
         public const string MetaResponseFormatPlain = "plain";
 
+        /// <summary>
+        /// 未指定字符集时使用的默认字符集。
+        /// </summary>
+        public static readonly Encoding DefaultEncoding = Encoding.UTF8;
+
         private const int OutputBodyLimitLower = 1024;
         private const int OutputBodyLimitUpper = 65536;
 
@@ -270,7 +275,7 @@ namespace cmstar.WebApi.Slim
         {
             try
             {
-                return decoder.DecodeParam(context.Request, null);
+                return decoder.DecodeParam(context.Request, requestState);
             }
             catch (Exception ex)
             {
@@ -282,7 +287,7 @@ namespace cmstar.WebApi.Slim
         }
 
         /// <summary>
-        /// 将指定的<see cref="ApiResponse"/>序列化并写如HTTP输出流中。
+        /// 将指定的<see cref="ApiResponse"/>序列化并写入HTTP输出流中。
         /// </summary>
         /// <param name="context">当前请求的<see cref="HttpContext"/>实例。</param>
         /// <param name="requestState">用于保存当前API请求信息的对象实例。</param>
