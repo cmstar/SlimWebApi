@@ -433,46 +433,17 @@ namespace cmstar.WebApi
                 }
 
                 var param = DecodeParam(context, requestState, decoder) ?? new Dictionary<string, object>(0);
-                var apiMethodContext = new ApiMethodContext
-                {
-                    CacheProvider = method.Setting.CacheProvider,
-                    CacheExpiration = method.Setting.CacheExpiration,
-                    CacheKeyProvider = () => CacheKeyHelper.GetCacheKey(method, param)
-                };
+                var apiMethodContext = new ApiMethodContext();
 
                 // 绑定本次请求的ApiMethodContext
                 ApiMethodContext.SwitchContext(context, apiMethodContext);
 
-                object result;
-                if (method.Setting.AutoCacheEnabled)
-                {
-                    var cacheProvider = method.Setting.CacheProvider;
-                    var cacheKey = CacheKeyHelper.GetCacheKey(method, param);
-                    result = cacheKey == null ? null : cacheProvider.Get(cacheKey);
-
-                    if (result == null)
-                    {
-                        methodInvocationStarted = true;
-
+                methodInvocationStarted = true;
 #if NET35
-                        result = MethodInvoke(handlerState, method, param);
+                var result = MethodInvoke(handlerState, method, param);
 #else
-                        result = await MethodInvokeAsync(context, apiMethodContext, handlerState, method, param);
+                var result = await MethodInvokeAsync(context, apiMethodContext, handlerState, method, param);
 #endif
-
-                        cacheProvider.Add(cacheKey, result, method.Setting.CacheExpiration);
-                    }
-                }
-                else
-                {
-                    methodInvocationStarted = true;
-
-#if NET35
-                    result = MethodInvoke(handlerState, method, param);
-#else
-                    result = await MethodInvokeAsync(context, apiMethodContext, handlerState, method, param);
-#endif
-                }
 
                 // 按需使用压缩流传输
                 AppendCompressionFilter(context, method);
@@ -498,7 +469,7 @@ namespace cmstar.WebApi
         }
 
 #if NET35
-        private static  object MethodInvoke(
+        private static object MethodInvoke(
             ApiHandlerState handlerState,
             ApiMethodInfo apiMethod,
             IDictionary<string, object> param)

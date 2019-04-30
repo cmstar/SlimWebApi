@@ -36,16 +36,6 @@ namespace cmstar.WebApi
         public Type CallerType { get; private set; }
 
         /// <summary>
-        /// 获取API缓存提供器。若API方法注册中没有单独指定缓存提供器，则套用此缓存提供器。
-        /// </summary>
-        public IApiCacheProvider CacheProvider { get; private set; }
-
-        /// <summary>
-        /// 获取缓存的超时时间。若API方法注册中没有单独指定超时时间，则套用此超时时间。
-        /// </summary>
-        public TimeSpan CacheExpiration { get; private set; }
-
-        /// <summary>
         /// 获取日志相关的配置入口。
         /// </summary>
         public LogSetup Log
@@ -59,21 +49,6 @@ namespace cmstar.WebApi
         public IEnumerable<ApiMethodInfo> ApiMethodInfos
         {
             get { return _apiMethodInfos; }
-        }
-
-        /// <summary>
-        /// 设置从当前实例注册的API所使用的缓存提供器。
-        /// 若API方法注册中没有单独指定缓存提供器，将套用此提供器。
-        /// </summary>
-        /// <param name="provider">API缓存提供器。</param>
-        /// <param name="expiration">缓存的超时时间。</param>
-        public void SetupCacheBase(IApiCacheProvider provider, TimeSpan expiration)
-        {
-            if (expiration.Ticks <= 0)
-                throw new ArgumentException("The expiration must be greater than zero.", "expiration");
-
-            CacheProvider = provider;
-            CacheExpiration = expiration;
         }
 
         /// <summary>

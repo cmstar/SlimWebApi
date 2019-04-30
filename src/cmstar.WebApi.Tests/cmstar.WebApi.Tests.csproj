@@ -21,6 +21,7 @@
     <IISExpressWindowsAuthentication />
     <IISExpressUseClassicPipelineMode />
     <UseGlobalApplicationHostFile />
+    <Use64BitIISExpress />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -74,9 +75,6 @@
     <Compile Include="business\AttributedServiceProvider.cs" />
     <Compile Include="business\DataStructrures.cs" />
     <Compile Include="business\SimpleServiceProvider.cs" />
-    <Compile Include="CacheExample.ashx.cs">
-      <DependentUpon>CacheExample.ashx</DependentUpon>
-    </Compile>
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -99,7 +97,6 @@
   <ItemGroup>
     <Content Include="DelegateExample.ashx" />
     <Content Include="ReflectionExample.ashx" />
-    <Content Include="CacheExample.ashx" />
     <Content Include="AutoSetupExample.ashx" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>

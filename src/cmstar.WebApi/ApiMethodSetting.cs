@@ -9,8 +9,6 @@ namespace cmstar.WebApi
     /// </summary>
     public class ApiMethodSetting
     {
-        private TimeSpan _cacheExpiration = TimeSpan.Zero;
-        private bool _autoCacheEnabled;
         private string _methodName;
 
         /// <summary>
@@ -30,24 +28,6 @@ namespace cmstar.WebApi
         }
 
         /// <summary>
-        /// 获取或设置当前WebAPI所用缓存的超时时间。若未开启缓存，则为<see cref="TimeSpan.Zero"/>。
-        /// </summary>
-        public TimeSpan CacheExpiration
-        {
-            get
-            {
-                return _cacheExpiration;
-            }
-            set
-            {
-                if (value.Ticks <= 0)
-                    throw new ArgumentException("The expiration time must be greater than zero.", nameof(value));
-
-                _cacheExpiration = value;
-            }
-        }
-
-        /// <summary>
         /// 指定对于此API方法使用何种压缩方式输出结果。
         /// 默认值为<see cref="ApiCompressionMethods.None"/>。
         /// </summary>
@@ -56,25 +36,6 @@ namespace cmstar.WebApi
         /// 需要评估API方法返回数据的体积加以评估以确定是否使用显式的压缩配置。
         /// </remarks>
         public ApiCompressionMethods CompressionMethods { get; set; } = ApiCompressionMethods.None;
-
-        /// <summary>
-        /// 获取或设置当前WebAPI所使用的缓存提供器。
-        /// </summary>
-        public IApiCacheProvider CacheProvider { get; set; }
-
-        /// <summary>
-        /// 获取或设置当前WebAPI注册中使用的缓存命名空间。
-        /// </summary>
-        public string CacheNamespace { get; set; }
-
-        /// <summary>
-        /// 是否允许对当前方法进行自动缓存。
-        /// </summary>
-        public bool AutoCacheEnabled
-        {
-            get { return _autoCacheEnabled && CacheProvider != null; }
-            set { _autoCacheEnabled = value; }
-        }
 
         /// <summary>
         /// 获取或设置当前WebAPI成功执行后输出日志信息所使用的日志级别。

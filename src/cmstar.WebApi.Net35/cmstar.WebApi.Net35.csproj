@@ -97,9 +97,6 @@
     <Compile Include="..\cmstar.WebApi\ApiSetup_Lambdas.cs">
       <Link>ApiSetup_Lambdas.cs</Link>
     </Compile>
-    <Compile Include="..\cmstar.WebApi\CacheKeyHelper.cs">
-      <Link>CacheKeyHelper.cs</Link>
-    </Compile>
     <Compile Include="..\cmstar.WebApi\EmptyParamMethodRequestDecoder.cs">
       <Link>EmptyParamMethodRequestDecoder.cs</Link>
     </Compile>
@@ -115,12 +112,6 @@
     <Compile Include="..\cmstar.WebApi\HttpContextExtention.cs">
       <Link>HttpContextExtention.cs</Link>
     </Compile>
-    <Compile Include="..\cmstar.WebApi\HttpRuntimeApiCacheProvider.cs">
-      <Link>HttpRuntimeApiCacheProvider.cs</Link>
-    </Compile>
-    <Compile Include="..\cmstar.WebApi\IApiCacheProvider.cs">
-      <Link>IApiCacheProvider.cs</Link>
-    </Compile>
     <Compile Include="..\cmstar.WebApi\IRequestDecoder.cs">
       <Link>IRequestDecoder.cs</Link>
     </Compile>
@@ -129,9 +120,6 @@
     </Compile>
     <Compile Include="..\cmstar.WebApi\LogSetup.cs">
       <Link>LogSetup.cs</Link>
-    </Compile>
-    <Compile Include="..\cmstar.WebApi\NoCacheApiCacheProvider.cs">
-      <Link>NoCacheApiCacheProvider.cs</Link>
     </Compile>
     <Compile Include="..\cmstar.WebApi\Routing\ApiRouteConfig.cs">
       <Link>Routing\ApiRouteConfig.cs</Link>

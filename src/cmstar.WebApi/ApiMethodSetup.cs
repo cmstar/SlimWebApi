@@ -21,18 +21,6 @@ namespace cmstar.WebApi
             ArgAssert.NotNull(setup, "setup");
             ArgAssert.NotNull(apiMethodInfo, "apiMethodInfo");
 
-            apiMethodInfo.Setting.CacheProvider = setup.CacheProvider;
-
-            if (setup.CacheExpiration.Ticks > 0)
-            {
-                apiMethodInfo.Setting.CacheExpiration = setup.CacheExpiration;
-            }
-
-            // 缓存命名空间优先使用承载方法的类型的名称
-            apiMethodInfo.Setting.CacheNamespace = apiMethodInfo.Method.DeclaringType != null
-                ? apiMethodInfo.Method.DeclaringType.FullName
-                : setup.CallerType.FullName;
-
             _apiMethodInfo = apiMethodInfo;
         }
 
@@ -99,61 +87,6 @@ namespace cmstar.WebApi
         public ApiMethodSetup Compression(ApiCompressionMethods compressionMethod)
         {
             _apiMethodInfo.Setting.CompressionMethods = compressionMethod;
-            return this;
-        }
-
-        /// <summary>
-        /// 为当前注册的方法单独指定缓存提供器。
-        /// </summary>
-        /// <param name="cacheProvider">缓存提供器。</param>
-        /// <returns>当前<see cref="ApiMethodSetup"/>实例。</returns>
-        public ApiMethodSetup CacheProvider(IApiCacheProvider cacheProvider)
-        {
-            ArgAssert.NotNull(cacheProvider, "cacheProvider");
-            _apiMethodInfo.Setting.CacheProvider = cacheProvider;
-            return this;
-        }
-
-        /// <summary>
-        /// 为当前注册的方法单独指定缓存超时时间。
-        /// </summary>
-        /// <param name="expiration"></param>
-        /// <returns>当前<see cref="ApiMethodSetup"/>超时时间。</returns>
-        public ApiMethodSetup CacheExpiration(TimeSpan expiration)
-        {
-            if (expiration.Ticks <= 0)
-                throw new ArgumentOutOfRangeException(
-                    nameof(expiration), "The expiration time must be greater than zero.");
-
-            _apiMethodInfo.Setting.CacheExpiration = expiration;
-            return this;
-        }
-
-        /// <summary>
-        /// 为当前注册的方法单独指定缓存命名空间。
-        /// </summary>
-        /// <param name="ns">缓存命名空间。</param>
-        /// <returns>当前<see cref="ApiMethodSetup"/>实例。</returns>
-        public ApiMethodSetup CacheNamespace(string ns)
-        {
-            _apiMethodInfo.Setting.CacheNamespace = ns ?? string.Empty;
-            return this;
-        }
-
-        /// <summary>
-        /// 开启API方法的自动缓存。
-        /// 没有被指定的缓存配置将套用<see cref="ApiSetup"/>中设置的缓存配置。
-        /// </summary>
-        /// <returns>当前<see cref="ApiMethodSetup"/>实例。</returns>
-        public ApiMethodSetup EnableAutoCache()
-        {
-            if (_apiMethodInfo.Setting.CacheProvider == null)
-            {
-                throw new InvalidOperationException(
-                    "The cache provider must be specified if the base provider is not set.");
-            }
-
-            _apiMethodInfo.Setting.AutoCacheEnabled = true;
             return this;
         }
 

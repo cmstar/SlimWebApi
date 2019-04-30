@@ -1,5 +1,4 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Reflection;
 using cmstar.WebApi.Slim;
 
 namespace cmstar.WebApi
@@ -12,9 +11,6 @@ namespace cmstar.WebApi
     {
         public override void Setup(ApiSetup setup)
         {
-            // 设置缓存的基础配置
-            setup.SetupCacheBase(new HttpRuntimeApiCacheProvider(), TimeSpan.FromSeconds(10));
-
             // 此方式等同于使用反射获取MethodInfo并批量注册，写法上更为便利
             setup.Auto(new SimpleServiceProvider(), false, BindingFlags.Public | BindingFlags.Static);
 

@@ -55,57 +55,6 @@ namespace cmstar.WebApi
         }
 
         /// <summary>
-        /// 指示缓存是否启用。
-        /// </summary>
-        public bool AutoCacheEnabled
-        {
-            get { return _setting.AutoCacheEnabled; }
-            set { _setting.AutoCacheEnabled = value; }
-        }
-
-        /// <summary>
-        /// 获取或设置当前API方法的缓存超时时间，单位为秒。
-        /// 使用非正数表示不指定缓存超时时间，在此情况下通常将套用全局的设置。
-        /// </summary>
-        public int CacheExpiration
-        {
-            get
-            {
-                return (int)_setting.CacheExpiration.TotalSeconds;
-            }
-            set
-            {
-                if (value >= 0)
-                {
-                    _setting.CacheExpiration = TimeSpan.FromSeconds(value);
-                }
-            }
-        }
-
-        /// <summary>
-        /// 获取或设置当前API方法的缓存命名空间。
-        /// 使用<c>null</c>表示不指定，在此情况下通常将套用全局的设置。
-        /// </summary>
-        public string CacheNamespace
-        {
-            get
-            {
-                return _setting.CacheNamespace;
-            }
-            set
-            {
-#if NET35
-                if (!StringUtils.IsNullOrWhiteSpace(value))
-#else
-                if (!string.IsNullOrWhiteSpace(value))
-#endif
-                {
-                    _setting.CacheNamespace = value;
-                }
-            }
-        }
-
-        /// <summary>
         /// 指定对于此API方法使用何种压缩方式输出结果。
         /// 默认值为<see cref="ApiCompressionMethods.None"/>。
         /// </summary>
