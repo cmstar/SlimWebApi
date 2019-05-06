@@ -275,7 +275,7 @@ namespace cmstar.WebApi.Slim
         {
             try
             {
-                return decoder.DecodeParam(context.Request, requestState);
+                return decoder.DecodeParam(context.Request, null);
             }
             catch (Exception ex)
             {
