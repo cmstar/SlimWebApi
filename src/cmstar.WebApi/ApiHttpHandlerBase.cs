@@ -177,7 +177,7 @@ namespace cmstar.WebApi
             HttpContext context, object requestState, IRequestDecoder decoder);
 
         /// <summary>
-        /// 将指定的<see cref="ApiResponse"/>序列化并写如HTTP输出流中。
+        /// 将指定的<see cref="ApiResponse"/>序列化并写入HTTP输出流中。
         /// </summary>
         /// <param name="context">当前请求的<see cref="HttpContext"/>实例。</param>
         /// <param name="requestState">用于保存当前API请求信息的对象实例。</param>
