@@ -13,7 +13,7 @@ namespace cmstar.WebApi
 
         static ApiMethodContext()
         {
-            EmptyContext = new ApiMethodContext();
+            EmptyContext = new ApiMethodContext(null, null);
         }
 
         /// <summary>
@@ -40,10 +40,28 @@ namespace cmstar.WebApi
             HttpContext.Current = httpContext;
         }
 
+        internal ApiMethodContext(ApiMethodInfo apiMethodInfo, object state)
+        {
+            ApiMethodInfo = apiMethodInfo;
+            RequestState = state;
+        }
+
         /// <summary>
         /// 获取当前API方法所关联的原始<see cref="HttpContext"/>。
         /// 若当前并不处于HTTP请求上下文中，返回<c>null</c>。
         /// </summary>
         public HttpContext Raw => HttpContext.Current;
+
+        /// <summary>
+        /// 获取当前被调用的方法的信息。
+        /// 若当前并不处于调用上下文中，返回<c>null</c>。
+        /// </summary>
+        public ApiMethodInfo ApiMethodInfo { get; }
+
+        /// <summary>
+        /// 获取一个实例，该实例用于记录当前处理的请求中的状态。
+        /// 若当前并不处于调用上下文中，返回<c>null</c>。
+        /// </summary>
+        public object RequestState { get; }
     }
 }
