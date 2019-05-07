@@ -433,7 +433,7 @@ namespace cmstar.WebApi
                 }
 
                 var param = DecodeParam(context, requestState, decoder) ?? new Dictionary<string, object>(0);
-                var apiMethodContext = new ApiMethodContext(method, requestState);
+                var apiMethodContext = new ApiMethodContext(method, requestState, param);
 
                 // 绑定本次请求的ApiMethodContext
                 ApiMethodContext.SwitchContext(context, apiMethodContext);

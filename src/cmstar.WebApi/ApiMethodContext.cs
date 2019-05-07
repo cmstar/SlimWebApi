@@ -1,4 +1,5 @@
-﻿using System.Web;
+﻿using System.Collections.Generic;
+using System.Web;
 
 namespace cmstar.WebApi
 {
@@ -13,7 +14,7 @@ namespace cmstar.WebApi
 
         static ApiMethodContext()
         {
-            EmptyContext = new ApiMethodContext(null, null);
+            EmptyContext = new ApiMethodContext(null, null, null);
         }
 
         /// <summary>
@@ -40,10 +41,11 @@ namespace cmstar.WebApi
             HttpContext.Current = httpContext;
         }
 
-        internal ApiMethodContext(ApiMethodInfo apiMethodInfo, object state)
+        internal ApiMethodContext(ApiMethodInfo apiMethodInfo, object state, IDictionary<string, object> args)
         {
             ApiMethodInfo = apiMethodInfo;
             RequestState = state;
+            Arguments = args ?? new Dictionary<string, object>(0);
         }
 
         /// <summary>
@@ -57,6 +59,11 @@ namespace cmstar.WebApi
         /// 若当前并不处于调用上下文中，返回<c>null</c>。
         /// </summary>
         public ApiMethodInfo ApiMethodInfo { get; }
+
+        /// <summary>
+        /// 获取用于调用当前方法的参数的值。若方法没有参数，则为一个空集。
+        /// </summary>
+        public IDictionary<string, object> Arguments { get; }
 
         /// <summary>
         /// 获取一个实例，该实例用于记录当前处理的请求中的状态。
