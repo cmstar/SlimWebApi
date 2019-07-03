@@ -340,7 +340,7 @@ namespace cmstar.WebApi.Slim
             var request = context.Request;
             var logMessage = new LogMessage();
             logMessage.SetProperty("Ip", GetUserHostAddress(request));
-            logMessage.SetProperty("Url", request.RawUrl);
+            logMessage.SetProperty("Url", request.Url.OriginalString);
 
             if (request.Files.Count == 0)
             {
