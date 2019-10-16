@@ -16,16 +16,19 @@ namespace cmstar.WebApi.Slim
     {
         /// <summary>
         /// 指定被调用的方法的名称的参数。
+        /// 可出现在URL参数、路径（通过路由匹配）或表单中。
         /// </summary>
         public static string MetaParamMethodName = "~method";
 
         /// <summary>
         /// 指定数据的序列化方式的参数。
+        /// 可出现在URL参数、路径（通过路由匹配）或表单中。
         /// </summary>
         public static string MetaParamFormat = "~format";
 
         /// <summary>
         /// 指定回执的JSONP回调方法名称的参数。
+        /// 可出现在URL参数、路径（通过路由匹配）或表单中。
         /// </summary>
         public static string MetaParamCallback = "~callback";
 
