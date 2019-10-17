@@ -115,6 +115,9 @@
     <Compile Include="..\cmstar.WebApi\IRequestDecoder.cs">
       <Link>IRequestDecoder.cs</Link>
     </Compile>
+    <Compile Include="..\cmstar.WebApi\IRequestState.cs">
+      <Link>IRequestState.cs</Link>
+    </Compile>
     <Compile Include="..\cmstar.WebApi\LogMessage.cs">
       <Link>LogMessage.cs</Link>
     </Compile>
@@ -135,6 +138,9 @@
     </Compile>
     <Compile Include="..\cmstar.WebApi\Slim\HttpParamDecoderHelper.cs">
       <Link>Slim\HttpParamDecoderHelper.cs</Link>
+    </Compile>
+    <Compile Include="..\cmstar.WebApi\Slim\IJsonRequestState.cs">
+      <Link>Slim\IJsonRequestState.cs</Link>
     </Compile>
     <Compile Include="..\cmstar.WebApi\Slim\InlineParamHttpParamDecoder.cs">
       <Link>Slim\InlineParamHttpParamDecoder.cs</Link>

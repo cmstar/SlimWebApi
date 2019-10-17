@@ -73,6 +73,7 @@
     <Compile Include="Filters\GzipCompressionFilter.cs" />
     <Compile Include="HttpContextExtention.cs" />
     <Compile Include="IRequestDecoder.cs" />
+    <Compile Include="IRequestState.cs" />
     <Compile Include="LogMessage.cs" />
     <Compile Include="LogSetup.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -81,6 +82,7 @@
     <Compile Include="Routing\ApiRouteMapping.cs" />
     <Compile Include="SingleEntryDictionary.cs" />
     <Compile Include="Slim\HttpParamDecoderHelper.cs" />
+    <Compile Include="Slim\IJsonRequestState.cs" />
     <Compile Include="Slim\JsonHelper.cs" />
     <Compile Include="Slim\MethodParamContract.cs" />
     <Compile Include="Slim\InlineParamHttpParamDecoder.cs" />

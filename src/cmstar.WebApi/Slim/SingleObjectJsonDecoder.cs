@@ -44,8 +44,8 @@ namespace cmstar.WebApi.Slim
         /// </summary>
         /// <param name="request">HTTP请求。</param>
         /// <param name="state">
-        /// 若为null，则JSON将从<see cref="HttpRequest.InputStream"/>中读取；
-        /// 否则从<paramref name="state"/>中获取，此时<paramref name="state"/>必须是个字符串。
+        /// 若为<see cref="IJsonRequestState"/>，则JSON将从<see cref="IJsonRequestState.RequestJson"/>读取；
+        /// 否则从<see cref="HttpRequest.InputStream"/>中获取。
         /// </param>
         /// <returns>记录参数名称和对应的值。</returns>
         public IDictionary<string, object> DecodeParam(HttpRequest request, object state)
@@ -54,15 +54,15 @@ namespace cmstar.WebApi.Slim
                 return new Dictionary<string, object>(0);
 
             object value;
-            if (state == null)
+            if (state is IJsonRequestState jsonState)
+            {
+                value = JsonHelper.Deserialize(jsonState.RequestJson, _paramType);
+            }
+            else
             {
                 // 不调用StreamReader.Dispose以保持InputStream不被关掉
                 var textReader = new StreamReader(request.InputStream);
                 value = JsonHelper.Deserialize(textReader, _paramType, true);
-            }
-            else
-            {
-                value = JsonHelper.Deserialize((string)state, _paramType);
             }
 
             return new Dictionary<string, object>(1) { { _paramName, value } };

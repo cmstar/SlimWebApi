@@ -3,7 +3,7 @@
     /// <summary>
     /// 记录<see cref="SlimApiHttpHandler"/>处理的一个请求中的状态。
     /// </summary>
-    public class SlimApiRequestState
+    public class SlimApiRequestState : IRequestState
     {
         /// <summary>
         /// 当前请求指定的方法入口的名称。
