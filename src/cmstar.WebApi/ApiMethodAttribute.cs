@@ -1,10 +1,6 @@
 ﻿using System;
 using Common.Logging;
 
-#if  NET35
-using cmstar.WebApi.NetFuture;
-#endif
-
 namespace cmstar.WebApi
 {
     /// <summary>
@@ -43,11 +39,7 @@ namespace cmstar.WebApi
             }
             set
             {
-#if NET35
-                if (!StringUtils.IsNullOrWhiteSpace(value))
-#else
                 if (!string.IsNullOrWhiteSpace(value))
-#endif
                 {
                     _setting.MethodName = value;
                 }
@@ -73,7 +65,6 @@ namespace cmstar.WebApi
             set { _setting.SuccessLogLevel = value; }
         }
 
-#if !NET35
         /// <summary>
         /// 获取或设置异步的WebAPI方法的超时时间，单位为秒。
         /// 0表示不会超时，-1（或其他负数）表示使用默认的超时（<see cref="ApiEnvironment.AsyncTimeout"/>），默认值为 -1。
@@ -85,7 +76,6 @@ namespace cmstar.WebApi
             get { return _setting.AsyncTimeout; }
             set { _setting.AsyncTimeout = value; }
         }
-#endif
 
         /// <summary>
         /// 获取方法的配置信息。

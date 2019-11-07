@@ -5,41 +5,23 @@ using System.Web;
 using System.Web.Routing;
 using cmstar.WebApi.Filters;
 using Common.Logging;
-
-#if NET35
-using cmstar.Net35Compact;
-#else
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading.Tasks;
-#endif
 
 namespace cmstar.WebApi
 {
     /// <summary>
     /// <see cref="IHttpHandler"/>的实现，包含了基本的API处理流程。这是一个抽象类。
     /// </summary>
-#if NET35
-    public abstract class ApiHttpHandlerBase : IHttpHandler
-#else
     public abstract class ApiHttpHandlerBase : HttpTaskAsyncHandler
-#endif
     {
         private static readonly ConcurrentDictionary<Type, ApiHandlerState> HandlerStates
             = new ConcurrentDictionary<Type, ApiHandlerState>();
 
         private ILog _log;
 
-#if NET35
-        /// <inheritdoc cref="IHttpHandler.IsReusable" />
-        public bool IsReusable => false;
-
-        /// <inheritdoc cref="IHttpHandler.ProcessRequest" />
-        public void ProcessRequest(HttpContext context)
-#else
-        /// <inheritdoc cref="HttpTaskAsyncHandler.ProcessRequestAsync" />
         public override async Task ProcessRequestAsync(HttpContext context)
-#endif
         {
             var httpResponse = context.Response;
 
@@ -59,11 +41,7 @@ namespace cmstar.WebApi
 
             try
             {
-#if NET35
-                PerformProcessRequest(context, handlerState, requestState);
-#else
                 await PerformProcessRequestAsync(context, handlerState, requestState);
-#endif
             }
             catch (Exception ex)
             {
@@ -403,13 +381,8 @@ namespace cmstar.WebApi
             }
         }
 
-#if NET35
-        private void PerformProcessRequest(
-            HttpContext context, ApiHandlerState handlerState, object requestState)
-#else
         private async Task PerformProcessRequestAsync(
             HttpContext context, ApiHandlerState handlerState, object requestState)
-#endif
         {
             var methodInvocationStarted = false;
             ApiMethodInfo method = null;
@@ -439,11 +412,7 @@ namespace cmstar.WebApi
                 ApiMethodContext.SwitchContext(context, apiMethodContext);
 
                 methodInvocationStarted = true;
-#if NET35
-                var result = MethodInvoke(handlerState, method, param);
-#else
                 var result = await MethodInvokeAsync(context, apiMethodContext, handlerState, method, param);
-#endif
 
                 // 按需使用压缩流传输
                 AppendCompressionFilter(context, method);
@@ -468,28 +437,18 @@ namespace cmstar.WebApi
             }
         }
 
-#if NET35
-        private static object MethodInvoke(
-            ApiHandlerState handlerState,
-            ApiMethodInfo apiMethod,
-            IDictionary<string, object> param)
-#else
         private static async Task<object> MethodInvokeAsync(
             HttpContext httpContext,
             ApiMethodContext apiMethodContext,
             ApiHandlerState handlerState,
             ApiMethodInfo apiMethod,
             IDictionary<string, object> param)
-#endif
         {
             try
             {
                 handlerState.OnMethodInvoking(apiMethod, param);
                 apiMethod.Setting.MethodInvoking?.Invoke(apiMethod, param);
 
-#if NET35
-                var result = apiMethod.Invoke(param);
-#else
                 // 异步和非异步方法采用不同形式处理
                 Task<object> methodInvocationTask;
                 if (apiMethod.IsAsyncMethod)
@@ -524,7 +483,6 @@ namespace cmstar.WebApi
                 }
 
                 var result = await methodInvocationTask;
-#endif
 
                 apiMethod.Setting.MethodInvoked?.Invoke(apiMethod, param, result, null);
                 handlerState.OnMethodInvoked(apiMethod, param, result, null);
@@ -539,7 +497,6 @@ namespace cmstar.WebApi
             }
         }
 
-#if !NET35
         // 获取异步调用WebAPI方法时的超时时间。没有超时时返回0，否则是一个正数。
         private static int GetAsyncTimeout(HttpContext httpContext, ApiMethodInfo apiMethod)
         {
@@ -558,7 +515,6 @@ namespace cmstar.WebApi
 
             return timeoutSeconds;
         }
-#endif
 
         private void AppendCompressionFilter(HttpContext context, ApiMethodInfo method)
         {

@@ -54,7 +54,6 @@ namespace cmstar.WebApi
             return this;
         }
 
-#if !NET35
         /// <summary>
         /// 获取异步的WebAPI方法的超时时间，单位为秒。
         /// 0表示不会超时，-1（或其他负数）表示使用默认的超时（<see cref="ApiEnvironment.AsyncTimeout"/>），若未设置，默认值为 -1。
@@ -68,7 +67,6 @@ namespace cmstar.WebApi
             _apiMethodInfo.Setting.AsyncTimeout = timeoutSeconds;
             return this;
         }
-#endif
 
         /// <summary>
         /// 获取输出结果所使用的压缩方式。

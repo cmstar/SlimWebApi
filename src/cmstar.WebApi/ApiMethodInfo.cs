@@ -1,15 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using cmstar.RapidReflection.Emit;
-using cmstar.Util;
-
-#if NET35
-using cmstar.WebApi.NetFuture;
-#else
 using System.Threading.Tasks;
 using System.Diagnostics.Contracts;
-#endif
+using cmstar.RapidReflection.Emit;
+using cmstar.Util;
 
 namespace cmstar.WebApi
 {
@@ -47,23 +42,17 @@ namespace cmstar.WebApi
             _setting = methodSetting ?? new ApiMethodSetting();
 
             // 若没有指定方法入口的名称，套用方法自身的名称
-#if NET35
-            if (StringUtils.IsNullOrWhiteSpace(_setting.MethodName))
-#else
             if (string.IsNullOrWhiteSpace(_setting.MethodName))
-#endif
             {
                 _setting.MethodName = methodInfo.Name;
             }
 
-#if !NET35
             // 只要返回Task就认为是异步方法
             IsAsyncMethod = ReflectionUtils.IsOrIsSubClassOf(methodInfo.ReturnType, typeof(Task));
             if (IsAsyncMethod)
             {
                 _taskResultGetter = BuildTaskResultGetter(methodInfo.ReturnType);
             }
-#endif
         }
 
         /// <summary>
@@ -158,7 +147,6 @@ namespace cmstar.WebApi
             return paramValues;
         }
 
-#if !NET35
         /// <summary>
         /// true若方法为异步方法（返回<see cref="Task"/>或<see cref="Task{T}"/>）；否则返回false。
         /// </summary>
@@ -211,6 +199,5 @@ namespace cmstar.WebApi
             var getter = PropertyAccessorGenerator.CreateGetter(resultProp);
             return getter;
         }
-#endif
     }
 }

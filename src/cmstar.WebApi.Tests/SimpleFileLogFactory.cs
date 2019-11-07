@@ -163,10 +163,8 @@ namespace cmstar.WebApi
 
         private static string GetFullDescrption(Exception ex)
         {
-#if !NET35
             if (ex is AggregateException)
                 return ex.ToString();
-#endif
 
             var sb = new StringBuilder(0xff);
             for (var inner = ex; inner != null; inner = inner.InnerException)
@@ -174,13 +172,11 @@ namespace cmstar.WebApi
                 if (inner != ex)
                     sb.Append(Environment.NewLine).Append("===>");
 
-#if !NET35
                 if (inner is AggregateException)
                 {
                     sb.Append(inner);
                     break;
                 }
-#endif
 
                 sb.Append(inner.GetType().FullName).Append(": ");
                 sb.Append(inner.Message).Append(Environment.NewLine);

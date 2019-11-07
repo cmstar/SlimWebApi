@@ -16,10 +16,8 @@ namespace cmstar.WebApi
         // // 存储配置中 system.web/httpRuntime 元素的 executetionTimeout 值，单位为秒。
         private static int _executionTimeout = Uninitialized;
 
-#if !NET35
         // 异步的WebAPI方法的超时时间，单位为秒。
         private static int _asyncTimeout = Uninitialized;
-#endif
 
         /// <summary>
         /// 用于<see cref="ApiResponse{T}.Code"/>，表示客户端请求不能被识别。
@@ -59,7 +57,6 @@ namespace cmstar.WebApi
             }
         }
 
-#if !NET35
         /// <summary>
         /// 获取或设置异步的WebAPI方法的超时时间，单位为秒。若WebAPI方法没有单独指定超时时间，则使用此超时设置。
         /// 初始值同<see cref="DefaultExecutionTimeout"/>；若设置为0，则没有超时限制。
@@ -83,6 +80,5 @@ namespace cmstar.WebApi
                 _asyncTimeout = value;
             }
         }
-#endif
     }
 }

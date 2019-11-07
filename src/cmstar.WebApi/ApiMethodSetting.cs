@@ -58,7 +58,6 @@ namespace cmstar.WebApi
         /// </summary>
         public Action<ApiMethodInfo, IDictionary<string, object>, object, Exception> MethodInvoked { get; set; }
 
-#if !NET35
         /// <summary>
         /// 获取或设置异步的WebAPI方法的超时时间，单位为秒。
         /// 0表示不会超时，-1（或其他负数）表示使用默认的超时（<see cref="ApiEnvironment.AsyncTimeout"/>），默认值为 -1。
@@ -66,6 +65,5 @@ namespace cmstar.WebApi
         /// 异步方法本身并不会因此结束，需要从相关的日志与调试信息中获取此情况的有关信息以便进行优化。 
         /// </summary>
         public int AsyncTimeout { get; set; } = -1;
-#endif
     }
 }
