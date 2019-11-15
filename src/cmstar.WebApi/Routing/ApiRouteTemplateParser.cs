@@ -1,40 +1,22 @@
 ﻿using System;
 using System.Text;
-using System.Web;
+
+#if NETCORE
+using Microsoft.AspNetCore.Routing;
+#else
 using System.Web.Routing;
+#endif
 
 namespace cmstar.WebApi.Routing
 {
-    /// <summary>
-    /// 提供WebAPI的URL路由模式注册的相关方法。
-    /// 这些方法支持以更简洁的语法进行模式注册。
-    /// </summary>
-    public static class ApiRouteMapping
+    public static class ApiRouteTemplateParser
     {
-        private const char DefaultValueDelimiter = ',';
+        private const char DefaultValueDelimiter1 = ',';
+        private const char DefaultValueDelimiter2 = '=';
         private const char ConstraintValueDelimiter = ':';
 
         /// <summary>
-        /// 定义一个路由规则。
-        /// </summary>
-        /// <typeparam name="T">用于处理请求的<see cref="IHttpHandler"/>。</typeparam>
-        /// <param name="routes">路由表。</param>
-        /// <param name="routeUrl">
-        /// 包含路由配置的URL。
-        /// 使用扩展语法，对于每个路由参数，可使用形如 {placeholder:'constraint',default} 的语法，
-        /// 在注册路由URL的同时，注册约束与默认值。
-        /// </param>
-        public static void MapApiRoute<T>(this RouteCollection routes, string routeUrl)
-            where T : IHttpHandler, new()
-        {
-            ArgAssert.NotNull(routes, "routes");
-
-            var conf = ParseRouteUrl(routeUrl);
-            routes.Add(new Route(conf.Url, conf.Defaults, conf.Constraints, new ApiRouteHandler<T>()));
-        }
-
-        /// <summary>
-        /// 基于扩展语法解析给定的路由URL。
+        /// 基于扩展语法解析给定的路由URL模板。
         /// </summary>
         /// <param name="routeUrl">
         /// 包含路由配置的URL。
@@ -42,16 +24,22 @@ namespace cmstar.WebApi.Routing
         /// 在注册路由URL的同时，注册约束与默认值。
         /// </param>
         /// <returns>路由注册所需的基本信息。</returns>
-        public static ApiRouteConfig ParseRouteUrl(string routeUrl)
+        /// <remarks>
+        /// 1. 默认值与约束部分的顺序没有要求，可以是 {placeholder,default:'constraint'} ，
+        /// 也可以是 {placeholder:'constraint',default} 。
+        /// 2. 默认值可以使用逗号如 {placeholder,default} ，也可以使用等号 {placeholder=default} 。
+        /// 3. 目前从兼容性考虑，只支持设置一个约束。
+        /// </remarks>
+        public static ApiRouteConfig ParseRouteTemplate(string routeUrl)
         {
-            ArgAssert.NotNull(routeUrl, "routeUrl");
+            ArgAssert.NotNull(routeUrl, nameof(routeUrl));
 
             var len = routeUrl.Length;
             var urlBuilder = new StringBuilder(len);
             var config = new ApiRouteConfig();
             var braced = false;
 
-            for (int i = 0; i < len; )
+            for (int i = 0; i < len;)
             {
                 var c = routeUrl[i];
 
@@ -125,7 +113,8 @@ namespace cmstar.WebApi.Routing
 
                 switch (startWith)
                 {
-                    case DefaultValueDelimiter:
+                    case DefaultValueDelimiter1:
+                    case DefaultValueDelimiter2:
                         // there can be only one default value
                         if (arg.Default != null)
                             throw ConfigError(routeUrl);
@@ -194,7 +183,7 @@ namespace cmstar.WebApi.Routing
                 {
                     quoted = true;
                 }
-                else if (c == DefaultValueDelimiter || c == ConstraintValueDelimiter)
+                else if (c == DefaultValueDelimiter1 || c == DefaultValueDelimiter2 || c == ConstraintValueDelimiter)
                 {
                     seg.Ending = c;
                     break;
@@ -221,7 +210,8 @@ namespace cmstar.WebApi.Routing
                 .Append("The route parameter configuration {").Append(routeUrl).Append("} is not valid, ")
                 .Append("the configuration cannot contain more than one constraint or default value.")
                 .ToString();
-            return new ArgumentException(msg, "routeUrl");
+
+            return new ArgumentException(msg, nameof(routeUrl));
         }
 
         private struct ApiRouteParam
@@ -233,7 +223,7 @@ namespace cmstar.WebApi.Routing
 
             public override string ToString()
             {
-                return string.Format("{0} {{{1},{2}:{3}}}", Length, Name, Default, Constraint);
+                return $"{Length} {{{Name},{Default}:{Constraint}}}";
             }
         }
 
@@ -245,8 +235,7 @@ namespace cmstar.WebApi.Routing
 
             public override string ToString()
             {
-                return string.Format("Index:{0} Ending:{1} Value:{2}",
-                    Index, Ending == '\0' ? "\\0" : Ending.ToString(), Value);
+                return $"Index:{Index} Ending:{(Ending == '\0' ? "\\0" : Ending.ToString())} Value:{Value}";
             }
         }
     }

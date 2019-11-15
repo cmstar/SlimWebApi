@@ -1,5 +1,10 @@
 ﻿using System.Collections.Generic;
+
+#if NETCORE
+using Microsoft.AspNetCore.Http;
+#else
 using System.Web;
+#endif
 
 namespace cmstar.WebApi
 {

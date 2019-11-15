@@ -2,7 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+
+#if NETCORE
+using Microsoft.AspNetCore.Http;
+#else
 using System.Web;
+#endif
 
 namespace cmstar.WebApi.Slim
 {
@@ -29,8 +34,8 @@ namespace cmstar.WebApi.Slim
 
             if (paramCount != 1)
             {
-                var msg = string.Format("The method {0} should not have more than one parameter.", paramInfoMap.Method);
-                throw new ArgumentException(msg, "paramInfoMap");
+                var msg = $"The method {paramInfoMap.Method} should not have more than one parameter.";
+                throw new ArgumentException(msg, nameof(paramInfoMap));
             }
 
             var paramInfo = paramInfoMap.ParamInfos.First().Value;
@@ -45,7 +50,7 @@ namespace cmstar.WebApi.Slim
         /// <param name="request">HTTP请求。</param>
         /// <param name="state">
         /// 若为<see cref="IJsonRequestState"/>，则JSON将从<see cref="IJsonRequestState.RequestJson"/>读取；
-        /// 否则从<see cref="HttpRequest.InputStream"/>中获取。
+        /// 否则从请求的BODY中获取。
         /// </param>
         /// <returns>记录参数名称和对应的值。</returns>
         public IDictionary<string, object> DecodeParam(HttpRequest request, object state)
@@ -60,9 +65,13 @@ namespace cmstar.WebApi.Slim
             }
             else
             {
-                // 不调用StreamReader.Dispose以保持InputStream不被关掉
-                var textReader = new StreamReader(request.InputStream);
-                value = JsonHelper.Deserialize(textReader, _paramType, true);
+                var body = request.RequestInputStream();
+
+                // BODY可能被重读，设置 leaveOpen=true 以保持其不被关掉。
+                using (var textReader = new StreamReader(body, SlimApiHttpHandler.DefaultEncoding, false, 1024, true))
+                {
+                    value = JsonHelper.Deserialize(textReader, _paramType, true);
+                }
             }
 
             return new Dictionary<string, object>(1) { { _paramName, value } };

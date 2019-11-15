@@ -4,8 +4,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Web;
 using cmstar.Util;
+
+#if NETCORE
+using Microsoft.AspNetCore.Http;
+#else
+using System.Web;
+#endif
 
 namespace cmstar.WebApi
 {
@@ -180,6 +185,8 @@ namespace cmstar.WebApi
         /// </remarks>
         public static object ConvertString(string value, Type type)
         {
+            ArgAssert.NotNull(type, nameof(type));
+
             if (value == null)
                 return type.IsValueType ? Activator.CreateInstance(type) : null;
 
@@ -197,6 +204,7 @@ namespace cmstar.WebApi
                 if (type == typeof(bool))
                     return ToBoolean(value);
 
+                // ReSharper disable once PossibleNullReferenceException
                 if (type.IsEnum)
                     return Enum.Parse(type, value, true);
 
@@ -224,7 +232,11 @@ namespace cmstar.WebApi
                     continue;
                 }
 
+#if NETCORE
+                if (t == typeof(Stream) || t == typeof(IFormFileCollection))
+#else
                 if (t == typeof(Stream) || t == typeof(HttpFileCollection))
+#endif
                 {
                     output.HasFileInput = true;
                     continue;
@@ -260,7 +272,7 @@ namespace cmstar.WebApi
 
         private static Exception CannotCastValue(string value, Type type, Exception innerException)
         {
-            var msg = string.Format("Cannnot cast value \"{0}\" to type {1}.", value, type);
+            var msg = $"Cannnot cast value \"{value}\" to type {type}.";
             return new InvalidCastException(msg, innerException);
         }
 
@@ -327,9 +339,16 @@ namespace cmstar.WebApi
         /// </summary>
         public bool HasComplexMember => Others > 0;
 
+#if NETCORE
+        /// <summary>
+        /// true if any <see cref="Stream"/> or <see cref="IFormFileCollection"/> member exists.
+        /// </summary>
+        public bool HasFileInput { get; set; }
+#else
         /// <summary>
         /// true if any <see cref="Stream"/> or <see cref="HttpFileCollection"/> member exists.
         /// </summary>
         public bool HasFileInput { get; set; }
+#endif
     }
 }

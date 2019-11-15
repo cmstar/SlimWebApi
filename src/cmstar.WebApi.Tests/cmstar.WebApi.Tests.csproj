@@ -78,7 +78,7 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Routing\ApiRouteMappingTests.cs" />
+    <Compile Include="Routing\ApiRouteTemplateParserTests.cs" />
     <Compile Include="ReflectionExample.ashx.cs">
       <DependentUpon>ReflectionExample.ashx</DependentUpon>
     </Compile>
@@ -87,12 +87,6 @@
       <DependentUpon>DelegateExample.ashx</DependentUpon>
     </Compile>
     <Compile Include="SimpleFileLogFactory.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\cmstar.WebApi\cmstar.WebApi.csproj">
-      <Project>{8E1E094B-1F4F-4BF6-B55D-1A4E361B07CC}</Project>
-      <Name>cmstar.WebApi</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="DelegateExample.ashx" />
@@ -104,6 +98,12 @@
     <None Include="Web.Release.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\cmstar.WebApi\cmstar.WebApi.csproj">
+      <Project>{8e1e094b-1f4f-4bf6-b55d-1a4e361b07cc}</Project>
+      <Name>cmstar.WebApi</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

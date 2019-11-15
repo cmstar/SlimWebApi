@@ -1,7 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using System.Web;
 using cmstar.Serialization.Json;
+
+#if NETCORE
+using Microsoft.AspNetCore.Http;
+#else
+using System.Web;
+#endif
 
 namespace cmstar.WebApi.Slim
 {
@@ -51,7 +56,7 @@ namespace cmstar.WebApi.Slim
         /// <param name="request">HTTP请求。</param>
         /// <param name="state">
         /// 若为<see cref="IJsonRequestState"/>，则JSON将从<see cref="IJsonRequestState.RequestJson"/>读取；
-        /// 否则从<see cref="HttpRequest.InputStream"/>中获取。
+        /// 否则从请求的BODY中获取。
         /// </param>
         /// <returns>记录参数名称和对应的值。</returns>
         public IDictionary<string, object> DecodeParam(HttpRequest request, object state)
@@ -67,7 +72,7 @@ namespace cmstar.WebApi.Slim
             else
             {
                 // 不调用StreamReader.Dispose以保持InputStream不被关掉
-                textReader = new StreamReader(request.InputStream);
+                textReader = new StreamReader(request.RequestInputStream());
             }
 
             var jsonReader = new JsonReader(textReader);

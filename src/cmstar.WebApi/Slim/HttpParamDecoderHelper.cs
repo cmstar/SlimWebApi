@@ -2,6 +2,10 @@
 using System.Text;
 using System.Web;
 
+#if NETCORE
+using Microsoft.AspNetCore.Http;
+#endif
+
 namespace cmstar.WebApi.Slim
 {
     internal static class HttpParamDecoderHelper
@@ -12,13 +16,13 @@ namespace cmstar.WebApi.Slim
         public static Dictionary<string, string> AllParam(HttpRequest request, object state)
         {
             var result = new Dictionary<string, string>();
-            var keys = request.ExplicicParamKeys();
+            var keys = request.ExplicitParamKeys();
 
             foreach (var key in keys)
             {
                 if (key != null)
                 {
-                    result[key] = request.ExplicicParam(key);
+                    result[key] = request.ExplicitParam(key);
                 }
             }
 
@@ -37,11 +41,19 @@ namespace cmstar.WebApi.Slim
             // 1. 请求指定了一个特殊参数；
             // 2. ASP.net 本身不解析表单。
             if (!(state is SlimApiRequestState slimApiRequestState)
-                || slimApiRequestState.RequestFormat != SlimApiHttpHandler.MetaRequestFormatPost // case 1
-                || request.Form.Count > 0) // case 2
+                || slimApiRequestState.RequestFormat != SlimApiHttpHandler.MetaRequestFormatPost)  // case 1
             {
                 return;
             }
+
+#if NETCORE
+            // case 2
+            if (request.HasFormContentType)
+                return;
+#else
+            if (request.Form.Count > 0)
+                return;
+#endif
 
             var encoding = GuessRequestEncoding(request);
             var body = request.TextBody(encoding);
@@ -60,10 +72,12 @@ namespace cmstar.WebApi.Slim
 
         private static Encoding GuessRequestEncoding(HttpRequest request)
         {
+#if !NETCORE
             // 如果直接使用 request.ContentEncoding，在请求没有指定 charset 的情况下，会使用默认字符集或配置文件里的字符集。
             // 在中文系统下默认编码一般是 GB2312，而当前的实现并不标准，也就是不能靠这个配置，故不能直接使用 ContentEncoding 。
             if (request.ContentType.Contains("charset="))
                 return request.ContentEncoding;
+#endif
 
             return SlimApiHttpHandler.DefaultEncoding;
         }

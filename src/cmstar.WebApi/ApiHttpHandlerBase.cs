@@ -1,37 +1,46 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Collections.Concurrent;
+using System.Threading.Tasks;
+using Common.Logging;
+
+#if NETCORE
+using Microsoft.AspNetCore.Http;
+#else
+using System.Diagnostics;
 using System.Web;
 using System.Web.Routing;
+using System.IO;
 using cmstar.WebApi.Filters;
-using Common.Logging;
-using System.Collections.Concurrent;
-using System.Diagnostics;
-using System.Threading.Tasks;
+#endif
 
 namespace cmstar.WebApi
 {
     /// <summary>
-    /// <see cref="IHttpHandler"/>的实现，包含了基本的API处理流程。这是一个抽象类。
+    /// 包含了基本的API处理流程。这是一个抽象类。
     /// </summary>
-    public abstract class ApiHttpHandlerBase : HttpTaskAsyncHandler
+    public abstract class ApiHttpHandlerBase
+#if !NETCORE
+        : HttpTaskAsyncHandler
+#endif
     {
         private static readonly ConcurrentDictionary<Type, ApiHandlerState> HandlerStates
             = new ConcurrentDictionary<Type, ApiHandlerState>();
 
         private ILog _log;
 
+#if NETCORE
+        public async Task ProcessRequestAsync(HttpContext context)
+#else
         public override async Task ProcessRequestAsync(HttpContext context)
+#endif
         {
-            var httpResponse = context.Response;
-
+#if !NETCORE
             // 开启输出缓冲，一方面提高输出性能——毕竟API输出总是不太大；
             // 另一方面避免“Server cannot set content type after HTTP headers have been sent”错误：
             // https://stackoverflow.com/questions/33546723/server-cannot-set-content-type-after-http-headers-have-been-sent-on-rowcommand
-            httpResponse.BufferOutput = true;
-
-            // 接口数据不应有缓存
-            httpResponse.CacheControl = "no-cache";
+            context.Response.BufferOutput = true;
+#endif
 
             var handlerState = GetCurrentTypeHandler();
             TryInitHandlerState(handlerState);
@@ -50,11 +59,13 @@ namespace cmstar.WebApi
             }
         }
 
+#if !NETCORE
         /// <summary>
         /// 获取或设置当前处理的请求上下文中所使用的路由信息。
         /// 若为null则对于当前请求的数据解析过程不使用路由信息。
         /// </summary>
         public RouteData RouteData { get; set; }
+#endif
 
         /// <summary>
         /// 获取日志相关的配置信息。
@@ -160,7 +171,7 @@ namespace cmstar.WebApi
         /// <param name="context">当前请求的<see cref="HttpContext"/>实例。</param>
         /// <param name="requestState">用于保存当前API请求信息的对象实例。</param>
         /// <param name="apiResponse">用于表示API返回的数据。</param>
-        protected abstract void WriteResponse(
+        protected abstract Task WriteResponseAsync(
             HttpContext context, object requestState, ApiResponse apiResponse);
 
         /// <summary>
@@ -180,10 +191,10 @@ namespace cmstar.WebApi
         /// <param name="requestState">用于保存当前API请求信息的对象实例。</param>
         /// <param name="apiResponse">用于表示API返回的数据。</param>
         /// <param name="apiLogLevel">当前API方法所使用的日志级别。</param>
-        protected virtual void OnSuccess(
+        protected virtual async Task OnSuccess(
             HttpContext context, object requestState, ApiResponse apiResponse, LogLevel apiLogLevel)
         {
-            WriteResponse(context, requestState, apiResponse);
+            await WriteResponseAsync(context, requestState, apiResponse);
 
             // API方法的日志级别低于handler的默认日志级别时就不需要输出日志了。
             if (apiLogLevel != LogLevel.Off && (int)apiLogLevel >= (int)LogSetup.SuccessLogLevel)
@@ -198,14 +209,14 @@ namespace cmstar.WebApi
         /// <param name="context">当前请求的<see cref="HttpContext"/>实例。</param>
         /// <param name="requestState">用于保存当前API请求信息的对象实例。</param>
         /// <param name="exception">异常的实例。</param>
-        protected virtual void OnError(HttpContext context, object requestState, Exception exception)
+        protected virtual async Task OnError(HttpContext context, object requestState, Exception exception)
         {
             var apiException = exception as ApiException;
             var apiResponse = apiException == null
                 ? new ApiResponse(ApiEnvironment.CodeInternalError, "Internal error.")
                 : new ApiResponse(apiException.Code, apiException.Description);
 
-            WriteResponse(context, requestState, apiResponse);
+            await WriteResponseAsync(context, requestState, apiResponse);
 
             var logLevel = apiResponse.Code == ApiEnvironment.CodeBadRequest
                 ? LogSetup.Code400LogLevel
@@ -219,12 +230,12 @@ namespace cmstar.WebApi
         /// </summary>
         /// <param name="context">当前请求的<see cref="HttpContext"/>实例。</param>
         /// <param name="requestState">用于保存当前API请求信息的对象实例。</param>
-        protected virtual void OnMethodNotFound(HttpContext context, object requestState)
+        protected virtual async Task OnMethodNotFound(HttpContext context, object requestState)
         {
             const string msg = "Bad entry.";
 
             var apiResponse = new ApiResponse(ApiEnvironment.CodeBadRequest, msg);
-            WriteResponse(context, requestState, apiResponse);
+            await WriteResponseAsync(context, requestState, apiResponse);
             WriteLog(LogSetup.Code400LogLevel, () => GetRequestDescription(context, requestState, apiResponse));
         }
 
@@ -233,12 +244,12 @@ namespace cmstar.WebApi
         /// </summary>
         /// <param name="context">当前请求的<see cref="HttpContext"/>实例。</param>
         /// <param name="requestState">用于保存当前API请求信息的对象实例。</param>
-        protected virtual void OnDecoderNotFound(HttpContext context, object requestState)
+        protected virtual async Task OnDecoderNotFound(HttpContext context, object requestState)
         {
             const string msg = "Unsupported format.";
 
             var apiResponse = new ApiResponse(ApiEnvironment.CodeBadRequest, msg);
-            WriteResponse(context, requestState, apiResponse);
+            await WriteResponseAsync(context, requestState, apiResponse);
             WriteLog(LogSetup.Code400LogLevel, () => GetRequestDescription(context, requestState, apiResponse));
         }
 
@@ -279,7 +290,7 @@ namespace cmstar.WebApi
         /// </summary>
         /// <param name="logLevel">
         /// 指定日志的级别。
-        /// <see cref="LogLevel.All"/>将作为<see cref="LogLevel.Info"/>处理。
+        /// <see cref="Common.Logging.LogLevel.All"/>将作为<see cref="Common.Logging.LogLevel.Info"/>处理。
         /// </param>
         /// <param name="msg">信息。</param>
         /// <param name="ex">异常。</param>
@@ -320,7 +331,7 @@ namespace cmstar.WebApi
         /// </summary>
         /// <param name="logLevel">
         /// 指定日志的级别。
-        /// <see cref="LogLevel.All"/>将作为<see cref="LogLevel.Info"/>处理。
+        /// <see cref="Common.Logging.LogLevel.All"/>将作为<see cref="Common.Logging.LogLevel.Info"/>处理。
         /// </param>
         /// <param name="getMsgCallback">获取日志信息的方法。</param>
         /// <param name="ex">异常。</param>
@@ -381,8 +392,7 @@ namespace cmstar.WebApi
             }
         }
 
-        private async Task PerformProcessRequestAsync(
-            HttpContext context, ApiHandlerState handlerState, object requestState)
+        private async Task PerformProcessRequestAsync(HttpContext context, ApiHandlerState handlerState, object requestState)
         {
             var methodInvocationStarted = false;
             ApiMethodInfo method = null;
@@ -393,7 +403,7 @@ namespace cmstar.WebApi
                 method = handlerState.GetMethod(methodName);
                 if (method == null)
                 {
-                    OnMethodNotFound(context, requestState);
+                    await OnMethodNotFound(context, requestState);
                     return;
                 }
 
@@ -401,7 +411,7 @@ namespace cmstar.WebApi
                 var decoder = handlerState.GetDecoder(methodName, decoderName);
                 if (decoder == null)
                 {
-                    OnDecoderNotFound(context, requestState);
+                    await OnDecoderNotFound(context, requestState);
                     return;
                 }
 
@@ -414,25 +424,27 @@ namespace cmstar.WebApi
                 methodInvocationStarted = true;
                 var result = await MethodInvokeAsync(context, apiMethodContext, handlerState, method, param);
 
+#if !NETCORE
                 // 按需使用压缩流传输
                 AppendCompressionFilter(context, method);
+#endif
 
                 var apiResponse = new ApiResponse(result);
-                OnSuccess(context, requestState, apiResponse, method.Setting.SuccessLogLevel);
+                await OnSuccess(context, requestState, apiResponse, method.Setting.SuccessLogLevel);
             }
             catch (Exception ex)
             {
                 var apiResponse = methodInvocationStarted ? TranslateMethodInvocationError(ex) : null;
                 if (apiResponse == null)
                 {
-                    OnError(context, requestState, ex);
+                    await OnError(context, requestState, ex);
                 }
                 else
                 {
                     // ReSharper disable once ConstantNullCoalescingCondition
                     // ReSharper disable once ConstantConditionalAccessQualifier
                     var apiLogLevel = method?.Setting.SuccessLogLevel ?? LogSetup.DefaultSuccessLogLevel;
-                    OnSuccess(context, requestState, apiResponse, apiLogLevel);
+                    await OnSuccess(context, requestState, apiResponse, apiLogLevel);
                 }
             }
         }
@@ -504,8 +516,13 @@ namespace cmstar.WebApi
                 return 0;
 
             // 调试模式下不要超时，类似非异步请求的 executionTimeout 配置的处理方式。
+#if NETCORE
+            if (ApiEnvironment.IsDevelopment)
+                return 0;
+#else
             if (httpContext.IsDebuggingEnabled || Debugger.IsAttached)
                 return 0;
+#endif
 
             // 由于前面的判定，这里 AsyncTimeout 肯定不是0了。
             // 大于0是用户指定的超时，小于0则套用默认超时。
@@ -516,6 +533,7 @@ namespace cmstar.WebApi
             return timeoutSeconds;
         }
 
+#if !NETCORE
         private void AppendCompressionFilter(HttpContext context, ApiMethodInfo method)
         {
             var compressionMethod = ParseCompressionMethods(context.Request, method.Setting.CompressionMethods);
@@ -543,6 +561,7 @@ namespace cmstar.WebApi
             context.Response.Filter = filter;
         }
 
+
         private ApiCompressionMethods ParseCompressionMethods(HttpRequest request, ApiCompressionMethods compressionMethod)
         {
             if (compressionMethod != ApiCompressionMethods.Auto)
@@ -561,6 +580,7 @@ namespace cmstar.WebApi
 
             return ApiCompressionMethods.None;
         }
+#endif
 
         private ApiHandlerState GetCurrentTypeHandler()
         {

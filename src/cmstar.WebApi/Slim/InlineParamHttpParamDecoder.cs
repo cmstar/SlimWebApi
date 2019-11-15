@@ -1,7 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+
+#if NETCORE
+using Microsoft.AspNetCore.Http;
+#else
 using System.Web;
+#endif
 
 namespace cmstar.WebApi.Slim
 {
@@ -44,7 +49,11 @@ namespace cmstar.WebApi.Slim
                     continue;
                 }
 
+#if NETCORE
+                if (paramType == typeof(IFormFileCollection))
+#else
                 if (paramType == typeof(HttpFileCollection))
+#endif
                 {
                     if (_streamParamName != null || _httpFileCollectionParamName != null)
                     {
@@ -60,7 +69,7 @@ namespace cmstar.WebApi.Slim
                     var msg = string.Format(
                         "The values for parameter '{0}' ({1}) of method '{2}' cannot be converted from the query string.",
                         paramInfo.Name, paramType, paramInfoMap.Method.Name);
-                    throw new ArgumentException(msg, "paramInfoMap");
+                    throw new ArgumentException(msg, nameof(paramInfoMap));
                 }
             }
 
@@ -82,13 +91,18 @@ namespace cmstar.WebApi.Slim
             var paramValueMap = new Dictionary<string, object>();
             if (_streamParamName != null)
             {
-                request.InputStream.Position = 0;
-                paramValueMap.Add(_streamParamName, request.InputStream);
+                var inputStream = request.RequestInputStream();
+                inputStream.Seek(0, SeekOrigin.Begin);
+                paramValueMap.Add(_streamParamName, inputStream);
             }
 
             if (_httpFileCollectionParamName != null)
             {
+#if NETCORE
+                paramValueMap.Add(_httpFileCollectionParamName, request.FormFiles());
+#else
                 paramValueMap.Add(_httpFileCollectionParamName, request.Files);
+#endif
             }
 
             var requestParam = HttpParamDecoderHelper.AllParam(request, state);
@@ -112,9 +126,7 @@ namespace cmstar.WebApi.Slim
                 }
                 catch (Exception ex)
                 {
-                    var msg = string.Format(
-                        "Parameter '{0}' - failed on converting value '{1}' to type {2}.",
-                        key, paramValue, paramInfo.Type);
+                    var msg = $"Parameter '{key}' - failed on converting value '{paramValue}' to type {paramInfo.Type}.";
                     throw new InvalidCastException(msg, ex);
                 }
 
@@ -126,9 +138,7 @@ namespace cmstar.WebApi.Slim
 
         private Exception FileParamConflictError(string methodName, string parameterName)
         {
-            var msg = string.Format(
-                "There can be only one parameter declared as Stream or HttpFileCollection on the method '{0}'.",
-                methodName);
+            var msg = $"There can be only one parameter declared as Stream or HttpFileCollection on the method '{methodName}'.";
             return new ArgumentException(msg, parameterName);
         }
     }

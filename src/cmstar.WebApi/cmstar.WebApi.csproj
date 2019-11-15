@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <!--Build options-->
-    <TargetFrameworks>net46;</TargetFrameworks>
+    <TargetFrameworks>net46;netcoreapp2.2;</TargetFrameworks>
     <RootNamespace>cmstar.WebApi</RootNamespace>
     <AssemblyName>cmstar.WebApi</AssemblyName>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -22,6 +22,10 @@
     <DocumentationFile />
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netcoreapp2.2'">
+    <DefineConstants>NETCORE;NETCORE2_2;</DefineConstants>
+  </PropertyGroup>
+
   <!--net46-->
   <ItemGroup Condition="'$(TargetFramework)' == 'net46'">
     <Reference Include="Common.Logging">
@@ -33,15 +37,25 @@
     <Reference Include="cmstar.Serialization">
       <HintPath>..\..\lib\net45\cmstar.Serialization.dll</HintPath>
     </Reference>
-  </ItemGroup>
 
-  <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Web" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+  </ItemGroup>
+
+  <!--netcore-->
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.2'">
+    <PackageReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Common.Logging.Core" Version="3.4.1" />
+    <PackageReference Include="Common.Logging" Version="3.4.1" />
+    <Reference Include="cmstar.Serialization">
+      <HintPath>..\..\lib\netstandard2.0\cmstar.Serialization.dll</HintPath>
+    </Reference>
+
+    <Compile Remove="Filters\**" />
   </ItemGroup>
 
 </Project>

@@ -3,13 +3,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29123.88
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cmstar.WebApi", "src\cmstar.WebApi\cmstar.WebApi.csproj", "{8E1E094B-1F4F-4BF6-B55D-1A4E361B07CC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "cmstar.WebApi", "src\cmstar.WebApi\cmstar.WebApi.csproj", "{8E1E094B-1F4F-4BF6-B55D-1A4E361B07CC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cmstar.WebApi.Tests", "src\cmstar.WebApi.Tests\cmstar.WebApi.Tests.csproj", "{6DF91451-CD41-49DD-AF88-13B8857285E2}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "lib", "lib", "{102167FA-8039-4BF9-B56A-943F393434E4}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net46.tests", "net46.tests", "{A5210616-5E14-41C1-8399-C90D241927F7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "netcore.tests", "netcore.tests", "{3B231B87-4969-42E0-A7D2-478AB0CDFC41}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "cmstar.WebApi.NetCore.Tests", "src\cmstar.WebApi.NetCore.Tests\cmstar.WebApi.NetCore.Tests.csproj", "{549C5C36-81FF-43BF-8789-702E10055D0E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,6 +29,10 @@ Global
 		{6DF91451-CD41-49DD-AF88-13B8857285E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6DF91451-CD41-49DD-AF88-13B8857285E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6DF91451-CD41-49DD-AF88-13B8857285E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{549C5C36-81FF-43BF-8789-702E10055D0E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{549C5C36-81FF-43BF-8789-702E10055D0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{549C5C36-81FF-43BF-8789-702E10055D0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{549C5C36-81FF-43BF-8789-702E10055D0E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -32,6 +40,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{8E1E094B-1F4F-4BF6-B55D-1A4E361B07CC} = {102167FA-8039-4BF9-B56A-943F393434E4}
 		{6DF91451-CD41-49DD-AF88-13B8857285E2} = {A5210616-5E14-41C1-8399-C90D241927F7}
+		{549C5C36-81FF-43BF-8789-702E10055D0E} = {3B231B87-4969-42E0-A7D2-478AB0CDFC41}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {617919C8-8F84-4723-9DD2-B714355C6A8A}

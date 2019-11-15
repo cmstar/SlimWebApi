@@ -3,8 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Web;
 using cmstar.RapidReflection.Emit;
+
+#if NETCORE
+using Microsoft.AspNetCore.Http;
+#else
+using System.Web;
+#endif
 
 namespace cmstar.WebApi.Slim
 {
@@ -79,7 +84,11 @@ namespace cmstar.WebApi.Slim
                     _streamMemberName = paramInfo.Name;
                 }
 
+#if NETCORE
+                if (paramType == typeof(IFormFileCollection))
+#else
                 if (paramType == typeof(HttpFileCollection))
+#endif
                 {
                     if (_streamMemberName != null || _httpFileCollectionMemmberName != null)
                     {
@@ -112,7 +121,7 @@ namespace cmstar.WebApi.Slim
                         var msg = string.Format(
                             "There can be only one member with type Stream int type {0} from method {1}.",
                             paramType, paramInfoMap.Method.Name);
-                        throw new ArgumentException(msg, "paramInfoMap");
+                        throw new ArgumentException(msg, nameof(paramInfoMap));
                     }
 
                     _streamMemberName = field.Name;
@@ -145,15 +154,21 @@ namespace cmstar.WebApi.Slim
 
             if (_streamMemberName != null)
             {
-                request.InputStream.Position = 0;
+                var inputStream = request.RequestInputStream();
+                inputStream.Seek(0, SeekOrigin.Begin);
                 var m = _memberMap[_streamMemberName];
-                m.Setter(instance, request.InputStream);
+                m.Setter(instance, inputStream);
             }
 
             if (_httpFileCollectionMemmberName != null)
             {
                 var m = _memberMap[_httpFileCollectionMemmberName];
+
+#if NETCORE
+                m.Setter(instance, request.FormFiles());
+#else
                 m.Setter(instance, request.Files);
+#endif
             }
 
             var requestParam = HttpParamDecoderHelper.AllParam(request, state);

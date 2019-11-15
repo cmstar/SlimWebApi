@@ -1,4 +1,8 @@
+#if NETCORE
+using Microsoft.AspNetCore.Routing;
+#else
 using System.Web.Routing;
+#endif
 
 namespace cmstar.WebApi.Routing
 {

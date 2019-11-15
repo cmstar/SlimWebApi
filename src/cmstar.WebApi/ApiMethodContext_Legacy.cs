@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿#if !NETCORE
+using System.Collections.Generic;
 using System.Web;
 
 namespace cmstar.WebApi
@@ -72,3 +73,4 @@ namespace cmstar.WebApi
         public object RequestState { get; }
     }
 }
+#endif

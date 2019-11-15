@@ -3,8 +3,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
-using System.Web;
+using System.Threading.Tasks;
 using cmstar.Serialization.Json;
+
+#if NETCORE
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
+#else
+using System.Web;
+#endif
 
 namespace cmstar.WebApi.Slim
 {
@@ -67,7 +74,7 @@ namespace cmstar.WebApi.Slim
         /// <returns>请求方的IP地址。</returns>
         protected virtual string GetUserHostAddress(HttpRequest request)
         {
-            return request.UserHostAddress;
+            return request.UserHostAddress();
         }
 
         /// <summary>
@@ -175,31 +182,36 @@ namespace cmstar.WebApi.Slim
             // 优先级自上而下
 
             // 形式1
-            var method = request.ExplicicParam(MetaParamMethodName);
-            var callback = request.ExplicicParam(MetaParamCallback);
-            var format = request.ExplicicParam(MetaParamFormat);
+            var method = request.ExplicitParam(MetaParamMethodName);
+            var callback = request.ExplicitParam(MetaParamCallback);
+            var format = request.ExplicitParam(MetaParamFormat);
+
+            // 形式3
+#if NETCORE
+            var routeData = context.GetRouteData();
+#else
+            var routeData = RouteData;
+#endif
+            if (routeData != null)
+            {
+                if (method == null)
+                    method = routeData.Param(MetaParamMethodName);
+
+                if (callback == null)
+                    callback = routeData.Param(MetaParamCallback);
+
+                if (format == null)
+                    format = routeData.Param(MetaParamFormat);
+            }
 
             // 形式2
             if (method == null)
             {
-                var mixedMetaParams = request.QueryString[null];
+                var mixedMetaParams = request.LegacyQueryString(null);
                 if (mixedMetaParams != null)
                 {
                     ParseMixedMetaParams(mixedMetaParams, out method, ref format, ref callback);
                 }
-            }
-
-            // 形式3
-            if (RouteData != null)
-            {
-                if (method == null)
-                    method = RouteData.Param(MetaParamMethodName);
-
-                if (callback == null)
-                    callback = RouteData.Param(MetaParamCallback);
-
-                if (format == null)
-                    format = RouteData.Param(MetaParamFormat);
             }
 
             if (string.IsNullOrEmpty(format))
@@ -289,18 +301,19 @@ namespace cmstar.WebApi.Slim
             }
         }
 
+#pragma warning disable 1998
         /// <summary>
         /// 将指定的<see cref="ApiResponse"/>序列化并写入HTTP输出流中。
         /// </summary>
         /// <param name="context">当前请求的<see cref="HttpContext"/>实例。</param>
         /// <param name="requestState">用于保存当前API请求信息的对象实例。</param>
         /// <param name="apiResponse">用于表示API返回的数据。</param>
-        protected override void WriteResponse(
+        protected override async Task WriteResponseAsync(
             HttpContext context, object requestState, ApiResponse apiResponse)
         {
             var slimApiRequestState = (SlimApiRequestState)requestState;
             var httpResponse = context.Response;
-            var isJsonp = !String.IsNullOrEmpty(slimApiRequestState.CallbackName);
+            var isJsonp = !string.IsNullOrEmpty(slimApiRequestState.CallbackName);
 
             if (slimApiRequestState.UsePlainText)
             {
@@ -315,20 +328,25 @@ namespace cmstar.WebApi.Slim
                 httpResponse.ContentType = "application/json";
             }
 
+            var bodyBuilder = new StringBuilder();
             if (isJsonp)
             {
-                httpResponse.Write(slimApiRequestState.CallbackName);
-                httpResponse.Write("(");
+                bodyBuilder.Append(slimApiRequestState.CallbackName);
+                bodyBuilder.Append("(");
             }
 
             var responseJson = JsonHelper.Serialize(apiResponse);
-            httpResponse.Write(responseJson);
+            bodyBuilder.Append(responseJson);
 
             if (isJsonp)
             {
-                httpResponse.Write(")");
+                bodyBuilder.Append(")");
             }
+
+            var body = bodyBuilder.ToString();
+            await httpResponse.WriteAsync(body);
         }
+#pragma warning restore 1998
 
         /// <summary>
         /// 获取当前请求的描述信息。
@@ -343,11 +361,18 @@ namespace cmstar.WebApi.Slim
             var request = context.Request;
             var logMessage = new LogMessage();
             logMessage.SetProperty("Ip", GetUserHostAddress(request));
-            logMessage.SetProperty("Url", request.Url.OriginalString);
+            logMessage.SetProperty("Url", request.FullUrl());
 
-            if (request.Files.Count == 0)
+#if NETCORE
+            var files = request.FormFiles();
+#else
+            var files = request.Files;
+#endif
+            var fileCount = files.Count;
+            if (fileCount == 0)
             {
-                var bodyLength = request.InputStream.Length;
+                var inputStream = request.RequestInputStream();
+                var bodyLength = inputStream.Length;
                 if (bodyLength > 0)
                 {
                     logMessage.SetProperty("Length", bodyLength.ToString());
@@ -367,24 +392,28 @@ namespace cmstar.WebApi.Slim
                     }
                     else
                     {
-                        canOutputBody = IsTextRequestBody(request.InputStream);
+                        canOutputBody = IsTextRequestBody(inputStream);
                     }
 
                     if (canOutputBody)
                     {
-                        var body = ReadRequestBody(request.InputStream);
+                        var body = ReadRequestBody(inputStream);
                         logMessage.SetProperty("Body", body);
                     }
                 }
             }
             else
             {
-                for (int i = 0; i < request.Files.Count; i++)
+                for (int i = 0; i < fileCount; i++)
                 {
-                    var file = request.Files[i];
+                    var file = files[i];
                     logMessage.SetProperty("File", file.FileName);
                     logMessage.SetProperty("ContentType", file.ContentType);
+#if NETCORE
+                    logMessage.SetProperty("Length", file.Length.ToString());
+#else
                     logMessage.SetProperty("Length", file.ContentLength.ToString());
+#endif
                 }
             }
 

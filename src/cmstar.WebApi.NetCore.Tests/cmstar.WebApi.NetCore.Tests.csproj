@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <RootNamespace>cmstar.WebApi</RootNamespace>
+    <AssemblyName>cmstar.WebApi.NetCore.Tests</AssemblyName>
+    <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\cmstar.WebApi.Tests\business\AbstractServiceProvider.cs" Link="business\AbstractServiceProvider.cs" />
+    <Compile Include="..\cmstar.WebApi.Tests\business\AsyncServiceProvider.cs" Link="business\AsyncServiceProvider.cs" />
+    <Compile Include="..\cmstar.WebApi.Tests\business\AttributedServiceProvider.cs" Link="business\AttributedServiceProvider.cs" />
+    <Compile Include="..\cmstar.WebApi.Tests\business\DataStructrures.cs" Link="business\DataStructrures.cs" />
+    <Compile Include="..\cmstar.WebApi.Tests\business\SimpleServiceProvider.cs" Link="business\SimpleServiceProvider.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\cmstar.WebApi\cmstar.WebApi.csproj" />
+  </ItemGroup>
+
+</Project>

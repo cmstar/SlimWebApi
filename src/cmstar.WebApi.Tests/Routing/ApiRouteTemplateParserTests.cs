@@ -7,7 +7,7 @@ using NUnit.Framework;
 namespace cmstar.WebApi.Routing
 {
     [TestFixture]
-    public class ApiRouteMappingTests
+    public class ApiRouteTemplateParserTests
     {
         [Test]
         public void TestParseRouteUrl()
@@ -26,9 +26,9 @@ namespace cmstar.WebApi.Routing
             // with defaults
             Check("{value,default}", "{value}", "value=default");
             Check("{value,quoted' default value '}", "{value}", "value=quoted default value ");
-            Check("{value,with space}", "{value}", "value=with space");
-            Check("head{a,a}/{b,b}/{c,c}tail", "head{a}/{b}/{c}tail", "a=a&b=b&c=c");
-            Check("{value,'with brace{}'}", "{value}", "value=with brace{}");
+            Check("{value=with space}", "{value}", "value=with space");
+            Check("head{a=a}/{b,b}/{c=c}tail", "head{a}/{b}/{c}tail", "a=a&b=b&c=c");
+            Check("{value='with brace{}'}", "{value}", "value=with brace{}");
             Check("{value,'It''s spatan!'}", "{value}", "value=It's spatan!");
             Check("{value,''''}", "{value}", "value='");
             Check("{value,','}", "{value}", "value=,");
@@ -53,7 +53,7 @@ namespace cmstar.WebApi.Routing
             string expectedConstraints = null)
         {
             Console.WriteLine("Testing: " + routeUrl);
-            var res = ApiRouteMapping.ParseRouteUrl(routeUrl);
+            var res = ApiRouteTemplateParser.ParseRouteTemplate(routeUrl);
 
             if (expectedUrl == null)
             {

@@ -32,17 +32,17 @@ namespace cmstar.WebApi
         private LogSetup() { }
 
         /// <summary>
-        /// 指定日志名称。默认为null，表示使用提供API的<see cref="IHttpHandler"/>的类名。
+        /// 指定日志名称。默认为null，此时自动套用API提供类，即<see cref="ApiHttpHandlerBase"/>的派生类的名称。
         /// </summary>
         public string LoggerName;
 
         /// <summary>
-        /// 指定API请求处理成功时的日志级别。默认为<see cref="LogLevel.Debug"/>。
+        /// 指定API请求处理成功时的日志级别。默认为 DEBUG 。
         /// </summary>
         public LogLevel SuccessLogLevel;
 
         /// <summary>
-        /// 指定API请求处理结果状态码为400时的日志级别。默认为<see cref="LogLevel.Warn"/>。
+        /// 指定API请求处理结果状态码为400时的日志级别。默认为 WARN 。
         /// </summary>
         public LogLevel Code400LogLevel;
 
