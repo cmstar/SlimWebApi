@@ -21,7 +21,7 @@ namespace cmstar.WebApi.Routing
         /// 使用扩展语法，对于每个路由参数，可使用形如 {placeholder=default} 的语法，
         /// 详见<see cref="ApiRouteTemplateParser.ParseRouteParam"/>
         /// </param>
-        public static void MapApiRoute<T>(this IApplicationBuilder app, string routeUrl)
+        public static IApplicationBuilder MapApiRoute<T>(this IApplicationBuilder app, string routeUrl)
             where T : ApiHttpHandlerBase, new()
         {
             app.UseRouter(routeBuilder =>
@@ -40,6 +40,8 @@ namespace cmstar.WebApi.Routing
 
                 routeBuilder.Routes.Add(route);
             });
+
+            return app;
         }
     }
 }

@@ -10,14 +10,22 @@ namespace cmstar.WebApi
 {
     public class Startup
     {
-        public void ConfigureServices(IServiceCollection services)
+        private readonly IHostingEnvironment _env;
+
+        public Startup(IHostingEnvironment env)
         {
-            services.AddRouting();
+            _env = env;
         }
 
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void ConfigureServices(IServiceCollection services)
         {
-            if (env.IsDevelopment())
+            // 启用API框架。
+            services.AddSlimApi(_env);
+        }
+
+        public void Configure(IApplicationBuilder app)
+        {
+            if (_env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
 
