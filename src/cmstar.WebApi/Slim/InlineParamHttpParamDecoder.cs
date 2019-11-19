@@ -92,7 +92,6 @@ namespace cmstar.WebApi.Slim
             if (_streamParamName != null)
             {
                 var inputStream = request.RequestInputStream();
-                inputStream.Seek(0, SeekOrigin.Begin);
                 paramValueMap.Add(_streamParamName, inputStream);
             }
 

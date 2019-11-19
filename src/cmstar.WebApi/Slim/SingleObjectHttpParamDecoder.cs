@@ -155,7 +155,6 @@ namespace cmstar.WebApi.Slim
             if (_streamMemberName != null)
             {
                 var inputStream = request.RequestInputStream();
-                inputStream.Seek(0, SeekOrigin.Begin);
                 var m = _memberMap[_streamMemberName];
                 m.Setter(instance, inputStream);
             }

@@ -35,7 +35,10 @@ namespace cmstar.WebApi
         public override async Task ProcessRequestAsync(HttpContext context)
 #endif
         {
-#if !NETCORE
+#if NETCORE
+            // 当前框架需要BODY部分可以被重复读取。
+            context.Request.TryEnableRequestBuffering();
+#else
             // 开启输出缓冲，一方面提高输出性能——毕竟API输出总是不太大；
             // 另一方面避免“Server cannot set content type after HTTP headers have been sent”错误：
             // https://stackoverflow.com/questions/33546723/server-cannot-set-content-type-after-http-headers-have-been-sent-on-rowcommand

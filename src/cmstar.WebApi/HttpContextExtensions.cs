@@ -141,25 +141,17 @@ namespace cmstar.WebApi
         }
 
         /// <summary>
-        /// 获取一个支持支持<see cref="Stream.Seek"/>的流，用于读取请求的BODY部分。
+        /// 获取一个支持支持<see cref="Stream.Seek"/>的流，且当前位置位于流的开头，用于读取请求的BODY部分。
         /// </summary>
-        /// <remarks>
-        /// BODY将被缓存，以支持<see cref="Stream.Seek"/>。BODY越大，占用内存越多。
-        /// </remarks>
         public static Stream RequestInputStream(this HttpRequest request)
         {
 #if NETCORE
-            // 当前框架需要BODY部分可以被重复读取。目前ASP.net Core对于表单类型的请求会
-            // 自动缓存BODY，其他类型则不会，需要调用 EnableRewind 开启缓存，支持 .net Core 2+ 。
-            if (!request.Body.CanSeek)
-            {
-                request.EnableRewind();
-            }
-
-            return request.Body;
+            var body = request.Body;
 #else
-            return request.InputStream;
+            var body = request.InputStream;
 #endif
+            body.Position = 0;
+            return body;
         }
 
         /// <summary>
@@ -233,6 +225,32 @@ namespace cmstar.WebApi
         }
 
 #if NETCORE
+        /// <summary>
+        /// 对请求的BODY部分启用缓存，使BODY支持随机、多次的读取。
+        /// 调用此方法后，<see cref="HttpRequest.Body"/>的读取位置（<see cref="Stream.Position"/>）将位于其开头。
+        /// </summary>
+        /// <remarks>
+        /// BODY将被缓存，以支持<see cref="Stream.Seek"/>。BODY越大，占用内存越多。
+        /// </remarks>
+        public static void TryEnableRequestBuffering(this HttpRequest request)
+        {
+            // 利用 .net Core 2.1 版提供的BODY缓存机制。
+            if (!request.Body.CanSeek)
+            {
+                request.EnableRewind();
+            }
+
+            // EnableRewind 使用一个 MemoryStream 做缓存，并使用延迟写入——数据在首次读取时写入缓存。
+            // 如果不把数据读一遍，缓存是空的，导致的获取流长度（Length 属性）为0。
+            // 要让 Body 具有完整的功能，得把数据读一遍。
+            request.Body.Position = 0;
+            var buffer = new byte[256];
+            while (request.Body.Read(buffer, 0, buffer.Length) > 0) { }
+
+            // 重置到开头。
+            request.Body.Position = 0;
+        }
+
         /// <summary>
         /// 获取表单请求所携带的文件集合<see cref="IFormFileCollection"/>。
         /// 对于非表单类型的请求，返回空集。
