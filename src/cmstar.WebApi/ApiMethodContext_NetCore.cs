@@ -39,6 +39,8 @@ namespace cmstar.WebApi
                 Http = httpContext,
                 Api = apiMethodContext
             };
+
+            CallContext.HostContext = httpContext;
         }
 
         internal ApiMethodContext(ApiMethodInfo apiMethodInfo, object state, IDictionary<string, object> args)

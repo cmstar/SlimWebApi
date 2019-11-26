@@ -17,6 +17,18 @@ namespace cmstar.WebApi
         private static readonly ConcurrentDictionary<string, AsyncLocal<object>> State
             = new ConcurrentDictionary<string, AsyncLocal<object>>();
 
+        private static readonly AsyncLocal<object> HostContextKeeper
+            = new AsyncLocal<object>();
+
+        /// <summary>
+        /// Gets or sets the host context associated with the current thread.
+        /// </summary>
+        public static object HostContext
+        {
+            get => HostContextKeeper.Value;
+            set => HostContextKeeper.Value = value;
+        }
+
         /// <summary>
         /// Stores a given object and associates it with the specified name.
         /// </summary>
