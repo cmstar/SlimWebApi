@@ -39,8 +39,14 @@ namespace cmstar.WebApi
                 Http = httpContext,
                 Api = apiMethodContext
             };
+        }
 
-            CallContext.HostContext = httpContext;
+        /// <summary>
+        /// 当结束当前API方法的处理过程时，调用此方法以清理当前上下文。
+        /// </summary>
+        internal static void ExitContext()
+        {
+            CurrentKeeper = null;
         }
 
         internal ApiMethodContext(ApiMethodInfo apiMethodInfo, object state, IDictionary<string, object> args)

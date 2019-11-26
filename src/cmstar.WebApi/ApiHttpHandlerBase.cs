@@ -53,12 +53,25 @@ namespace cmstar.WebApi
 
             try
             {
+#if NETCORE
+                // 模拟了 .net Framework 的 HostContext ，一些地方可能仍需要访问 HttpContext.Current ，
+                // 可通过访问此属性获得。
+                CallContext.HostContext = context;
+#endif
+
                 await PerformProcessRequestAsync(context, handlerState, requestState);
             }
             catch (Exception ex)
             {
                 Logger.Fatal("Can not process the request.", ex);
                 throw;
+            }
+            finally
+            {
+#if NETCORE
+                ApiMethodContext.ExitContext();
+                CallContext.HostContext = null;
+#endif
             }
         }
 
