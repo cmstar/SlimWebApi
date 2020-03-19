@@ -4,7 +4,7 @@ using System.Text;
 namespace cmstar.WebApi
 {
     /// <summary>
-    /// 表示一个日志事件的消息部分。
+    /// 表示一个日志事件的消息部分。消息由一组 key-value 构成，且 key 在消息中是唯一的。
     /// </summary>
     public class LogMessage
     {

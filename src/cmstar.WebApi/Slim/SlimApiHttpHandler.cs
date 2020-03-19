@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using cmstar.Serialization.Json;
 
-#if NETCORE
+#if !NETFX
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 #else
@@ -187,7 +187,7 @@ namespace cmstar.WebApi.Slim
             var format = request.ExplicitParam(MetaParamFormat);
 
             // 形式3
-#if NETCORE
+#if !NETFX
             var routeData = context.GetRouteData();
 #else
             var routeData = RouteData;
@@ -363,7 +363,7 @@ namespace cmstar.WebApi.Slim
             logMessage.SetProperty("Ip", GetUserHostAddress(request));
             logMessage.SetProperty("Url", request.FullUrl());
 
-#if NETCORE
+#if !NETFX
             var files = request.FormFiles();
 #else
             var files = request.Files;
@@ -404,15 +404,28 @@ namespace cmstar.WebApi.Slim
             }
             else
             {
+                // 分部表单的，输出每个分部的概要信息。
+#if NETFX
+                var partNames = files.AllKeys;
+#endif
+
                 for (int i = 0; i < fileCount; i++)
                 {
                     var file = files[i];
-                    logMessage.SetProperty("File", file.FileName);
-                    logMessage.SetProperty("ContentType", file.ContentType);
-#if NETCORE
-                    logMessage.SetProperty("Length", file.Length.ToString());
+
+#if !NETFX
+                    logMessage.SetProperty("Length" + i, file.Name);
 #else
-                    logMessage.SetProperty("Length", file.ContentLength.ToString());
+                    logMessage.SetProperty("Name" + i, partNames[i]);
+#endif
+
+                    logMessage.SetProperty("File" + i, file.FileName);
+                    logMessage.SetProperty("ContentType" + i, file.ContentType);
+
+#if !NETFX
+                    logMessage.SetProperty("Length" + i, file.Length.ToString());
+#else
+                    logMessage.SetProperty("Length" + i, file.ContentLength.ToString());
 #endif
                 }
             }
