@@ -22,7 +22,7 @@ namespace cmstar.WebApi.Routing
         /// 详见<see cref="ApiRouteTemplateParser.ParseRouteParam"/>
         /// </param>
         public static IApplicationBuilder MapApiRoute<T>(this IApplicationBuilder app, string routeUrl)
-            where T : ApiHttpHandlerBase, new()
+            where T : HttpTaskAsyncHandler, new()
         {
             app.UseRouter(routeBuilder =>
             {

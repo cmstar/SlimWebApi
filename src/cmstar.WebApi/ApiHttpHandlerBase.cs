@@ -19,21 +19,14 @@ namespace cmstar.WebApi
     /// <summary>
     /// 包含了基本的API处理流程。这是一个抽象类。
     /// </summary>
-    public abstract class ApiHttpHandlerBase
-#if !NETCORE
-        : HttpTaskAsyncHandler
-#endif
+    public abstract class ApiHttpHandlerBase : HttpTaskAsyncHandler
     {
         private static readonly ConcurrentDictionary<Type, ApiHandlerState> HandlerStates
             = new ConcurrentDictionary<Type, ApiHandlerState>();
 
         private ILog _log;
 
-#if NETCORE
-        public async Task ProcessRequestAsync(HttpContext context)
-#else
         public override async Task ProcessRequestAsync(HttpContext context)
-#endif
         {
 #if NETCORE
             // 当前框架需要BODY部分可以被重复读取。
@@ -66,13 +59,15 @@ namespace cmstar.WebApi
                 Logger.Fatal("Can not process the request.", ex);
                 throw;
             }
+#if NETCORE
             finally
             {
-#if NETCORE
+
                 ApiMethodContext.ExitContext();
                 CallContext.HostContext = null;
-#endif
+
             }
+#endif
         }
 
 #if !NETCORE
