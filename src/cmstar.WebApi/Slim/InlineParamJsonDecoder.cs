@@ -2,7 +2,7 @@
 using System.IO;
 using cmstar.Serialization.Json;
 
-#if NETCORE
+#if !NETFX
 using Microsoft.AspNetCore.Http;
 #else
 using System.Web;

@@ -6,7 +6,7 @@ using System.Linq;
 using System.Reflection;
 using cmstar.Util;
 
-#if NETCORE
+#if !NETFX
 using Microsoft.AspNetCore.Http;
 #else
 using System.Web;
@@ -232,7 +232,7 @@ namespace cmstar.WebApi
                     continue;
                 }
 
-#if NETCORE
+#if !NETFX
                 if (t == typeof(Stream) || t == typeof(IFormFileCollection))
 #else
                 if (t == typeof(Stream) || t == typeof(HttpFileCollection))
@@ -339,7 +339,7 @@ namespace cmstar.WebApi
         /// </summary>
         public bool HasComplexMember => Others > 0;
 
-#if NETCORE
+#if !NETFX
         /// <summary>
         /// true if any <see cref="Stream"/> or <see cref="IFormFileCollection"/> member exists.
         /// </summary>

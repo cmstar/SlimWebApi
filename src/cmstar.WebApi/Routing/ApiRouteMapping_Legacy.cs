@@ -1,4 +1,4 @@
-﻿#if !NETCORE
+﻿#if NETFX
 using System.Web;
 using System.Web.Routing;
 

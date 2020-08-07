@@ -4,7 +4,7 @@ using System.Text;
 using System.Web;
 using System.Threading.Tasks;
 
-#if NETCORE
+#if !NETFX
 using System.Linq;
 using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.AspNetCore.Http;
@@ -35,7 +35,7 @@ namespace cmstar.WebApi
         /// </summary>
         public static string[] QueryStringKeys(this HttpRequest request)
         {
-#if NETCORE
+#if !NETFX
             var keys = request.Query.Keys;
             var values = new string[keys.Count];
             keys.CopyTo(values, 0);
@@ -59,7 +59,7 @@ namespace cmstar.WebApi
         /// </remarks>
         public static string LegacyQueryString(this HttpRequest request, string key)
         {
-#if NETCORE
+#if !NETFX
             if (key == null)
                 return ReadKeylessQueryString(request.QueryString.Value);
 
@@ -68,7 +68,7 @@ namespace cmstar.WebApi
             {
                 case 0: return null;
                 case 1: return values[0];
-                default: return string.Join(',', values);
+                default: return string.Join(",", values);
             }
 #else
             return request.QueryString[key];
@@ -84,7 +84,7 @@ namespace cmstar.WebApi
         /// <returns>参数的值。无此参数时返回null。</returns>
         public static string LegacyForm(this HttpRequest request, string key)
         {
-#if NETCORE
+#if !NETFX
             if (!request.HasFormContentType)
                 return null;
 
@@ -93,7 +93,7 @@ namespace cmstar.WebApi
             {
                 case 0: return null;
                 case 1: return values[0];
-                default: return string.Join(',', values);
+                default: return string.Join(",", values);
             }
 #else
             return request.Form[key];
@@ -109,7 +109,7 @@ namespace cmstar.WebApi
         /// <returns>参数的值。无此参数时返回null。</returns>
         public static string ExplicitParam(this HttpRequest request, string key)
         {
-#if NETCORE
+#if !NETFX
             return LegacyQueryString(request, key) ?? LegacyForm(request, key);
 #else
             return request.QueryString[key] ?? request.Form[key];
@@ -124,7 +124,7 @@ namespace cmstar.WebApi
         /// <returns>HTTP请求参数的名称的序列。</returns>
         public static IEnumerable<string> ExplicitParamKeys(this HttpRequest request)
         {
-#if NETCORE
+#if !NETFX
             var keys = request.Query.Keys;
             return request.HasFormContentType ? keys.Union(request.Form.Keys) : keys;
 #else
@@ -145,7 +145,7 @@ namespace cmstar.WebApi
         /// </summary>
         public static Stream RequestInputStream(this HttpRequest request)
         {
-#if NETCORE
+#if !NETFX
             var body = request.Body;
 #else
             var body = request.InputStream;
@@ -192,7 +192,7 @@ namespace cmstar.WebApi
         /// </summary>
         public static string FullUrl(this HttpRequest request)
         {
-#if NETCORE
+#if !NETFX
             return request.GetEncodedUrl();
 #else
             return request.Url.OriginalString;
@@ -204,7 +204,7 @@ namespace cmstar.WebApi
         /// </summary>
         public static string UserHostAddress(this HttpRequest request)
         {
-#if NETCORE
+#if !NETFX
             return request.HttpContext.Connection.RemoteIpAddress?.ToString();
 #else
             return request.UserHostAddress;
@@ -216,7 +216,7 @@ namespace cmstar.WebApi
         /// </summary>
         public static Task BinaryWriteAsync(this HttpResponse response, byte[] buffer)
         {
-#if NETCORE
+#if !NETFX
             return response.Body.WriteAsync(buffer, 0, buffer.Length);
 #else
             response.BinaryWrite(buffer);
@@ -224,7 +224,7 @@ namespace cmstar.WebApi
 #endif
         }
 
-#if NETCORE
+#if !NETFX
         /// <summary>
         /// 对请求的BODY部分启用缓存，使BODY支持随机、多次的读取。
         /// 调用此方法后，<see cref="HttpRequest.Body"/>的读取位置（<see cref="Stream.Position"/>）将位于其开头。

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 
-#if NETCORE
+#if !NETFX
 using Microsoft.AspNetCore.Routing;
 #else
 using System.Web.Routing;

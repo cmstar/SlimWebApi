@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using Common.Logging;
 
-#if NETCORE
+#if !NETFX
 using Microsoft.AspNetCore.Http;
 #else
 using System.Diagnostics;
@@ -28,7 +28,7 @@ namespace cmstar.WebApi
 
         public override async Task ProcessRequestAsync(HttpContext context)
         {
-#if NETCORE
+#if !NETFX
             // 当前框架需要BODY部分可以被重复读取。
             context.Request.TryEnableRequestBuffering();
 #else
@@ -46,7 +46,7 @@ namespace cmstar.WebApi
 
             try
             {
-#if NETCORE
+#if !NETFX
                 // 模拟了 .net Framework 的 HostContext ，一些地方可能仍需要访问 HttpContext.Current ，
                 // 可通过访问此属性获得。
                 CallContext.HostContext = context;
@@ -59,7 +59,7 @@ namespace cmstar.WebApi
                 Logger.Fatal("Can not process the request.", ex);
                 throw;
             }
-#if NETCORE
+#if !NETFX
             finally
             {
 
@@ -70,7 +70,7 @@ namespace cmstar.WebApi
 #endif
         }
 
-#if !NETCORE
+#if NETFX
         /// <summary>
         /// 获取或设置当前处理的请求上下文中所使用的路由信息。
         /// 若为null则对于当前请求的数据解析过程不使用路由信息。
@@ -435,7 +435,7 @@ namespace cmstar.WebApi
                 methodInvocationStarted = true;
                 var result = await MethodInvokeAsync(context, apiMethodContext, handlerState, method, param);
 
-#if !NETCORE
+#if NETFX
                 // 按需使用压缩流传输
                 AppendCompressionFilter(context, method);
 #endif
@@ -527,7 +527,7 @@ namespace cmstar.WebApi
                 return 0;
 
             // 调试模式下不要超时，类似非异步请求的 executionTimeout 配置的处理方式。
-#if NETCORE
+#if !NETFX
             if (ApiEnvironment.IsDevelopment)
                 return 0;
 #else
@@ -544,7 +544,7 @@ namespace cmstar.WebApi
             return timeoutSeconds;
         }
 
-#if !NETCORE
+#if NETFX
         private void AppendCompressionFilter(HttpContext context, ApiMethodInfo method)
         {
             var compressionMethod = ParseCompressionMethods(context.Request, method.Setting.CompressionMethods);

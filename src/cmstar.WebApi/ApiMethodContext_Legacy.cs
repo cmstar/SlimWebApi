@@ -1,4 +1,4 @@
-﻿#if !NETCORE
+﻿#if NETFX
 using System.Collections.Generic;
 using System.Web;
 

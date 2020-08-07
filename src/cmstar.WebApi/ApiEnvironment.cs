@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net;
 
-#if !NETCORE
+#if NETFX
 using System.Web;
 using System.Web.Configuration;
 #endif
@@ -13,7 +13,7 @@ namespace cmstar.WebApi
     /// </summary>
     public static class ApiEnvironment
     {
-#if NETCORE
+#if !NETFX
         /// <summary>
         /// 默认的请求超时时间，<see cref="AsyncTimeout"/>的初始值。单位为秒。
         /// </summary>
@@ -42,7 +42,7 @@ namespace cmstar.WebApi
         /// </summary>
         public static int CodeInternalError { get; } = (int)HttpStatusCode.InternalServerError;
 
-#if NETCORE
+#if !NETFX
         /// <summary>
         /// 获取或设置异步的WebAPI方法的超时时间，单位为秒。若WebAPI方法没有单独指定超时时间，则使用此超时设置。
         /// 若设置为0，则没有超时限制。当<see cref="IsDevelopment"/>为true时，总是返回0。

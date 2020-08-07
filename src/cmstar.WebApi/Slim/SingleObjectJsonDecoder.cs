@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-#if NETCORE
+#if !NETFX
 using Microsoft.AspNetCore.Http;
 #else
 using System.Web;

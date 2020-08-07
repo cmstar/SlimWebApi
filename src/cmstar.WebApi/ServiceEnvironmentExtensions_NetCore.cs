@@ -1,4 +1,4 @@
-﻿#if NETCORE
+﻿#if !NETFX
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 

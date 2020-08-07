@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-#if NETCORE
+#if !NETFX
 using Microsoft.AspNetCore.Http;
 #else
 using System.Web;
@@ -49,7 +49,7 @@ namespace cmstar.WebApi.Slim
                     continue;
                 }
 
-#if NETCORE
+#if !NETFX
                 if (paramType == typeof(IFormFileCollection))
 #else
                 if (paramType == typeof(HttpFileCollection))
@@ -97,7 +97,7 @@ namespace cmstar.WebApi.Slim
 
             if (_httpFileCollectionParamName != null)
             {
-#if NETCORE
+#if !NETFX
                 paramValueMap.Add(_httpFileCollectionParamName, request.FormFiles());
 #else
                 paramValueMap.Add(_httpFileCollectionParamName, request.Files);

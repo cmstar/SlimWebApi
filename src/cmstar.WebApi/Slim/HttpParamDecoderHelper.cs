@@ -2,7 +2,7 @@
 using System.Text;
 using System.Web;
 
-#if NETCORE
+#if !NETFX
 using Microsoft.AspNetCore.Http;
 #endif
 
@@ -46,7 +46,7 @@ namespace cmstar.WebApi.Slim
                 return;
             }
 
-#if NETCORE
+#if !NETFX
             // case 2
             if (request.HasFormContentType)
                 return;
@@ -72,7 +72,7 @@ namespace cmstar.WebApi.Slim
 
         private static Encoding GuessRequestEncoding(HttpRequest request)
         {
-#if !NETCORE
+#if NETFX
             // 如果直接使用 request.ContentEncoding，在请求没有指定 charset 的情况下，会使用默认字符集或配置文件里的字符集。
             // 在中文系统下默认编码一般是 GB2312，而当前的实现并不标准，也就是不能靠这个配置，故不能直接使用 ContentEncoding 。
             if (request.ContentType.Contains("charset="))

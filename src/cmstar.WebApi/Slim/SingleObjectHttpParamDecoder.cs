@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 using cmstar.RapidReflection.Emit;
 
-#if NETCORE
+#if !NETFX
 using Microsoft.AspNetCore.Http;
 #else
 using System.Web;
@@ -84,7 +84,7 @@ namespace cmstar.WebApi.Slim
                     _streamMemberName = paramInfo.Name;
                 }
 
-#if NETCORE
+#if !NETFX
                 if (paramType == typeof(IFormFileCollection))
 #else
                 if (paramType == typeof(HttpFileCollection))
@@ -163,7 +163,7 @@ namespace cmstar.WebApi.Slim
             {
                 var m = _memberMap[_httpFileCollectionMemmberName];
 
-#if NETCORE
+#if !NETFX
                 m.Setter(instance, request.FormFiles());
 #else
                 m.Setter(instance, request.Files);

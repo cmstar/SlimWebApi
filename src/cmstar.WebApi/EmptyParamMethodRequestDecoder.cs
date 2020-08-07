@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-#if NETCORE
+#if !NETFX
 using Microsoft.AspNetCore.Http;
 #else
 using System.Web;

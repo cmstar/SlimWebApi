@@ -1,4 +1,4 @@
-﻿#if NETCORE || NETSTANDARD
+﻿#if !NETFX || NETSTANDARD
 using System.Collections.Concurrent;
 using System.Threading;
 
