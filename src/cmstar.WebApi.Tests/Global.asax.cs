@@ -9,10 +9,11 @@ namespace cmstar.WebApi
     {
         protected void Application_Start(object sender, EventArgs e)
         {
-            RegisterRoutes(RouteTable.Routes);
+            // 注册路由，通过 IApiRouteAdapter 中转。
+            RegisterRoutes(RouteTable.Routes.CreateApiRouteAdapter());
         }
 
-        private void RegisterRoutes(RouteCollection routes)
+        private void RegisterRoutes(IApiRouteAdapter routes)
         {
             routes.MapApiRoute<DelegateExample>("routed/slim/{~method,GetGuid}/");
         }

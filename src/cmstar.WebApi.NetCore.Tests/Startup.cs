@@ -41,11 +41,17 @@ namespace cmstar.WebApi
                     Arguments = new NameValueCollection()
                 }
             });
-            
-            app.MapApiRoute<SlimApiExample>("api/auto/{~method}/");
-            app.MapApiRoute<SlimApiExample>("api/auto2");
+
+            // 注册路由，通过 IApiRouteAdapter 中转。
+            RegisterRoutes(app.CreateApiRouteAdapter());
 
             app.Run(async context => await context.Response.WriteAsync("hello"));
+        }
+
+        private void RegisterRoutes(IApiRouteAdapter routes)
+        {
+            routes.MapApiRoute<SlimApiExample>("api/auto/{~method}/");
+            routes.MapApiRoute<SlimApiExample>("api/auto2");
         }
     }
 }

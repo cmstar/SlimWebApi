@@ -43,6 +43,31 @@ namespace cmstar.WebApi.Routing
 
             return app;
         }
+
+        /// <summary>
+        /// 创建一个用于注册路由规则的<see cref="IApiRouteAdapter"/>，以提供跨平台（.net Framework/Core/Standard）的兼容性。
+        /// </summary>
+        public static IApiRouteAdapter CreateApiRouteAdapter(this IApplicationBuilder app)
+        {
+            return new ApiRouteAdapter(app);
+        }
+
+        private class ApiRouteAdapter : IApiRouteAdapter
+        {
+            private readonly IApplicationBuilder _app;
+
+            public ApiRouteAdapter(IApplicationBuilder app)
+            {
+                _app = app;
+            }
+
+            public IApiRouteAdapter MapApiRoute<T>(string routeUrl)
+                where T : HttpTaskAsyncHandler, new()
+            {
+                _app.MapApiRoute<T>(routeUrl);
+                return this;
+            }
+        }
     }
 }
 #endif

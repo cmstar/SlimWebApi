@@ -20,13 +20,40 @@ namespace cmstar.WebApi.Routing
         /// 使用扩展语法，对于每个路由参数，可使用形如 {placeholder=default} 的语法，
         /// 详见<see cref="ApiRouteTemplateParser.ParseRouteParam"/>
         /// </param>
-        public static void MapApiRoute<T>(this RouteCollection routes, string routeUrl)
+        public static RouteCollection MapApiRoute<T>(this RouteCollection routes, string routeUrl)
             where T : IHttpHandler, new()
         {
             ArgAssert.NotNull(routes, nameof(routes));
 
             var conf = ApiRouteTemplateParser.ParseRouteTemplate(routeUrl);
             routes.Add(new Route(conf.Url, conf.Defaults, conf.Constraints, new ApiRouteHandler<T>()));
+
+            return routes;
+        }
+
+        /// <summary>
+        /// 创建一个用于注册路由规则的<see cref="IApiRouteAdapter"/>，以提供跨平台（.net Framework/Core/Standard）的兼容性。
+        /// </summary>
+        public static IApiRouteAdapter CreateApiRouteAdapter(this RouteCollection routes)
+        {
+            return new ApiRouteAdapter(routes);
+        }
+
+        private class ApiRouteAdapter : IApiRouteAdapter
+        {
+            private readonly RouteCollection _routes;
+
+            public ApiRouteAdapter(RouteCollection routes)
+            {
+                _routes = routes;
+            }
+
+            public IApiRouteAdapter MapApiRoute<T>(string routeUrl)
+                where T : IHttpHandler, new()
+            {
+                _routes.MapApiRoute<T>(routeUrl);
+                return this;
+            }
         }
 
         private class ApiRouteHandler<T> : IRouteHandler
