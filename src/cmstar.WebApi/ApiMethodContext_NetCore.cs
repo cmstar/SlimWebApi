@@ -20,6 +20,7 @@ namespace cmstar.WebApi
 
         /// <summary>
         /// 获取本次API方法调用所使用的<see cref="ApiMethodContext"/>。
+        /// 不会返回 null ，若当前不在 API 方法调用的上下文中，返回一个空白的实例。
         /// </summary>
         public static ApiMethodContext Current => CurrentKeeper?.Api ?? EmptyContext;
 
