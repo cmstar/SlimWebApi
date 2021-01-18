@@ -51,6 +51,9 @@
     <Reference Include="System.Web" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+
+    <Compile Remove="**\*_NetCore.cs;**\*_NetStandard.cs;" />
+    <None Include="**\*_NetCore.cs;**\*_NetStandard.cs" />
   </ItemGroup>
 
   <!--netstandard-->
@@ -62,6 +65,7 @@
     </Reference>
 
     <Compile Remove="Filters\**" />
+    <Compile Remove="**\*_NetFx.cs;**\*_Legacy.cs" />
   </ItemGroup>
 
   <!--netcore-->
@@ -72,6 +76,7 @@
     </Reference>
 
     <Compile Remove="Filters\**" />
+    <Compile Remove="**\*_NetFx.cs;**\*_Legacy.cs" />
   </ItemGroup>
 
 </Project>

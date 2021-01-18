@@ -16,7 +16,10 @@ using System.Web.Routing;
 
 namespace cmstar.WebApi
 {
-    internal static class HttpContextExtensions
+    /// <summary>
+    /// 包含<see cref="HttpContext"/>及其相关类型的扩展方法。
+    /// </summary>
+    public static class HttpContextExtensions
     {
         /// <summary>
         /// 从路由信息中获取指定的参数值。
@@ -53,6 +56,7 @@ namespace cmstar.WebApi
         /// <param name="key">参数的名称。可以使用null获取没有key的参数值，如从“?a&amp;foo=bar”得到“a”。</param>
         /// <returns>参数的值。无此参数时返回null。</returns>
         /// <remarks>
+        /// 此方法用于在 .net Core 上模拟 .net Framework 的 HttpRequest.QueryString 属性。
         /// 在传统ASP.net中，“?a”解析为一个 key 为 null，值为“a”的参数；而.net Core中，则解析为 key 为“a”值为“”的参数。
         /// 此方法沿用旧版的逻辑。但在 ASP.net Core 上没有将“a”参数移除，如果使用“a”获取参数值，仍会获取到一个值“”，
         /// 在使用过程中应避免这种情况。
@@ -82,6 +86,9 @@ namespace cmstar.WebApi
         /// <param name="request">请求对象。</param>
         /// <param name="key">参数的名称。</param>
         /// <returns>参数的值。无此参数时返回null。</returns>
+        /// <remarks>
+        /// 此方法用于在 .net Core 上模拟 .net Framework 的 HttpRequest.Form 属性。
+        /// </remarks>
         public static string LegacyForm(this HttpRequest request, string key)
         {
 #if !NETFX
@@ -97,6 +104,44 @@ namespace cmstar.WebApi
             }
 #else
             return request.Form[key];
+#endif
+        }
+
+        /// <summary>
+        /// 获取具有指定名称的 HTTP 请求头的值。
+        /// </summary>
+        /// <param name="request">请求对象。</param>
+        /// <param name="name">请求头字段的名称。</param>
+        /// <returns>请求头的对应字段的值。没有给定名称的请求头时返回null。</returns>
+        /// <remarks>
+        /// 此方法用于在 .net Core 上模拟 .net Framework 的 HttpRequest.Headers 属性。
+        /// </remarks>
+        public static string LegacyHeader(this HttpRequest request, string name)
+        {
+#if !NETFX
+            var values = request.Headers[name];
+            return values.Count > 0 ? values[0] : null;
+#else
+            return request.Headers[name];
+#endif
+        }
+
+        /// <summary>
+        /// 依次尝试从<see cref="HttpRequest.QueryString"/>、<see cref="HttpRequest.Form"/>、
+        /// <see cref="HttpRequest.Cookies"/>读取具有指定名称的字段的值。返回第一个读取到的字段。
+        /// </summary>
+        /// <param name="request">请求对象。</param>
+        /// <param name="name">所需字段的名称。</param>
+        /// <returns>字段的值。无此字段时返回null。</returns>
+        /// <remarks>
+        /// 此方法用于在 .net Core 上模拟 .net Framework 的 HttpRequest.Params 属性。
+        /// </remarks>
+        public static string LegacyParam(this HttpRequest request, string name)
+        {
+#if !NETFX
+            return LegacyQueryString(request, name) ?? LegacyForm(request, name) ?? request.Cookies[name];
+#else
+            return request.Params[name];
 #endif
         }
 
@@ -190,6 +235,9 @@ namespace cmstar.WebApi
         /// <summary>
         /// 获取请求的完整的URL，包含协议、域名、参数。
         /// </summary>
+        /// <remarks>
+        /// 此方法用于在 .net Core 上模拟 .net Framework 的 HttpRequest.Url.OriginalString 属性。
+        /// </remarks>
         public static string FullUrl(this HttpRequest request)
         {
 #if !NETFX
@@ -202,6 +250,9 @@ namespace cmstar.WebApi
         /// <summary>
         /// 获取请求方的IP地址。
         /// </summary>
+        /// <remarks>
+        /// 此方法用于在 .net Core 上模拟 .net Framework 的 HttpRequest.UserHostAddress 属性。
+        /// </remarks>
         public static string UserHostAddress(this HttpRequest request)
         {
 #if !NETFX
@@ -221,6 +272,22 @@ namespace cmstar.WebApi
 #else
             response.BinaryWrite(buffer);
             return Task.CompletedTask;
+#endif
+        }
+
+        /// <summary>
+        /// 获取表单请求所携带的文件集合<see cref="IFormFileCollection"/>。
+        /// 对于非表单类型的请求，返回空集。
+        /// </summary>
+        public static IFormFileCollection FormFiles(this HttpRequest request)
+        {
+#if !NETFX
+            if (!request.HasFormContentType)
+                return new FormFileCollection();
+
+            return request.Form.Files;
+#else
+            return new FormFileCollectionImpl(request.Files);
 #endif
         }
 
@@ -249,18 +316,6 @@ namespace cmstar.WebApi
 
             // 重置到开头。
             request.Body.Position = 0;
-        }
-
-        /// <summary>
-        /// 获取表单请求所携带的文件集合<see cref="IFormFileCollection"/>。
-        /// 对于非表单类型的请求，返回空集。
-        /// </summary>
-        public static IFormFileCollection FormFiles(this HttpRequest request)
-        {
-            if (!request.HasFormContentType)
-                return new FormFileCollection();
-
-            return request.Form.Files;
         }
 
         private static string ReadKeylessQueryString(string queryString)

@@ -38,7 +38,8 @@ namespace cmstar.WebApi.Slim
         private readonly Dictionary<string, MemberCache> _memberMap;
         private readonly Func<object> _constructor;
         private readonly string _streamMemberName;
-        private readonly string _httpFileCollectionMemmberName;
+        private readonly string _httpFileCollectionParamName;
+        private readonly Type _httpFileCollectionType;
         private readonly string _paramName;
 
         /// <summary>
@@ -87,15 +88,16 @@ namespace cmstar.WebApi.Slim
 #if !NETFX
                 if (paramType == typeof(IFormFileCollection))
 #else
-                if (paramType == typeof(HttpFileCollection))
+                if (paramType == typeof(IFormFileCollection) || paramType == typeof(HttpFileCollection))
 #endif
                 {
-                    if (_streamMemberName != null || _httpFileCollectionMemmberName != null)
+                    if (_streamMemberName != null || _httpFileCollectionParamName != null)
                     {
                         throw FileParamConflictError(paramType, "paramInfoMap");
                     }
 
-                    _httpFileCollectionMemmberName = paramInfo.Name;
+                    _httpFileCollectionParamName = paramInfo.Name;
+                    _httpFileCollectionType = paramType;
                 }
 
                 var setter = PropertyAccessorGenerator.CreateSetter(prop);
@@ -159,14 +161,19 @@ namespace cmstar.WebApi.Slim
                 m.Setter(instance, inputStream);
             }
 
-            if (_httpFileCollectionMemmberName != null)
+            if (_httpFileCollectionParamName != null)
             {
-                var m = _memberMap[_httpFileCollectionMemmberName];
+                var m = _memberMap[_httpFileCollectionParamName];
 
-#if !NETFX
-                m.Setter(instance, request.FormFiles());
-#else
-                m.Setter(instance, request.Files);
+                if (_httpFileCollectionType == typeof(IFormFileCollection))
+                {
+                    m.Setter(instance, request.FormFiles());
+                }
+#if NETFX
+                else if (_httpFileCollectionType == typeof(HttpFileCollection))
+                {
+                    m.Setter(instance, request.Files);
+                }
 #endif
             }
 
@@ -174,7 +181,7 @@ namespace cmstar.WebApi.Slim
             foreach (var p in requestParam)
             {
                 var key = p.Key;
-                if (key == null || key == _streamMemberName || key == _httpFileCollectionMemmberName)
+                if (key == null || key == _streamMemberName || key == _httpFileCollectionParamName)
                     continue;
 
                 MemberCache m;

@@ -232,15 +232,19 @@ namespace cmstar.WebApi
                     continue;
                 }
 
-#if !NETFX
                 if (t == typeof(Stream) || t == typeof(IFormFileCollection))
-#else
-                if (t == typeof(Stream) || t == typeof(HttpFileCollection))
-#endif
                 {
                     output.HasFileInput = true;
                     continue;
                 }
+
+#if NETFX
+                if ( t == typeof(HttpFileCollection))
+                {
+                    output.HasFileInput = true;
+                    continue;
+                }
+#endif
 
                 var elementType = GetElementType(t);
                 if (elementType != null)

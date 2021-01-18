@@ -24,6 +24,7 @@ namespace cmstar.WebApi.Slim
         private readonly ApiMethodParamInfoMap _paramInfoMap;
         private readonly string _streamParamName;
         private readonly string _httpFileCollectionParamName;
+        private readonly Type _httpFileCollectionType;
 
         /// <summary>
         /// 初始化<see cref="InlineParamHttpParamDecoder"/>的新实例。
@@ -52,7 +53,7 @@ namespace cmstar.WebApi.Slim
 #if !NETFX
                 if (paramType == typeof(IFormFileCollection))
 #else
-                if (paramType == typeof(HttpFileCollection))
+                if (paramType == typeof(IFormFileCollection) || paramType == typeof(HttpFileCollection))
 #endif
                 {
                     if (_streamParamName != null || _httpFileCollectionParamName != null)
@@ -61,6 +62,7 @@ namespace cmstar.WebApi.Slim
                     }
 
                     _httpFileCollectionParamName = paramInfo.Name;
+                    _httpFileCollectionType = paramType;
                     continue;
                 }
 
@@ -97,10 +99,15 @@ namespace cmstar.WebApi.Slim
 
             if (_httpFileCollectionParamName != null)
             {
-#if !NETFX
-                paramValueMap.Add(_httpFileCollectionParamName, request.FormFiles());
-#else
-                paramValueMap.Add(_httpFileCollectionParamName, request.Files);
+                if (_httpFileCollectionType == typeof(IFormFileCollection))
+                {
+                    paramValueMap.Add(_httpFileCollectionParamName, request.FormFiles());
+                }
+#if NETFX
+                else if (_httpFileCollectionType == typeof(HttpFileCollection))
+                {
+                    paramValueMap.Add(_httpFileCollectionParamName, request.Files);
+                }
 #endif
             }
 
