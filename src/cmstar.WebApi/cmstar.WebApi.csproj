@@ -51,6 +51,7 @@
     <Reference Include="System.Web" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="System.Net.Http" />
 
     <Compile Remove="**\*_NetCore.cs;**\*_NetStandard.cs;" />
     <None Include="**\*_NetCore.cs;**\*_NetStandard.cs" />
