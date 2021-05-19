@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Web;
@@ -211,16 +212,25 @@ namespace cmstar.WebApi
         }
 
         /// <summary>
-        /// 从请求的HTTP body中读取所有的数据。
+        /// 从请求的 HTTP body 中读取所有的数据。读取从输入流的当前位置开始，读取到流的末尾。
+        /// 若没有读取到数据，返回一个空数组。
         /// </summary>
         /// <param name="request">请求对象。</param>
-        /// <returns>HTTP body中的数据。</returns>
+        /// <returns>HTTP body 中的数据。若没有读取到数据，返回一个空数组。</returns>
         public static byte[] BinaryReadToEnd(this HttpRequest request)
         {
-            const int bufferLength = 4096;
+            const int maxBufferLength = 30720;
 
             var inputStream = request.RequestInputStream();
-            var data = new byte[inputStream.Length];
+            var inputLength = (int)inputStream.Length;
+            var data = new byte[inputLength];
+
+            // 有的流不支持 0 长度的 buffer ，例如 .net Core 的 FileBufferingStream 会抛出 ArgumentOutOfRangeException ；
+            // 但有的流支持，例如 MemoryStream 。这里统一做前置判定。
+            if (inputLength == 0)
+                return data;
+
+            var bufferLength = Math.Min(inputLength, maxBufferLength);
             var pos = 0;
 
             int len;
