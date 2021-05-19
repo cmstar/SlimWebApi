@@ -22,6 +22,8 @@ namespace cmstar.WebApi
     /// </summary>
     public static class HttpContextExtensions
     {
+        private const int DefaultBufferLength = 30720;
+
         /// <summary>
         /// 从路由信息中获取指定的参数值。
         /// </summary>
@@ -219,8 +221,6 @@ namespace cmstar.WebApi
         /// <returns>HTTP body 中的数据。若没有读取到数据，返回一个空数组。</returns>
         public static byte[] BinaryReadToEnd(this HttpRequest request)
         {
-            const int maxBufferLength = 30720;
-
             var inputStream = request.RequestInputStream();
             var inputLength = (int)inputStream.Length;
             var data = new byte[inputLength];
@@ -230,7 +230,7 @@ namespace cmstar.WebApi
             if (inputLength == 0)
                 return data;
 
-            var bufferLength = Math.Min(inputLength, maxBufferLength);
+            var bufferLength = Math.Min(inputLength, DefaultBufferLength);
             var pos = 0;
 
             int len;
@@ -321,7 +321,7 @@ namespace cmstar.WebApi
             // 如果不把数据读一遍，缓存是空的，导致的获取流长度（Length 属性）为0。
             // 要让 Body 具有完整的功能，得把数据读一遍。
             request.Body.Position = 0;
-            var buffer = new byte[256];
+            var buffer = new byte[DefaultBufferLength];
             while (request.Body.Read(buffer, 0, buffer.Length) > 0) { }
 
             // 重置到开头。
