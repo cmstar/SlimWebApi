@@ -504,7 +504,7 @@ namespace cmstar.WebApi.Slim
         private static void ParseMixedMetaParams(string input, out string method, ref string format, ref string callback)
         {
             // METHOD.FORMAT(CALLBACK)
-            const int followedByFomat = 1;
+            const int followedByFormat = 1;
             const int followedByCallback = 2;
 
             var inputLength = input.Length;
@@ -517,7 +517,7 @@ namespace cmstar.WebApi.Slim
 
                 if (c == '.') // hit the beginning of the format name
                 {
-                    followedBy = followedByFomat;
+                    followedBy = followedByFormat;
                     break;
                 }
 
@@ -536,7 +536,7 @@ namespace cmstar.WebApi.Slim
 
             method = input.Substring(0, position);
 
-            if (followedBy == followedByFomat)
+            if (followedBy == followedByFormat)
             {
                 position++; // move to the next char after .
                 var formatStartIndex = position;
