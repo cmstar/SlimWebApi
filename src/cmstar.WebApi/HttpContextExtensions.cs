@@ -328,6 +328,13 @@ namespace cmstar.WebApi
             request.Body.Position = 0;
         }
 
+        // 读取无名称的 querystring ，模拟 ASP.net Framework 的行为：
+        // "" -> null
+        // "?" -> null
+        // "?x" -> "x"
+        // "?x&a=1&y" -> "x,y"
+        // "?x&a=1&y&" -> "x,y,"
+        // "?&" -> ","
         private static string ReadKeylessQueryString(string queryString)
         {
             if (string.IsNullOrEmpty(queryString) || queryString == "?")
@@ -341,7 +348,7 @@ namespace cmstar.WebApi
 
             var length = queryString.Length;
             string result = null;
-            int idxRight;
+            int idxRight = 0;
             for (; idxLeft < length; idxLeft = idxRight + 1)
             {
                 idxRight = queryString.IndexOf('&', idxLeft);
@@ -363,13 +370,12 @@ namespace cmstar.WebApi
                 {
                     result += "," + value;
                 }
+            }
 
-                // queryString ends with '&'
-                if (idxRight == length - 1)
-                {
-                    result += ",";
-                    break;
-                }
+            // 如果末尾是 & ，则认为后面还有个空字符串的值。
+            if (idxRight == length - 1)
+            {
+                result += ",";
             }
 
             return result;
