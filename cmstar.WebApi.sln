@@ -15,6 +15,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "netcore.tests", "netcore.te
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "cmstar.WebApi.NetCore.Tests", "src\cmstar.WebApi.NetCore.Tests\cmstar.WebApi.NetCore.Tests.csproj", "{549C5C36-81FF-43BF-8789-702E10055D0E}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "doc", "doc", "{EF5C5C5E-0D84-40FF-A281-B8E6C190310B}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
