@@ -414,7 +414,7 @@ namespace cmstar.WebApi.Slim
                     var file = files[i];
 
 #if !NETFX
-                    logMessage.SetProperty("Length" + i, file.Name);
+                    logMessage.SetProperty("Name" + i, file.Name);
 #else
                     logMessage.SetProperty("Name" + i, partNames[i]);
 #endif
