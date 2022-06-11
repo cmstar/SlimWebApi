@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <!--Build options-->
-    <TargetFrameworks>net46;netstandard2.0;netcoreapp2.2;</TargetFrameworks>
+    <TargetFrameworks>net46;netstandard2.0;netcoreapp2.1;</TargetFrameworks>
     <RootNamespace>cmstar.WebApi</RootNamespace>
     <AssemblyName>cmstar.WebApi</AssemblyName>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -26,12 +26,12 @@
     <DefineConstants>NETFX;</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <DefineConstants>NETSTANDARD;NETSTANDARD2_0;</DefineConstants>
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('netstandard'))">
+    <DefineConstants>NETSTANDARD;</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' == 'netcoreapp2.2'">
-    <DefineConstants>NETCORE;NETCORE2_2;</DefineConstants>
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('netcoreapp'))">
+    <DefineConstants>NETCORE;</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -55,7 +55,7 @@
   </ItemGroup>
 
   <!--netstandard-->
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+  <ItemGroup Condition="$(TargetFramework.StartsWith('netstandard'))">
     <PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.2.0" />
     <Compile Remove="Filters\**" />
@@ -63,7 +63,7 @@
   </ItemGroup>
 
   <!--netcore-->
-  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.2'">
+  <ItemGroup Condition="$(TargetFramework.StartsWith('netcoreapp'))">
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <Compile Remove="Filters\**" />
     <Compile Remove="**\*_NetFx.cs;**\*_Legacy.cs" />
