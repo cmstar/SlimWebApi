@@ -8,8 +8,19 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>1591;1701;1702;3021</NoWarn>
 
-    <!--Package info-->
-    <Copyright>Copyright ©cmstar 2014</Copyright>
+    <!--Package information-->
+    <PackageId>cmstar.WebApi</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Eric Ruan</Authors>
+    <Description>一个极速的WebAPI开发库，能够以简单且非侵入的方式将任何 .net 方法发布为 WebAPI 。</Description>
+    <Copyright>Copyright © Eric Ruan 2014</Copyright>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/cmstar/SlimWebApi.git</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/cmstar/SlimWebApi</PackageProjectUrl>
+    <PackageTags>web webapi</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <!--Include .pdb-->
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
   </PropertyGroup>
 
   <!--Compiling contants-->
