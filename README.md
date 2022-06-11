@@ -1,11 +1,25 @@
 # cmstar.WebApi
 
+[![NuGet](https://img.shields.io/nuget/v/cmstar.WebApi.svg)](https://www.nuget.org/packages/cmstar.WebApi/)
+
 一个极速的WebAPI开发库，能够以简单且非侵入的方式将任何 .net 方法发布为 WebAPI 。
 
 支持的 .NET 版本：
 - .NET Framework 4.6 或更高版本。
 - .NET Core 2.1 或更高版本。
 - 其他支持 .NET Standard 2 的运行时。
+
+## 安装
+
+通过 Package Manager:
+```
+Install-Package cmstar.WebApi
+```
+
+或通过 dotnet-cli:
+```
+dotnet add package cmstar.WebApi
+```
 
 ## 目标
 
@@ -26,7 +40,6 @@
 当前库使用一组固定的方式描述这几方面的内容。 
 1. 方法的入口，体现在 URL 上，对应 `~method` 元参数。
 2. 输出一个固定的格式，由 `Code` 字段表示是否有错误；`Data`表示执行成功时的返回值；`Message`给出异常时的信息。详见下文《返回的格式》一节。
-
 
 ## 入门——三步构建一个WebAPI
 
