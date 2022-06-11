@@ -22,45 +22,49 @@
 1. 方法的入口，体现在 URL 上，对应 `~method` 元参数。
 2. 输出一个固定的格式，由 `Code` 字段表示是否有错误；`Data`表示执行成功时的返回值；`Message`给出异常时的信息。详见下文《返回的格式》一节。
 
+
 # 入门——三步构建一个WebAPI
 
 假设已有业务逻辑：
 
-    public class SimpleServiceProvider
+```csharp
+public class SimpleServiceProvider
+{
+    private readonly Random _random = new Random();
+
+    public int PlusRandom(int x, int y)
     {
-        private readonly Random _random = new Random();
-
-        public int PlusRandom(int x, int y)
-        {
-            _lastValue = _random.Next(1000);
-            return x + y + _lastValue;
-        }
-
-        public static void Save(string value)
-        {
-        }
+        _lastValue = _random.Next(1000);
+        return x + y + _lastValue;
     }
+
+    // 支持异步方法。
+    public static async Task Save(string value)
+    {
+    }
+}
+```
 
 现在让我们按下面的步骤，将上面的PlusRandom方法发布为WebAPI。
 
 1. 新建一个ASP.net项目，并引用此API程序集。
-1. 新建一个ashx入口，这里假定其名字为SimpleExample.ashx，让其关联的类代码继承抽象类`SlimApiHttpHandler`。
-1. 重写`Setup`方法，代码如下：
+2. 新建一个ashx入口，这里假定其名字为SimpleExample.ashx，让其关联的类代码继承抽象类`SlimApiHttpHandler`。
+3. 重写`Setup`方法，代码如下：
 
-        public class SimpleExample : SlimApiHttpHandler
-        {
-            public override void Setup(ApiSetup setup)
-            {
-                // 实例方法
-                var serviceProvider = new SimpleServiceProvider();
-                setup.Method((Func<int, int, int>)serviceProvider.PlusRandom);
+```csharp
+public class SimpleExample : SlimApiHttpHandler
+{
+    public override void Setup(ApiSetup setup)
+    {
+        // 实例方法
+        var serviceProvider = new SimpleServiceProvider();
+        setup.Method((Func<int, int, int>)serviceProvider.PlusRandom);
             
-                // 静态方法
-                setup.Method((Action<string>)SimpleServiceProvider.Save);
-            }
-        }
-
-*注：当前支持的.net framwork最低版本为3.5。*
+        // 静态方法
+        setup.Method((Action<string>)SimpleServiceProvider.Save);
+    }
+}
+```
 
 现在WebAPI已经可以使用了，编译运行，并使用下面的链接访问（不同电脑上端口可能不一样）：
 
@@ -68,8 +72,9 @@
 
 得到了返回结果，因为方法中使用随机数，返回结果的`Data`字段可能不尽相同：
 
-    {"Code":0,"Message":"","Data":311}
-
+```json
+{"Code":0,"Message":"","Data":311}
+```
 
 # 通信协议
 
@@ -123,7 +128,9 @@ URL:
 
 Post Data:
 
-    { "x":13, "y":25 } 
+```json
+{ "x":13, "y":25 } 
+```
 
 JSON比起HTTP参数，能够传递更为复杂的数据结构。
 
@@ -133,16 +140,18 @@ JSON比起HTTP参数，能够传递更为复杂的数据结构。
 
 前面的`PlusRandom`方法也可以被改成下面样子，而调用方的请求则不需要改变：
 
-    public class PlusRandomParam
-    {
-        public int x { get; set; }
-        public int y { get; set; }
-    }
+```csharp
+public class PlusRandomParam
+{
+    public int x { get; set; }
+    public int y { get; set; }
+}
 
-    public int PlusRandom(PlusRandomParam param)
-    {
-        // 实现逻辑
-    }
+public int PlusRandom(PlusRandomParam param)
+{
+    // 实现逻辑
+}
+```
 
 这种用法尤其适合一些需要重构的场景，比如一个方法一开始接收三个参数，随着需求的复杂化，参数逐渐增多，就应当将参数重新定义到一个类里去。
 
@@ -164,8 +173,9 @@ JSON比起HTTP参数，能够传递更为复杂的数据结构。
 
 将得到JSONP结果
 
-    invoke({"Code":0,"Message":"","Data":311}) 
-
+```javascript
+invoke({"Code":0,"Message":"","Data":311}) 
+```
 
 # 注册API方法
 
@@ -175,43 +185,53 @@ JSON比起HTTP参数，能够传递更为复杂的数据结构。
 
 前面的例子中给出了API方法注册的入口
 
-    public class SimpleExample : SlimApiHttpHandler
+```csharp
+public class SimpleExample : SlimApiHttpHandler
+{
+    public override void Setup(ApiSetup setup)
     {
-        public override void Setup(ApiSetup setup)
-        {
-            // 在这里通过setup实例进行方法注册
-        }
+        // 在这里通过setup实例进行方法注册
     }
+}
+```
 
 ### 通过委托注册与方法的重命名
 
 前面的例子中，使用委托的方式注册了`SimpleServiceProvider`中的两个方法：
 
-    setup.Method((Func<int, int, int>)serviceProvider.PlusRandom);
-    setup.Method((Action<string>)serviceProvider.Save);
+```csharp
+setup.Method((Func<int, int, int>)serviceProvider.PlusRandom);
+setup.Method((Action<string>)serviceProvider.Save);
+```
 
 对应调用时的`~method`即为方法名称，其实也可以对调用名称进行重命名：
 
-    setup.Method((Func<int, int, int>)serviceProvider.PlusRandom).Name("plus");
+```csharp
+setup.Method((Func<int, int, int>)serviceProvider.PlusRandom).Name("plus");
+```
 
 则对应的调用`PlusRandom`方法的`~method`变为了plus。
 
 利用委托机制，可以注册匿名方法：
 
-    Func<int, int, int> multiple = (x, y) => x * y;
-    setup.Method(multiple).Name("multiple");
+```csharp
+Func<int, int, int> multiple = (x, y) => x * y;
+setup.Method(multiple).Name("multiple");
+```
 
 ### 通过`MethodInfo`注册
 
 可以直接注册`MethodInfo`：
 
-    // 静态方法
-    var method = typeof(SimpleServiceProvider).GetMethod("Save");
-    setup.Method(null, method); 
+```csharp
+// 静态方法
+var method = typeof(SimpleServiceProvider).GetMethod("Save");
+setup.Method(null, method); 
 
-    // 实例方法
-    method = typeof(SimpleServiceProvider).GetMethod("PlusRandom");
-    setup.Method(new SimpleServiceProvider(), method);
+// 实例方法
+method = typeof(SimpleServiceProvider).GetMethod("PlusRandom");
+setup.Method(new SimpleServiceProvider(), method);
+```
 
 *如果你想，明显可以注册私有方法。*
 
@@ -219,31 +239,39 @@ JSON比起HTTP参数，能够传递更为复杂的数据结构。
 
 可以利用`ApiMethodAttribute`特性标记方法
 
-    public class SimpleServiceProvider
-    {
-        [ApiMethod]
-        public int Plus(int x, int y) { return x + y; }
+```csharp
+public class SimpleServiceProvider
+{
+    [ApiMethod]
+    public int Plus(int x, int y) { return x + y; }
 
-        [ApiMethod]
-        public void Save(string value) {  }
+    [ApiMethod]
+    public void Save(string value) {  }
 
-        // 没有ApiMethod不会被注册
-        public void WillNotBeRegistered() {  }
-    }
+    // 没有ApiMethod不会被注册
+    public void WillNotBeRegistered() {  }
+}
+```
 
 之后通过使用`Auto`方法注册所有有特性的方法：
 
-    setup.Auto(new SimpleServiceProvider());
+```csharp
+setup.Auto(new SimpleServiceProvider());
+```
 
 `Auto`方法要求提供包含待注册方法的实例，对于静态类，则使用`FromType`方法，如：
 
-    setup.FromType(typeof(SomeStaticClass));
+```csharp
+setup.FromType(typeof(SomeStaticClass));
+```
 
 如果不想使用`ApiMethodAttribute`，可以通过重载方法的参数指定需要注册的方法的范围，例如下面的例子注册类型内所有非私有的静态方法：
 
-    setup.Auto(new SimpleServiceProvider(),
-        parseAttribute: false, 
-        bindingFlags: BindingFlags.Static | BindingFlags.Public);
+```csharp
+setup.Auto(new SimpleServiceProvider(),
+    parseAttribute: false, 
+    bindingFlags: BindingFlags.Static | BindingFlags.Public);
+```
 
 ## 处理文件流
 
@@ -254,16 +282,17 @@ JSON比起HTTP参数，能够传递更为复杂的数据结构。
 
 比如可以用下面这个方法处理HTTP文件上传，并且在URL中接收id和name两个参数，方法最终返回被上传文件的URL地址
 
-    [ApiMethod]
-    public void Upload(int id, string name, HttpFileCollection files)
+```csharp
+[ApiMethod]
+public void Upload(int id, string name, HttpFileCollection files)
+{
+    for (int i = 0; i < files.Count; i++)
     {
-        for (int i = 0; i < files.Count; i++)
-        {
-            var file = files[i];
-            // process the file
-        }
+        var file = files[i];
+        // process the file
     }
-
+}
+```
 
 ## 其他需要注意的
 
