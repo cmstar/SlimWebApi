@@ -12,16 +12,18 @@ namespace cmstar.WebApi.Slim
     /// </summary>
     public static class JsonHelper
     {
+        public const string DefaultDateTimeFormat = "yyyy-MM-dd HH:mm:ss";
+
         private static readonly JsonDeserializingState ApiResponseDeserializingState;
         private static readonly JsonSerializer Serializer;
 
         static JsonHelper()
         {
-            var knonwContracts = new Dictionary<Type, JsonContract>();
-            var dateTimeContract = GetCustomFormatDateTimeContract();
-            knonwContracts.Add(typeof(DateTime), dateTimeContract);
+            var knownContracts = new Dictionary<Type, JsonContract>();
+            var dateTimeContract = new CustomFormatDateTimeOffsetContract { Format = DefaultDateTimeFormat };
+            knownContracts.Add(typeof(DateTimeOffset), dateTimeContract);
 
-            var jsonContractResolver = new JsonContractResolver(knonwContracts);
+            var jsonContractResolver = new JsonContractResolver(knownContracts);
             jsonContractResolver.CaseSensitive = false;
             Serializer = new JsonSerializer(jsonContractResolver);
 
@@ -102,13 +104,6 @@ namespace cmstar.WebApi.Slim
             {
                 return contract.Read(jsonReader, new JsonDeserializingState());
             }
-        }
-
-        private static JsonContract GetCustomFormatDateTimeContract()
-        {
-            var contract = new CustomFormatDateTimeContract();
-            contract.Format = "yyyy-MM-dd HH:mm:ss";
-            return contract;
         }
     }
 }
