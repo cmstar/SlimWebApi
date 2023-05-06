@@ -203,7 +203,7 @@ data=1&name=abc&time=2014-4-8&array=1~2~3~4
 
 状态码总是200，具体异常码需要从Code字段判定。数据装在一个基本的信封中，信封格式如下：
 ```json
-{ Code: 0, Message: "", Data: {} }
+{ "Code": 0, "Message": "", "Data": {} }
 ```
 
 - Code 0为API调用成功未见异常，非0值为异常：
